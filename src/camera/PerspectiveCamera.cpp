@@ -1,7 +1,8 @@
 #include "PerspectiveCamera.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-PerspectiveCamera::PerspectiveCamera() :
+PerspectiveCamera::PerspectiveCamera(Object* _parentObj) :
+	Camera(_parentObj),
 	fov(0),
 	aspect(0),
 	near(0),
@@ -9,7 +10,8 @@ PerspectiveCamera::PerspectiveCamera() :
 {
 }
 
-PerspectiveCamera::PerspectiveCamera(float in_fov, float in_aspect, float in_near, float in_far) :
+PerspectiveCamera::PerspectiveCamera(Object* _parentObj,float in_fov, float in_aspect, float in_near, float in_far) :
+	Camera(_parentObj),
 	fov(in_fov),
 	aspect(in_aspect),
 	near(in_near),

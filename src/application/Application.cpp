@@ -106,6 +106,8 @@ bool Application::init(const int& _width, const int& _height)
 	glfwSetScrollCallback(windowInstance, scrollCallback);
 
 	glfwSetWindowUserPointer(windowInstance, this);
+
+	glfwSwapInterval(1);
 	return true;
 }
 bool Application::update()

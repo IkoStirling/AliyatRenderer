@@ -4,8 +4,8 @@
 class PerspectiveCamera : public Camera
 {
 public:
-	PerspectiveCamera();
-	PerspectiveCamera(float in_fov, float in_aspect,
+	PerspectiveCamera(Object* _parentObj);
+	PerspectiveCamera(Object* _parentObj,float in_fov, float in_aspect,
 		float in_near, float in_far);
 	~PerspectiveCamera();
 

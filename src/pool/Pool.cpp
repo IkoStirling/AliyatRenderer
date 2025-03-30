@@ -1,7 +1,7 @@
 #include "Pool.h"
 
-Pool::Pool():
-	maxElement(1000)
+Pool::Pool(GLuint _maxElement):
+	maxElement(_maxElement)
 {
 	for (GLuint i = 0; i < maxElement; i++)
 	{

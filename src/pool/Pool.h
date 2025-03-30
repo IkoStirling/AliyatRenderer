@@ -7,7 +7,7 @@ class Pool
 {
 public:
 
-	Pool();
+	Pool(GLuint _maxElement = 1000);
 	virtual ~Pool();
 
 

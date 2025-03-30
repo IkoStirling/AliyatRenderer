@@ -1,7 +1,8 @@
 #include "OrthographicCamera.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-OrthographicCamera::OrthographicCamera() :
+OrthographicCamera::OrthographicCamera(Object* _parentObj) :
+	Camera(_parentObj),
 	left(0),
 	right(0),
 	top(0),
@@ -12,7 +13,8 @@ OrthographicCamera::OrthographicCamera() :
 
 }
 
-OrthographicCamera::OrthographicCamera(float in_left, float in_right, float in_top, float in_bottom, float in_near, float in_far):
+OrthographicCamera::OrthographicCamera(Object* _parentObj,float in_left, float in_right, float in_top, float in_bottom, float in_near, float in_far):
+	Camera(_parentObj),
 	left(in_left),
 	right(in_right),
 	top(in_top),
