@@ -17,7 +17,6 @@ public:
 public:
 
 	AYEventSystem();
-
 	~AYEventSystem();
 
 	void update() override;
@@ -25,6 +24,7 @@ public:
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback) override;
 	void unsubscribe(const std::string& event_name, EventHandler event_callback) override;
 	void execute(std::shared_ptr<const IAYEvent> in_event) override;
+	void executeJoin(std::unique_ptr<IAYEvent> in_event) override;
 
 private:
 	std::unique_ptr<AYEventThreadPoolManager> _eventManager;

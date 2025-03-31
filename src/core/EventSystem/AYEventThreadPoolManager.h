@@ -31,7 +31,7 @@ public:
 
 	//void executeAsync();
 	void execute(std::shared_ptr<const IAYEvent> in_event) override;
-	void executeNow(std::unique_ptr<IAYEvent> in_event);
+	void executeJoin(std::unique_ptr<IAYEvent> in_event)override;
 
 
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback) override;

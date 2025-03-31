@@ -39,4 +39,9 @@ void AYEventSystem::execute(std::shared_ptr<const IAYEvent> in_event)
 	_eventManager->execute(std::move(in_event));
 }
 
+void AYEventSystem::executeJoin(std::unique_ptr<IAYEvent> in_event)
+{
+	_eventManager->executeJoin(std::move(in_event));
+}
+
 

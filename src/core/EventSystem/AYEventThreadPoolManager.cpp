@@ -89,7 +89,7 @@ void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
 
 }
 
-void AYEventThreadPoolManager::executeNow(std::unique_ptr<IAYEvent> in_event)
+void AYEventThreadPoolManager::executeJoin(std::unique_ptr<IAYEvent> in_event)
 {
 	const std::string eventType = in_event->getType();
 	std::vector<EventHandler> handlersCopy;
