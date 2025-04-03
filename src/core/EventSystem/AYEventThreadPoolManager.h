@@ -5,6 +5,7 @@
 #include <mutex>
 #include <queue>
 #include <unordered_map>
+#include <list>
 
 class IAYEvent;
 class AYEventToken;
@@ -37,7 +38,7 @@ public:
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback) override;
 	void unsubscribe(const std::string& event_name, EventHandler event_callback) override;
 
-private:
+protected:
 	//对待处理事件集合进行优先级队列处理
 	void _enquene();
 
@@ -47,9 +48,9 @@ private:
 		bool operator()(const std::unique_ptr<IAYEvent>& a, const std::unique_ptr<IAYEvent>& b);
 	};
 
-private:
+protected:
 	std::mutex _handlerMutex;
-	std::unordered_map<std::string, std::vector<EventHandler>> _handlers;
+	std::unordered_map<std::string, std::list<EventHandler>> _handlers;
 
 	std::vector<std::unique_ptr<AYThreadPoolBase>> _layerPools;
 

@@ -65,7 +65,7 @@ void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
 	const std::string eventType = in_event->getType();
 	size_t layer = static_cast<size_t>(in_event->layer);
 
-	std::vector<EventHandler> handlersCopy;
+	std::list<EventHandler> handlersCopy;
 	{
 		std::lock_guard<std::mutex> lock(_handlerMutex);
 		auto it = _handlers.find(eventType);
@@ -77,8 +77,9 @@ void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
 	{
 		_layerPools[layer]->enqueue([in_event, handler_ = std::move(handler)](){
 			try {
-				auto eventCopy = in_event->clone();
-				handler_(*eventCopy);
+				//这里为什么要将事件复制 这么多份出去？
+				//auto eventCopy = in_event->clone();
+				handler_(*in_event);
 			}
 			catch (const std::exception& e)
 			{
@@ -92,7 +93,7 @@ void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
 void AYEventThreadPoolManager::executeJoin(std::unique_ptr<IAYEvent> in_event)
 {
 	const std::string eventType = in_event->getType();
-	std::vector<EventHandler> handlersCopy;
+	std::list<EventHandler> handlersCopy;
 	{
 		std::lock_guard<std::mutex> lock(_handlerMutex);
 		auto it = _handlers.find(eventType);
@@ -160,5 +161,5 @@ void AYEventThreadPoolManager::_enquene()
 
 bool AYEventThreadPoolManager::IAYEventGreator::operator()(const std::unique_ptr<IAYEvent>& a, const std::unique_ptr<IAYEvent>& b)
 {
-	return *a > *b;
+	return a->priority > b->priority;
 }

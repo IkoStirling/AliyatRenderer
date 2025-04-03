@@ -1,14 +1,5 @@
 #include "IAYEvent.h"
 
-bool IAYEvent::operator<(const IAYEvent& other) const
-{
-	return  priority < other.priority;
-}
-
-bool IAYEvent::operator>(const IAYEvent& other) const
-{
-	return  priority > other.priority;
-}
 
 IAYEvent::Builder::Builder() :
 	priority(99),

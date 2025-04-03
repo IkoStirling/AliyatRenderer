@@ -16,8 +16,10 @@ public:
 	using EventHandler = std::function<void(const IAYEvent&)>;
 public:
 
-	AYEventSystem();
+	AYEventSystem(std::unique_ptr<AYEventThreadPoolManager> in_manager);
 	~AYEventSystem();
+
+	void setEventManager(std::unique_ptr<AYEventThreadPoolManager> in_manager);
 
 	void update() override;
 	void publish(std::unique_ptr<IAYEvent> in_event) override;
