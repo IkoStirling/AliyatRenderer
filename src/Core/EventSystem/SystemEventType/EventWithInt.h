@@ -14,18 +14,13 @@ public:
 
 	virtual void merge(const IAYEvent& other) override
 	{
-		if (other.getTypeIndex == this->getTypeIndex())
+		if (other.getTypeIndex() == this->getTypeIndex())
 		{
-			this->carryer += static_cast<const EventWithInt&>(other).carryer;
+			this->carryer += static_cast<const Event_Int&>(other).carryer;
 		}
 	}
 
-	virtual std::unique_ptr<IAYEvent> clone()const override
-	{
-		return std::make_unique<Event_Int>();
-	}
-
-	int carryer;
+	int carryer{0};
 };
 
 REGISTER_EVENT_CLASS(Event_Int);

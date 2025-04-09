@@ -26,3 +26,11 @@ IAYEvent::Builder& IAYEvent::Builder::setLayer(AYEventLayer in_layer)
 	this->layer = in_layer;
 	return *this;
 }
+
+IAYEvent::IAYEvent(const Builder& builder):
+	priority(builder.priority),
+	shouldMerge(builder.shouldMerge),
+	layer(builder.layer)
+{
+
+}

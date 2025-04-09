@@ -104,8 +104,10 @@ void AYEventThreadPoolManager::executeJoin(std::unique_ptr<IAYEvent> in_event)
 	for (const auto& handler : handlersCopy)
 	{
 		try {
-			auto eventCopy = in_event->clone();
-			handler(*eventCopy);
+			//这里为什么要将事件复制 这么多份出去？
+			//auto eventCopy = in_event->clone();
+			//handler(*eventCopy);
+			handler(*in_event);
 		}
 		catch (const std::exception& e)
 		{

@@ -7,15 +7,16 @@
 #define POOL_NUMS 64
 
 
-/*
-	通过该方式生成的任意对象首部嵌入了一个指向下一个内存插槽的指针
-*/
+
 struct Slot
 {
 	std::atomic<Slot*> next;
 };
 
-
+/*
+	每个内存块首部包含slot指针，用于索引下一个内存块
+	除此之外，实际存储对象的插槽，并不包含slot指针，仅由内存池主动管理（计算偏移）
+*/
 class AYMemoryPool
 {
 public:
@@ -28,21 +29,21 @@ public:
 
 private:
 	void newBlock();
-	size_t paddingBlock(char*, size_t);
+	size_t paddingBlock(char* ptr, size_t align);
 
-	void pushFreeSlot(Slot* slot);
+	bool pushFreeSlot(Slot* slot);
 	Slot* popFreeSlot();
 private:
-	int _blockSize;
-	int _slotSize;
-	Slot* _firstBlock;
-	Slot* _curSlot;
-	std::atomic<Slot*> _freeSlots;
-	Slot* _lastSlot;
+	int _blockSize; //内存块大小
+	int _slotSize; //实际插槽大小
+	Slot* _firstBlock; //指向最新的内存块，链表
+	Slot* _curSlot; //当前内存块标记位置，创建内存块会被更新
+	std::atomic<Slot*> _freeSlots; //所有线程及内存块共享，空闲插槽链表
+	Slot* _lastSlot; //当前内存块最后边界标记位置
 	std::mutex _blockMutex;
 };
 
-class AYMemoryPoolProxay
+class AYMemoryPoolProxy
 {
 public:
 	static void initMemoryPool();
@@ -62,9 +63,16 @@ public:
 };
 
 template<typename T, typename... Args>
-T* NewObject(Args... args)
+T* NewObject(Args&&... args)
 {
-	T* ptr = reinterpret_cast<T*>(AYMemoryPoolProxay::useMemoryPool(sizeof(T)));
+	T* p = nullptr;
+	// 根据元素大小选取合适的内存池分配内存
+	if ((p = reinterpret_cast<T*>(AYMemoryPoolProxy::useMemoryPool(sizeof(T)))) != nullptr)
+		// 在分配的内存上构造对象
+		new(p) T(std::forward<Args>(args)...);
+
+	return p;
+	T* ptr = reinterpret_cast<T*>(AYMemoryPoolProxy::useMemoryPool(sizeof(T)));
 	if (ptr)
 		new(ptr) T(std::forward<Args>(args)...);
 	return ptr;
@@ -76,6 +84,7 @@ void DeleteObject(T* ptr)
 	if (ptr)
 	{
 		ptr->~T();
-		AYMemoryPoolProxay::freeMomory(ptr, sizeof(T));
+		AYMemoryPoolProxy::freeMomory(reinterpret_cast<void*>(ptr), sizeof(T));
 	}
 }
+
