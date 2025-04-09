@@ -5,7 +5,10 @@
 #include <typeindex> 
 
 
-
+/*
+	this marco's aim is to support events using memory pool,
+	and provide some static methods
+*/
 #define DECLARE_EVENT_CLASS(CLASS_NAME, EVENT_TYPE_NAME) \
 public: \
 	virtual const char* getType()const override { \
@@ -14,40 +17,24 @@ public: \
 	virtual std::type_index getTypeIndex()const override { \
 		return typeid(CLASS_NAME); \
 	}\
+	virtual std::unique_ptr<IAYEvent> clone()const override{ \
+		return std::make_unique<CLASS_NAME>(*this);\
+	}\
 	static const char* staticGetType(){ \
 		return EVENT_TYPE_NAME; \
 	}\
 	static std::type_index staticGetTypeIndex(){ \
 		return typeid(CLASS_NAME); \
 	}\
-	virtual std::unique_ptr<IAYEvent> clone()const override \
-	{ \
-		void* mem = AYMemoryPoolProxy::useMemoryPool(sizeof(CLASS_NAME));\
-		if (!mem) throw std::bad_alloc();\
-		\
-		CLASS_NAME* newObj = new (mem) CLASS_NAME(*this); \
-		return std::unique_ptr<IAYEvent>(newObj);\
-	}\
-	void* operator new(size_t size){ \
-		void* ptr = AYMemoryPoolProxy::useMemoryPool(size); \
-		if (!ptr) throw std::bad_alloc(); \
-		memset(ptr, 0, size); \
-		return ptr; \
-	} \
-	void operator delete(void* ptr){ \
-		DeleteObject<CLASS_NAME>(static_cast<CLASS_NAME*>(ptr)); \
-	} \
-	static std::shared_ptr<CLASS_NAME> create_shared() { \
+public: \
+	/* unused function */ \
+	static std::shared_ptr<CLASS_NAME> UNUSED_create_shared() { \
 		CLASS_NAME* ptr = new CLASS_NAME(); \
 		return std::shared_ptr<CLASS_NAME>(ptr, [](CLASS_NAME* p) { \
 			delete p; \
 			}); \
-	} \
-    static void* operator new(size_t size, void* ptr) noexcept { \
-		return ::operator new(size, ptr); \
-	} \
+	}\
 private:\
-	static void* operator new(size_t size, const std::nothrow_t&) noexcept = delete;
 
 
 #define REGISTER_EVENT_CLASS(CLASS_NAME, ...) \
@@ -69,6 +56,7 @@ public: \
 */
 class IAYEvent
 {
+	SUPPORT_MEMORY_POOL(IAYEvent)
 public:
 	class Builder;
 public:

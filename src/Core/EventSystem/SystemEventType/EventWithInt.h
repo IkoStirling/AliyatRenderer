@@ -1,9 +1,10 @@
 #pragma once
 #include "../IAYEvent.h"
-
+#include <iostream>
 class Event_Int : public IAYEvent
 {
 	DECLARE_EVENT_CLASS(Event_Int, "Event_Int");
+	SUPPORT_MEMORY_POOL(Event_Int);
 public:
 	Event_Int():
 		IAYEvent(Builder()

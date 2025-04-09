@@ -6,6 +6,22 @@
 #define SLOT_BASE_SIZE 8
 #define POOL_NUMS 64
 
+#define SUPPORT_MEMORY_POOL(CLASS_NAME) \
+public: \
+	void* operator new(size_t size){ \
+		void* ptr = AYMemoryPoolProxy::useMemoryPool(size); \
+		if (!ptr) throw std::bad_alloc(); \
+		memset(ptr, 0, size); \
+		return ptr; \
+	} \
+	void operator delete(void* ptr){ \
+		AYMemoryPoolProxy::freeMomory(reinterpret_cast<void*>(ptr), sizeof(CLASS_NAME)); \
+	} \
+	static void* operator new(size_t size, void* ptr) noexcept { \
+		return ::operator new(size, ptr); \
+	} \
+private: \
+
 
 
 struct Slot

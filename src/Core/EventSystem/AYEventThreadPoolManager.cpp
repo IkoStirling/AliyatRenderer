@@ -26,6 +26,11 @@ AYEventThreadPoolManager::AYEventThreadPoolManager()
 
 AYEventThreadPoolManager::~AYEventThreadPoolManager()
 {
+	std::lock_guard<std::mutex> lock(_processedMutex);
+	for (auto it = _processedEvents.begin(); it != _processedEvents.end();)
+	{
+		it = _processedEvents.erase(it);
+	}
 }
 
 void AYEventThreadPoolManager::publish(std::unique_ptr<IAYEvent> in_event) 

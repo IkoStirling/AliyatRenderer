@@ -1,4 +1,5 @@
 #pragma once
+#include "ResourceManager/MemoryPool/AYMemoryPool.h"
 #include <iostream>
 #include <unordered_map>
 #include <string>
@@ -14,12 +15,33 @@ UTDebugInfoCollector::getInfoCollector().collectThis(__func__);
 class VDebugInfo
 {
 public:
-	double minExecTime;
-	double maxExecTime;
-	double avgExecTime;
-	int count;
+	double curExecTime;
+public:
+	SUPPORT_MEMORY_POOL(VDebugInfo)
 };
 
+struct CollectedInfo
+{
+	double minExecTime;
+	double maxExecTime;
+	double totalExecTime;
+	int count;
+
+	CollectedInfo():
+		minExecTime(0),
+		maxExecTime(0),
+		totalExecTime(0),
+		count(1)
+	{
+
+	}
+	CollectedInfo(VDebugInfo* in_info):
+		minExecTime(in_info->curExecTime),
+		maxExecTime(in_info->curExecTime),
+		totalExecTime(in_info->curExecTime),
+		count(1)
+	{ }
+};
 
 class UTDebugInfoAgent
 {
@@ -36,9 +58,7 @@ public:
 	{
 		auto _end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> duration = _end - _start;
-		_info->maxExecTime = duration.count();
-		_info->minExecTime = duration.count();
-		_info->avgExecTime = duration.count();
+		_info->curExecTime = duration.count();
 		_callback(_scopeName, std::unique_ptr<VDebugInfo>(std::move(_info)));
 	}
 
@@ -49,6 +69,8 @@ private:
 	const std::string _scopeName;
 	std::function<void(const std::string&, std::unique_ptr<VDebugInfo>)> _callback;
 	VDebugInfo* _info;
+public:
+	SUPPORT_MEMORY_POOL(UTDebugInfoAgent)
 };
 
 class UTDebugInfoCollector
@@ -79,15 +101,17 @@ public:
 		{
 			std::cout
 				<< std::fixed << std::setprecision(10)
-				<< "show the infomation of " << scopeName << ": \n\n"
-				<< std::setw(20) << "minExecTime: " 
-				<< std::left << std::setw(20) << it->second->minExecTime << "s\n"
+				<< "show the infomation of " << scopeName << ": \n" << std::endl
+				<< std::left << std::setw(20) << "minExecTime: "
+				<< std::left << std::setw(20) << it->second.minExecTime << "s\n"
 				<< std::setw(20) << "maxExecTime: "
-				<< std::left << std::setw(20) << it->second->maxExecTime << "s\n"
+				<< std::left << std::setw(20) << it->second.maxExecTime << "s\n"
+				<< std::setw(20) << "totalExecTime: "
+				<< std::left << std::setw(20) << it->second.totalExecTime << "s\n"
 				<< std::setw(20) << "avgExecTime: "
-				<< std::left << std::setw(20) << it->second->avgExecTime << "s\n"
+				<< std::left << std::setw(20) << it->second.totalExecTime / it->second.count << "s\n"
 				<< std::setw(20) << "count: "
-				<< std::left << std::setw(20) << it->second->count << "times\n\n"
+				<< std::left << std::setw(20) << it->second.count << "times\n\n"
 				;
 		}
 	}
@@ -101,20 +125,19 @@ private:
 		if (it != _infoMap.end())
 		{
 
-			it->second->minExecTime =
-				it->second->minExecTime > info->minExecTime ? info->minExecTime : it->second->minExecTime;
-			it->second->maxExecTime =
-				it->second->maxExecTime < info->maxExecTime ? info->maxExecTime : it->second->maxExecTime;
-			it->second->avgExecTime =
-				(it->second->avgExecTime * it->second->count + info->minExecTime) / (it->second->count + 1);
-			it->second->count++;
+			it->second.minExecTime =
+				it->second.minExecTime > info->curExecTime ? info->curExecTime : it->second.minExecTime;
+			it->second.maxExecTime =
+				it->second.maxExecTime < info->curExecTime ? info->curExecTime : it->second.maxExecTime;
+			it->second.totalExecTime = it->second.totalExecTime + info->curExecTime;
+			it->second.count++;
 		}
 		else
 		{
-			info->count++;
-			_infoMap[scopeName] = std::move(info);
+			_infoMap[scopeName] = CollectedInfo(info.get());
 		}
 	}
 private:
-	std::unordered_map<std::string, std::unique_ptr<VDebugInfo>> _infoMap;
+	std::unordered_map<std::string, CollectedInfo> _infoMap;
+	std::string _cache;
 };
