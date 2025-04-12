@@ -15,6 +15,15 @@ public:
 		std::cout << "Texture unload" << std::endl;
 		return true;
 	}
+	virtual bool reload(const std::string& filepath)override
+	{
+		std::cout << "Texture reload" << std::endl;
+		return true;
+	}
+	virtual size_t sizeInBytes()override
+	{
+		return 0;
+	}
 
 	bool test{ false };
 private:
