@@ -43,6 +43,7 @@ protected:
 	void _enquene();
 
 private:
+	//ÊÂ¼þ·Âº¯Êý
 	struct IAYEventGreator
 	{
 		bool operator()(const std::unique_ptr<IAYEvent>& a, const std::unique_ptr<IAYEvent>& b);

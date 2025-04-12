@@ -4,6 +4,7 @@
 #include "IAYEvent.h"
 #include <iostream>
 
+
 AYEventSystem::AYEventSystem(std::unique_ptr<AYEventThreadPoolManager> in_manager):
 	_eventManager(std::move(in_manager))
 {

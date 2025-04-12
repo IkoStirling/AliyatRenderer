@@ -1,18 +1,19 @@
 #pragma once
 #include "ECEventDependence.h"
+#include "Core/MemoryPool/AYMemoryPool.h"
 #include <memory>
-#include "ResourceManager/MemoryPool/AYMemoryPool.h"
 #include <typeindex> 
+#include <string>
 
 
 /*
-	this marco's aim is to support events using memory pool,
-	and provide some static methods
+	this marco's aim is to provide some default methods
 */
 #define DECLARE_EVENT_CLASS(CLASS_NAME, EVENT_TYPE_NAME) \
 public: \
 	virtual const char* getType()const override { \
-		return EVENT_TYPE_NAME; \
+		static std::string str = EVENT_TYPE_NAME; \
+		return str.c_str(); \
 	}\
 	virtual std::type_index getTypeIndex()const override { \
 		return typeid(CLASS_NAME); \
@@ -21,7 +22,8 @@ public: \
 		return std::make_unique<CLASS_NAME>(*this);\
 	}\
 	static const char* staticGetType(){ \
-		return EVENT_TYPE_NAME; \
+		static std::string str = EVENT_TYPE_NAME; \
+		return str.c_str(); \
 	}\
 	static std::type_index staticGetTypeIndex(){ \
 		return typeid(CLASS_NAME); \
@@ -36,11 +38,52 @@ public: \
 	}\
 private:\
 
+/*
+	this marco's aim is to provide some default methods
+*/
+#define DECLARE_TEMPLATE_EVENT_CLASS(CLASS_NAME, EVENT_TYPE_NAME, TEMPLATE_TYPE_NAME) \
+public: \
+	virtual const char* getType()const override { \
+		static std::string str = EVENT_TYPE_NAME + std::string(typeid(TEMPLATE_TYPE_NAME).name()); \
+		return str.c_str(); \
+	}\
+	virtual std::type_index getTypeIndex()const override { \
+		return typeid(CLASS_NAME<TEMPLATE_TYPE_NAME>); \
+	}\
+	virtual std::unique_ptr<IAYEvent> clone()const override{ \
+		return std::make_unique<CLASS_NAME<TEMPLATE_TYPE_NAME>>(*this);\
+	}\
+	static const char* staticGetType(){ \
+		static std::string str = EVENT_TYPE_NAME+ std::string(typeid(TEMPLATE_TYPE_NAME).name()); \
+		return str.c_str(); \
+	}\
+	static std::type_index staticGetTypeIndex(){ \
+		return typeid(CLASS_NAME<TEMPLATE_TYPE_NAME>); \
+	}\
+public: \
+	/* unused function */ \
+	static std::shared_ptr<CLASS_NAME<TEMPLATE_TYPE_NAME>> UNUSED_create_shared() { \
+		auto ptr = new CLASS_NAME<TEMPLATE_TYPE_NAME>(); \
+		return std::shared_ptr<CLASS_NAME<TEMPLATE_TYPE_NAME>>(ptr, [](CLASS_NAME<TEMPLATE_TYPE_NAME>* p) { \
+			delete p; \
+			}); \
+	}\
+private:\
+
 
 #define REGISTER_EVENT_CLASS(CLASS_NAME, ...) \
 struct CLASS_NAME##_Register{ \
 	CLASS_NAME##_Register(){ \
 		::AYEventRegistry::getInstance().registerEvent<CLASS_NAME>(CLASS_NAME::staticGetType()); \
+	}\
+}; \
+static CLASS_NAME##_Register CLASS_NAME##_register; \
+
+
+#define REGISTER_TEMPLATE_EVENT_CLASS(CLASS_NAME, TYPE_NAME) \
+struct CLASS_NAME##_Register{ \
+	CLASS_NAME##_Register(){ \
+		::AYEventRegistry::getInstance().registerEvent<CLASS_NAME<TYPE_NAME>>(CLASS_NAME<TYPE_NAME>::staticGetType()); \
 	}\
 }; \
 static CLASS_NAME##_Register CLASS_NAME##_register; \

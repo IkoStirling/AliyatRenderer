@@ -11,11 +11,13 @@ AYEventThreadPoolManager::AYEventThreadPoolManager()
 	size_t expectPhysics = 1;
 	size_t expectRender = 1;
 	size_t expectNetwork = 1;
+	size_t expectResource = 2;
 	std::vector<size_t> expectNumThreads;
 	expectNumThreads.push_back(expectGameLogic);
 	expectNumThreads.push_back(expectPhysics);
 	expectNumThreads.push_back(expectRender);
 	expectNumThreads.push_back(expectNetwork);
+	expectNumThreads.push_back(expectResource);
 
 	for (auto it : expectNumThreads)
 	{

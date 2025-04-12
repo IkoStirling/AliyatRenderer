@@ -53,8 +53,11 @@ target_link_libraries(Server utils ${TPLIB} ${OpenCV_LIBS} ${Boost_LIBRARY_DIRS}
 target_link_libraries(Client utils ${TPLIB} ${OpenCV_LIBS} ${Boost_LIBRARY_DIRS})
 
 #--------------µ¥Ôª²âÊÔ-------------#
-add_executable(UnitTest unitest/EventSystem/UnitTest.cpp ${SRCS})
-target_link_libraries(UnitTest utils ${TPLIB} ${OpenCV_LIBS} ${Boost_LIBRARY_DIRS})
+add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp ${SRCS})
+target_link_libraries(UnitTest_EventSystem utils ${TPLIB} ${OpenCV_LIBS} ${Boost_LIBRARY_DIRS})
+
+add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp ${SRCS})
+target_link_libraries(UnitTest_ResourceManager utils ${TPLIB} ${OpenCV_LIBS} ${Boost_LIBRARY_DIRS})
 
 
 

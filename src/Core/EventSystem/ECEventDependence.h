@@ -5,7 +5,7 @@ enum class AYEventLayer : size_t
 	PHYSICS = 1,
 	RENDER = 2,
 	NETWORK = 3,
-
+	RESOURCE = 4,
 
 	END,
 };

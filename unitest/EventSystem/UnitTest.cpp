@@ -229,6 +229,34 @@ namespace AYEventSystemUnitTest
 		std::this_thread::sleep_for(std::chrono::seconds(3));
 		std::cout << "benchmark_MergeEvent*************************************END\n";
 	}
+	void performance_EventWithMemoryPool()
+	{
+		std::vector<std::unique_ptr<A>> a;
+		for (int i = 0; i < 5; i++)
+			a.push_back(std::make_unique<A>());
+		for (int i = 0; i < 100000; i++)
+		{
+			DEBUG_COLLECT();
+			AYEventRegistry::publish(eventSystem, "Event_Int", [](IAYEvent* event) {
+				auto eI = static_cast<Event_Int*>(event);
+				eI->carryer = rand() % 10;
+				});
+			if (i % 2 == 0)
+				eventSystem->update();
+		}
+		for (int i = 0; i < 10000; i++)
+		{
+			DEBUG_COLLECT();
+			AYEventRegistry::publish(eventSystem, "Event_Int", [](IAYEvent* event) {
+				auto eI = static_cast<Event_Int*>(event);
+				eI->carryer = rand() % 10;
+				});
+			if (i % 1 == 0)
+				eventSystem->update();
+		}
+		std::this_thread::sleep_for(std::chrono::seconds(120));
+		DEBUG_CONSOLE_SHOW(__func__);
+	}
 }
 
 int main() {
@@ -237,32 +265,6 @@ int main() {
 	AYEventSystemUnitTest::eventSystem = std::make_shared<AYEventSystem>(std::move(manager));
 
 	AYMemoryPoolProxy::initMemoryPool();
-	{
-		std::vector<std::unique_ptr<AYEventSystemUnitTest::A>> a;
-		for (int i = 0; i < 5; i++)
-			a.push_back(std::make_unique<AYEventSystemUnitTest::A>());
-		for (int i = 0; i < 100000; i++)
-		{
-			DEBUG_COLLECT();
-			AYEventRegistry::publish(AYEventSystemUnitTest::eventSystem, "Event_Int", [](IAYEvent* event) {
-				auto eI = static_cast<Event_Int*>(event);
-				eI->carryer = rand() % 10;
-				});
-			if(i%2==0)
-				AYEventSystemUnitTest::eventSystem->update();
-		}
-		for (int i = 0; i < 10000; i++)
-		{
-			DEBUG_COLLECT();
-			AYEventRegistry::publish(AYEventSystemUnitTest::eventSystem, "Event_Int", [](IAYEvent* event) {
-				auto eI = static_cast<Event_Int*>(event);
-				eI->carryer = rand() % 10;
-				});
-			if (i % 1 == 0)
-				AYEventSystemUnitTest::eventSystem->update();
-		}
-	}
-	
 
 	//AYEventSystemUnitTest::benchmark_MultiThreadsHandleEvent1();
 
@@ -271,18 +273,12 @@ int main() {
 	//AYEventSystemUnitTest::benchmark_PriorityQueueHandleEvent();
 
 	//AYEventSystemUnitTest::benchmark_MergeEvent();
-	std::this_thread::sleep_for(std::chrono::seconds(180));
-	DEBUG_CONSOLE_SHOW(main);
+
+	AYEventSystemUnitTest::performance_EventWithMemoryPool();
 
 	AYEventSystemUnitTest::eventSystem->~AYEventSystem();
 	std::cout << "end?\n";
-	//getchar();
+	getchar();
 	return 0;
 	//内存池一定要最后释放
 }
-
-/*
-	事件注册支持带参构造
-	增加带参宏来声明构造函数 + 函数闭包 
-	带参构造和clone可以用宏一起声明
-*/
