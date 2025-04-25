@@ -3,6 +3,7 @@
 #include "Core/EngineCore/AYEngineCore.h"
 #include "IAYResource.h"
 #include "STResourceLoadRequest.h"
+#include "AYAsyncTracker.h"
 #include "Core/SystemResourceType/AYTexture.h"
 #include "Core/SystemEventType/Event_ResourceLoadAsync.h"
 #include <memory>
@@ -16,176 +17,178 @@ class AYResourceHandle;
 /*
     后续：
     资源依赖
-    资源标签
     资源优先级
-    资源类型注册接口 registerResourceType<AYTexture>()
-    异步加载失败
     持久化缓存/预加载列表
 */
 
 
-
-
-
-
-
-struct AsyncTask {
-    std::shared_future<std::shared_ptr<IAYResource>> future;
-    std::string resourcePath;
-};
-
-struct CacheEntry {
-    std::shared_ptr<IAYResource> resource;
-    size_t size;
-    std::chrono::steady_clock::time_point lastUsed;
-};
-
 class AYResourceManager {
 public:
-    static AYResourceManager& getInstance()
-    {
-        static AYResourceManager mInstance;
-        return mInstance;
-    }
+    using Tag = std::string;
+    using TagSet = std::unordered_set<Tag>;
 public:
-    size_t _maxItemCount = 200;           // 最大缓存个数
-    size_t _maxMemoryBytes = 512 * 1024 * 1024; // 最大缓存大小，单位字节
-    size_t _currentMemoryUsage = 0;
-
+    static AYResourceManager& getInstance();
 public:
     /*
-        立即加载资源
+        立即加载资源（异步加载中加载功能，由该函数实现）
+        该函数实现功能：
+            a）加载资源
+            b）资源强弱缓存
+            c）缓存数量/大小控制（基于LRU）
+            d）如已加载，则从强弱缓存中获取对象
+        关于强弱缓存的意义：
+            强缓存由资源管理器直接持有，保证资源持久化
+            弱缓存不持有资源，只持有引用，如果强缓存因缓存管理被删除，但是外界还持有资源，则从弱缓存获取
+            须注意，通过弱缓存实现的加载，不会在资源管理器中缓存资源
     */
     template <typename T, typename... Args>
     std::shared_ptr<T> load(const std::string& filepath, Args&& ...args);
 
+
     /*
         异步加载资源
+        该函数实现功能：
+            a）返回资源共享指针的future，以供手动阻塞获取 （不建议在主线程使用）
+            b）发布异步加载事件，由事件系统处理
+            c）实际调用立即加载函数，因此异步加载也会进行缓存
+            d）事件加载完成时执行回调
+            e）异步任务追踪 （目前看起来没什么用？可以添加函数查看异步任务追踪器中的任务以完善）
     */
     template<typename T>
     std::shared_future<std::shared_ptr<T>> loadAsync(
         const std::string& filepath,
         std::function<void(std::shared_ptr<T>)> callback = nullptr);
 
+
     /*
         返回资源句柄
+        该函数实现功能：
+            a）通过资源句柄创建的资源，将脱离缓存，需要手动管理，但可以实现延迟加载
     */
      template <typename T>
      std::shared_ptr<AYResourceHandle<T>> createHandle(const std::string& filepath);
 
+
      /*
-         每次手动卸载后，都会尝试清理失效缓存？
+         手动卸载资源
+         该函数实现功能：
+            a）将资源卸载，并从强弱缓存中移除
      */
-    void unload(const std::string& filepath) {
-        auto it = _weakCache.find(filepath);
-        if (it != _weakCache.end()) {
-            if (auto resource = it->second.lock())
-            {
-                if (resource->unload())
-                {
-                    _cleanupResources();
-                }
-            }
-        }
-    }
+     void unloadResource(const std::string& filepath);
 
-    void reload(const std::string& filepath) {
-        auto strongIt = _strongCache.find(filepath);
-        if (strongIt != _strongCache.end()) {
-            strongIt->second.resource->reload(filepath);
-            return;
-        }
 
-        auto weakIt = _weakCache.find(filepath);
-        if (weakIt != _weakCache.end()) {
-            if (auto resource = weakIt->second.lock())
-            {
-                weakIt->second.lock()->reload(filepath);
-            }
-        }
-    }
-    void pinResource(const std::string& filepath, const std::shared_ptr<IAYResource>& res){
-        size_t size = res->sizeInBytes();
-        _currentMemoryUsage += size;
-        _strongCache[filepath] = CacheEntry{ res, size, std::chrono::steady_clock::now() };
-    }
-    void unpinResource(const std::string& filepath)
-    {
-        _strongCache.erase(filepath);
-    }
-    void printStats() {
-        std::cout << "=== Resource Cache Stats ===\n";
-        for (const auto& [filepath, weak] : _weakCache) {
-            auto shared = weak.lock();
-            int count = shared ? shared.use_count() : 0;
-            std::cout << filepath << " - use_count: " << count << "\n";
-        }
-    }
+    /*
+        重载资源
+        该函数实现功能：
+            a）热重载
+    */
+     void reloadResource(const std::string& filepath);
 
-    void touch(const std::string& filepath) {
-        auto strongIt = _strongCache.find(filepath);
-        if (strongIt != _strongCache.end()) {
-            strongIt->second.lastUsed = std::chrono::steady_clock::now();
-        }
-    } // 更新访问时间
 
-    void trim() {
-        while (_strongCache.size() > _maxItemCount || _currentMemoryUsage > _maxMemoryBytes) {
-            // 找出最久未使用的资源
-            auto oldest = _strongCache.begin();
-            for (auto it = _strongCache.begin(); it != _strongCache.end(); ++it) {
-                if (it->second.lastUsed < oldest->second.lastUsed)
-                    oldest = it;
-            }
+    /*
+        钉住资源
+        该函数实现功能：
+            a）将资源加入强缓存
+    */
+     void pinResource(const std::string& filepath, const std::shared_ptr<IAYResource>& res);
 
-            // 释放该资源
-            _currentMemoryUsage -= oldest->second.size;
-            _strongCache.erase(oldest);
-        }
-    }                       // 淘汰缓存
 
-    void update()
-    {
-        for (auto it = _inFlightResources.begin(); it != _inFlightResources.end(); ) {
-            if (it->future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                auto result = it->future.get(); // 多次 get 安全
-                pinResource(it->resourcePath, result);
-                trim();
-                it = _inFlightResources.erase(it);
-            }
-            else {
-                ++it;
-            }
-        }
+    /*
+        取消持有资源
+        该函数实现功能：
+            a）将资源移除强缓存
+    */
+     void unpinResource(const std::string& filepath);
 
-    }
+    /*
+        DEBUG
+    */
+     void printStats();
 
-private:
-    AYResourceManager() {
-        _listenEvents<AYTexture>();
-    }
-    ~AYResourceManager() {}
 
-    void _cleanupResources()
-    {
-        for (auto it = _weakCache.begin(); it != _weakCache.end(); )
-        {
-            if (it->second.expired())
-                it = _weakCache.erase(it);
-            else
-                it++;
-        }
-    }
-private:
-    std::unordered_map<std::string, std::weak_ptr<IAYResource>> _weakCache;
-    std::unordered_map<std::string, CacheEntry> _strongCache;
-    std::vector<AsyncTask> _inFlightResources;
+    /*
+        更新访问时间
+        该函数实现功能：
+            a）设置强缓存的time point
+    */
+     void touchResource(const std::string& filepath);
 
-private:
+
+    /*
+        淘汰缓存
+        该函数实现功能：
+            a）LRU淘汰缓存
+    */
+     void trim();
+
+
+    /*
+        TICK
+    */
+     void update();
+
+
+     /*
+        手动注册要纳入管理的资源类型（继承自IAYResource）
+     */
     template<typename T>
+    void registerResourceType();
+
+
+    std::shared_ptr<IAYResource> getResourceByPath(const std::string& filepath);
+
+    void tagResource(const std::string& filepath, const Tag& tag);
+
+    void untagResource(const std::string& filepath, const Tag& tag);
+
+    std::vector<std::shared_ptr<IAYResource>> getResourcesWithTag(const Tag& tag);
+
+    void unloadTag(const Tag& tag);
+
+    void printTaggedStats(const Tag& tag);
+
+    void savePersistentCache(const std::string& savePath);
+    void loadPersistentCache(const std::string& loadPath);
+
+private:
+    AYResourceManager();
+    ~AYResourceManager();
+
+    /*
+        清理失效的weakCache
+    */
+    void _cleanupResources();
+private:
+    struct STCacheEntry {
+        std::shared_ptr<IAYResource> resource;
+        size_t size;
+        std::chrono::steady_clock::time_point lastUsed;
+    };
+
+    struct PersistentCacheEntry {
+        std::string filepath;
+        size_t size;
+        std::time_t lastUsed;
+        std::string typeName; 
+    };
+
+    std::unordered_map<std::string, std::weak_ptr<IAYResource>> _weakCache;
+    std::unordered_map<std::string, STCacheEntry> _strongCache;
+
+    size_t _maxItemCount = 200;           // 最大缓存个数
+    size_t _maxMemoryBytes = 512 * 1024 * 1024; // 最大缓存大小，单位字节
+    size_t _currentMemoryUsage = 0;
+
+private:
     void _listenEvents();
 
     std::vector<std::unique_ptr<AYEventToken>> _tokens;
+
+private:
+    std::unordered_map<Tag, std::unordered_set<std::string>> _tagMap;
+
+private:
+    void _preloadFromConfig(const std::string& configPath);
 };
 
 
@@ -207,7 +210,7 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
     auto strongIt = _strongCache.find(filepath);
     if (strongIt != _strongCache.end())
     {
-        touch(filepath);
+        touchResource(filepath);
         return std::static_pointer_cast<T>(strongIt->second.resource);
     }
 
@@ -216,23 +219,30 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
     if (weakIt != _weakCache.end()) {
         if (auto resource = weakIt->second.lock())
         {
-            touch(filepath);
+            touchResource(filepath);
             return std::dynamic_pointer_cast<T>(resource);
         }
     }
 
-    auto resource = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
-    if (!resource->load(filepath)) {
+    try {
+        auto resource = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+        if (!resource->load(filepath)) 
+            throw std::runtime_error("Failed to load resource: " + filepath);
+        
+        _weakCache[filepath] = resource;
+        pinResource(filepath, resource);
+        trim();
+
+        return resource;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "[AYResourceManager] Error loading resource: " << e.what() << "\n";
         return nullptr;
     }
-
-    _weakCache[filepath] = resource;
-
-    pinResource(filepath, resource); 
-    trim();
-
-    return resource;
 }
+
+
 
 template<typename T>
 inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
@@ -246,13 +256,18 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
     auto castPromise = std::make_shared<std::promise<std::shared_ptr<IAYResource>>>();
     auto castFuture = castPromise->get_future().share();
 
-    auto castCallback = [promise, castPromise, callback](std::shared_ptr<T> result) {
+    auto castCallback = [castPromise, callback](std::shared_ptr<T> result) {
         castPromise->set_value(std::static_pointer_cast<IAYResource>(result));
         if (callback) callback(result);
         };
 
     STResourceLoadRequest<T> request{ filepath, promise, castCallback };
-    _inFlightResources.push_back({ castFuture, filepath });
+    AYAsyncTracker::getInstance().addTask(
+        filepath,
+        castFuture,
+        nullptr,
+        std::chrono::seconds(10)
+    );
     // 发布事件
     AYEventRegistry::publish(GetEventSystem(), Event_ResourceLoadAsync<T>::staticGetType(), [&request](IAYEvent* event) {
         auto eI = static_cast<Event_ResourceLoadAsync<T>*>(event);
@@ -261,21 +276,29 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
     return future;
 }
 
+
+
 template<typename T>
 inline std::shared_ptr<AYResourceHandle<T>> AYResourceManager::createHandle(const std::string& filepath)
 {
     return std::shared_ptr<AYResourceHandle<T>>(filepath);
 }
 
+
+
 template<typename T>
-inline void AYResourceManager::_listenEvents()
+inline void AYResourceManager::registerResourceType()
 {
-    auto loader = [this](const IAYEvent& in_event) {
-        auto event = static_cast<const Event_ResourceLoadAsync<T>&>(in_event);
+    auto loader = [this](const IAYEvent& in_event) 
+    {
+        auto& event = static_cast<const Event_ResourceLoadAsync<T>&>(in_event);
         auto request = event.mRequest;
 
         try {
             auto result = this->load<T>(request.mPath);
+            if(!result)
+                throw std::runtime_error("Async load failed: " + request.mPath);
+
             request.mPromise->set_value(result);
 
             if (request.mCallback)
@@ -283,9 +306,15 @@ inline void AYResourceManager::_listenEvents()
         }
         catch (...)
         {
-            request.mPromise->set_exception(std::current_exception());
+            try {
+                request.mPromise->set_exception(std::current_exception());
+            }
+            catch (...) 
+            { }
         }
     };
     auto token = SUBSCRIBE_EVENT_LAMBDA(GetEventSystem(), Event_ResourceLoadAsync<T>::staticGetType(), loader);
     _tokens.push_back(std::unique_ptr<AYEventToken>(token));
 }
+
+

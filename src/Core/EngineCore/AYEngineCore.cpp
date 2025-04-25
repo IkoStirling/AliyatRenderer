@@ -1,6 +1,7 @@
 #include "Core/EventSystem/AYEventThreadPoolManager.h"
 #include "Core/EventSystem/AYEventSystem.h"
 #include "Core/MemoryPool/AYMemoryPool.h"
+#include "Core/ResourceManager/AYResourceManager.h"
 #include "AYEngineCore.h"
 
 std::shared_ptr<AYEventSystem> AYEngineCore::getEventSystem()
@@ -26,6 +27,22 @@ void AYEngineCore::init()
 		_eventSystem = std::make_shared<AYEventSystem>(std::move(tpm));
 	}
 }
+void AYEngineCore::start()
+{
+	while (!_shouldClosed)
+	{
+		if (!update())
+			break;
+	}
+}
+
+bool AYEngineCore::update()
+{
+	GetEventSystem()->update();
+	AYAsyncTracker::getInstance().update();
+	return true;
+}
+
 
 AYEngineCore::AYEngineCore()
 {

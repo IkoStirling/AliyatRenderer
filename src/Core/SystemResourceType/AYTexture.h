@@ -1,12 +1,19 @@
 #pragma once
 #include "Core/ResourceManager/IAYResource.h"
+#include "Core/ResourceManager/AYResourceRegistry.h"
+#include "Core/MemoryPool/AYMemoryPool.h"
 #include <iostream>
+
+
 class AYTexture : public IAYResource
 {
+	SUPPORT_MEMORY_POOL(AYTexture)
+	DECLARE_RESOURCE_CLASS(AYTexture, "textures")
 public:
 	virtual bool load(const std::string& filepath)override
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(10));
+		IAYResource::load(filepath);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::cout << "Texture load" << std::endl;
 		return true;
 	}
@@ -25,7 +32,8 @@ public:
 		return 0;
 	}
 
-	bool test{ false };
 private:
 
 };
+
+REGISTER_RESOURCE_CLASS(AYTexture)

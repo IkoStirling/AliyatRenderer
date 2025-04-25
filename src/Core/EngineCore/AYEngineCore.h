@@ -23,8 +23,8 @@ public:
 	static AYEngineCore& getInstance();
 
 	void init();
-	void start() {};
-	bool update() {};
+	void start();
+	bool update();
 
 private:
 	AYEngineCore();

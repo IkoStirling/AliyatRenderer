@@ -89,9 +89,6 @@ struct CLASS_NAME##_Register{ \
 static CLASS_NAME##_Register CLASS_NAME##_register; \
 
 
-#define GENERATE_EVENT_CONSTRUCTOR(CLASS_NAME, ...) \
-public: \
-	CLASS_NAME(__VA_ARGS__)
 
 
 /*

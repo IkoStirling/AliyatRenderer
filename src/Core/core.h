@@ -10,7 +10,7 @@
 
 
 // other
-#include "checkError.h"
+//#include "checkError.h"
 #include <iostream>
 #include <sstream>
 #include "glad/glad.h"
