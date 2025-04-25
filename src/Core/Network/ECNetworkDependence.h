@@ -5,6 +5,9 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/array.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -27,6 +30,7 @@ namespace Network
 
     struct STNetworkMessage {
         AYMessageType type;
+        boost::uuids::uuid id;
         std::vector<uint8_t> data;
     };
 
