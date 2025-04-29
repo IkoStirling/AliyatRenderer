@@ -10,19 +10,6 @@ namespace Network {
 	{
 	public:
 		using pointer = boost::shared_ptr<AYTcpSession>;
-	public:
-		static pointer create(asio::io_context& io_context);
-		tcp::socket& getSocket();
-		void start(MessageHandler handler) override;
-		void send(const STNetworkMessage& msg) override;
-		void close() override;
-		std::wstring remoteAddress() const override;
-	private:
-		explicit AYTcpSession(asio::io_context& io_context);
-		void _handleReadHeader(const boost::system::error_code& err);
-		void _handleReadBody(const boost::system::error_code& err);
-		//void _doRead(); 因为拆包处理，单一doRead函数分为了处理消息头和处理消息体
-		void _doWrite();
 	private:
 #pragma pack(push,1)
 		struct STTcpHeader
@@ -32,16 +19,41 @@ namespace Network {
 			uint32_t bodyLength;
 		};
 #pragma pack(pop)
+	public:
+		static pointer create(asio::io_context& io_context);
+		tcp::socket& getSocket();
+		boost::uuids::uuid getSessionID() const override;
+		void start(MessageHandler handler) override;
+		void send(AYMessageType type, std::vector<uint8_t>& data, ResponseHandler onResponse = nullptr) override;
+		void close() override;
+		std::string remoteAddress() const override;
+	private:
+		explicit AYTcpSession(asio::io_context& io_context);
+		void _doReadHeader();
+		void _doReadBody();
+		//void _doRead(); 因为拆包处理，单一doRead函数分为了处理消息头和处理消息体
+		void _doWrite();
+		std::vector<uint8_t> _serializeMessage(const STNetworkMessage& msg);
+		STTcpHeader _deserializeHeader(const uint8_t* data);
+		void _startTimeout(int second = 30);
+		void _startIdleTimeout(int second = 300);
+		void _resetIdleTimeout();
 	private:
 		tcp::socket _socket;
-		STTcpHeader _headerBuf;
-		std::vector<uint8_t> _readBuf;
-		std::vector<uint8_t> _recvBuf;
+		STTcpHeader _headerBuffer;
 		asio::streambuf _streamBuffer;
 		MessageHandler _handler;
-		std::deque<STNetworkMessage> _writeQueue;
+		std::deque<std::vector<uint8_t>> _writeQueue;
 		std::mutex _writeMutex;
 		bool _isWriting;
 
+		std::unordered_map<boost::uuids::uuid, ResponseHandler, boost::hash<boost::uuids::uuid>> _responseCallbacks;
+		std::mutex _callbackMutex;
+
+		asio::steady_timer _timeoutTimer; //操作超时计时器
+		asio::steady_timer _idleTimer; //全局静默计时器
+		int _idleSeconds;
+
+		boost::uuids::uuid _sessionID;
 	};
 }

@@ -100,7 +100,7 @@ void BaseSceneWithCheckerboard::render()
 	view_matrix = camera->getViewMatrix();
 	shader->setUniformMatrix4fv("model", glm::value_ptr(model_matrix));
 	shader->setUniformMatrix4fv("view", glm::value_ptr(view_matrix));
-	shader->setUniform3f("cameraPos", camera->getWorldLocation());
+	shader->setUniform3f("cameraPos", camera->getCameraWorldPosition());
 	shader->setUniform3f("lightDir", { glm::cos(glfwGetTime() / (2 * glm::pi<float>())),glm::sin(glfwGetTime()/(2*glm::pi<float>())),0.f });
 	float c = (2.f - glm::abs(glm::cos(glfwGetTime() / (2 * glm::pi<double>())))) / 2.f;
 	shader->setUniform3f("lightColor", { c,c,c });

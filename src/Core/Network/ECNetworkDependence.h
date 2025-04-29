@@ -8,6 +8,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/functional/hash.hpp>
 #include <vector>
 #include <queue>
 #include <memory>
@@ -34,5 +35,7 @@ namespace Network
         std::vector<uint8_t> data;
     };
 
+   
     using MessageHandler = std::function<void(const STNetworkMessage&)>;
+    using ResponseHandler = std::function<void(const STNetworkMessage&)>;
 }

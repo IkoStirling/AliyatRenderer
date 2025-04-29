@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include "Core/Network/Network.hpp"
 
 /*
 	职责：
@@ -8,9 +8,13 @@
 		3）更新场景
 		4）转发客户端帧画面至网页端
 */
-
+using namespace Network;
 
 int main()
 {
-		
+	std::cout << "server" << std::endl;
+
+
+
+	return 0;
 }

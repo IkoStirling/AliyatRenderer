@@ -6,23 +6,45 @@
 #include "Core/ResourceManager/AYResourceManager.h"
 
 
+namespace ResourceManager {
 
+	void benchmark_ResourceCount()
+	{
+		{
+			auto x = AYResourceManager::getInstance().loadAsync<AYTexture>("12345");
+		}
+		GetEventSystem()->update();
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+		AYResourceManager::getInstance().printStats();
 
+		AYAsyncTracker::getInstance().update();
+		AYResourceManager::getInstance().printStats();	
+	}
 
+	void benchmark_Tags()
+	{
+		//已经缓存过的资源直接从缓存中获取
+		auto x = AYResourceManager::getInstance().load<AYTexture>("12345");
+		AYResourceManager::getInstance().tagResource("12345", "test");
+		AYResourceManager::getInstance().printTaggedStats("test");
 
+		AYResourceManager::getInstance().unpinResource("12345");
+		AYResourceManager::getInstance().printStats();
+	}
 
-
+	void benchmark_Persistent()
+	{
+		AYResourceManager::getInstance().printStats();
+		auto x = AYResourceManager::getInstance().load<AYTexture>("12345");
+		
+	}
+}
 
 int main()
 {
 	GetEngine().init();
-	GetEngine().start();
-	auto x = AYResourceManager::getInstance().loadAsync<AYTexture>("");
-	GetEventSystem()->update();
-	std::shared_ptr< Event_ResourceLoadAsync<AYTexture>> ptrS(new Event_ResourceLoadAsync<AYTexture>());
-	auto u = ptrS->clone();
-	std::cout << x.get()->test << std::endl;
-
-	getchar();
+	//ResourceManager::benchmark_ResourceCount();
+	//ResourceManager::benchmark_Tags();
+	ResourceManager::benchmark_Persistent();
 	return 0;
 }
