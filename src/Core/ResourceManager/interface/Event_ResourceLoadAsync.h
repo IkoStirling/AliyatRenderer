@@ -1,8 +1,8 @@
 #pragma once
-#include "Core/EventSystem/IAYEvent.h"
-#include "Core/EventSystem/AYEventRegistry.h"
-#include "Core/ResourceManager/STResourceLoadRequest.h"
-#include "Core/SystemResourceType/AYTexture.h"
+#include "IAYEvent.h"
+#include "AYEventRegistry.h"
+#include "STResourceLoadRequest.h"
+#include "AYTexture.h"
 
 template <typename T>
 class Event_ResourceLoadAsync : public IAYEvent

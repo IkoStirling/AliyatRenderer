@@ -1,7 +1,7 @@
 #pragma once
-#include "Core/ResourceManager/IAYResource.h"
-#include "Core/ResourceManager/AYResourceRegistry.h"
-#include "Core/MemoryPool/AYMemoryPool.h"
+#include "IAYResource.h"
+#include "AYResourceRegistry.h"
+#include "AYMemoryPool.h"
 #include <iostream>
 
 

@@ -1,11 +1,11 @@
 ﻿#pragma once
-#include "Core/EventSystem/core_event_system.h"
+#include "core_event_system.h"
 #include "Core/EngineCore/AYEngineCore.h"
 #include "IAYResource.h"
 #include "STResourceLoadRequest.h"
 #include "AYAsyncTracker.h"
-#include "Core/SystemResourceType/AYTexture.h"
-#include "Core/SystemEventType/Event_ResourceLoadAsync.h"
+#include "AYTexture.h"
+#include "Event_ResourceLoadAsync.h"
 #include <memory>
 #include <unordered_map>
 #include <future>
