@@ -1,6 +1,7 @@
 #include "IAYEvent.h"
 #include "AYEventRegistry.h"
 #include "AYEventSystem.h"
+#include "Mod_EventSystem.h"
 
 AYEventRegistry& AYEventRegistry::getInstance()
 {
@@ -36,11 +37,13 @@ bool AYEventRegistry::isRegistered(const std::string& typeName) const
     return _nameToType.find(typeName) != _nameToType.end();
 }
 #include <assert.h>
-void AYEventRegistry::publish(std::shared_ptr<AYEventSystem> system, const std::string& typeName, std::function<void(IAYEvent*)> wrapped)
+void AYEventRegistry::publish(const std::string& typeName, std::function<void(IAYEvent*)> wrapped)
 {
     assert(getInstance().isRegistered(typeName));
 
     auto event = getInstance().create(typeName);
     wrapped(event);
-    system->publish(std::unique_ptr<IAYEvent>(event));
+    auto system = GET_CAST_MODULE(Mod_EventSystem, "EventSystem");
+    if(system)
+        system->publish(std::unique_ptr<IAYEvent>(event));
 }

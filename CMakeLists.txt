@@ -22,13 +22,17 @@ include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/include)
 link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 
 #-------------项目自定义库--------------#
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 add_subdirectory(src/Core/ModuleManager)
+
 add_subdirectory(src/Core/MemoryPool)
+
 add_subdirectory(src/Core/EventSystem)
 add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/Network)
+
+add_subdirectory(src/Core/EngineCore)
 
 
 file(GLOB ASSETS
@@ -46,8 +50,10 @@ file(GLOB_RECURSE SRCS
 
 file(GLOB TPLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib/*")
 
-add_executable(TESTLIBS test.cpp "src/Core/ModuleManager/include/AYModuleRegistry.h" "src/Core/ModuleManager/src/AYModuleRegistry.cpp")
-target_link_libraries(TESTLIBS PRIVATE event_system resource_manager system_event_type module_manager)
+find_package(OpenSSL REQUIRED)
+
+add_executable(TESTLIBS test.cpp)
+target_link_libraries(TESTLIBS PRIVATE engine_core Boost::asio OpenSSL::SSL)
 
 #链接
 #add_executable(BaseWorld main.cpp ${SRCS})

@@ -1,8 +1,7 @@
+#include <iostream>
 #include "AYEventSystem.h"
-#include "AYEventThreadPoolManager.h"
 #include "AYEventToken.h"
 #include "IAYEvent.h"
-#include <iostream>
 
 
 AYEventSystem::AYEventSystem(std::unique_ptr<AYEventThreadPoolManager> in_manager):
@@ -17,6 +16,12 @@ AYEventSystem::~AYEventSystem()
 void AYEventSystem::setEventManager(std::unique_ptr<AYEventThreadPoolManager> in_manager)
 {
 	_eventManager = std::move(in_manager);
+}
+
+void AYEventSystem::init()
+{
+	if (!_eventManager)
+		setEventManager(std::make_unique<AYEventThreadPoolManager>());
 }
 
 void AYEventSystem::update()

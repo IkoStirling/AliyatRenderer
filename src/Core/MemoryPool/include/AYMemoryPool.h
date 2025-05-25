@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <mutex>
+#include "Mod_MemoryPool.h"
 
 #define MAX_SLOT_SIZE 512
 #define SLOT_BASE_SIZE 8
@@ -59,9 +60,11 @@ private:
 	std::mutex _blockMutex;
 };
 
-class AYMemoryPoolProxy
+class AYMemoryPoolProxy : public Mod_MemoryPool
 {
 public:
+	virtual void init() override;
+	virtual void update() override {};
 	static void initMemoryPool();
 	static AYMemoryPool& getMemoryPool(int index);
 
@@ -77,6 +80,9 @@ public:
 	template<typename T>
 	friend void DeleteObject(T* ptr);
 };
+
+REGISTER_MODULE_CLASS("MemoryPool", AYMemoryPoolProxy);
+
 
 template<typename T, typename... Args>
 T* NewObject(Args&&... args)

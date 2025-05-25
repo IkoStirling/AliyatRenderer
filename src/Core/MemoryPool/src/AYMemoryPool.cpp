@@ -126,6 +126,12 @@ Slot* AYMemoryPool::popFreeSlot()
 	}
 }
 
+void AYMemoryPoolProxy::init()
+{
+	for (int i = 0; i < POOL_NUMS; i++)
+		getMemoryPool(i).init((i + 1) * SLOT_BASE_SIZE);
+}
+
 void AYMemoryPoolProxy::initMemoryPool()
 {
 	for (int i = 0; i < POOL_NUMS; i++)

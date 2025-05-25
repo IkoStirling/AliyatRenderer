@@ -18,4 +18,9 @@ add_library(${MODULE_NAME} STATIC
 target_include_directories(${MODULE_NAME} PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME} memory_pool )
+
+# 严格来说接口库是需要方链接，这里相当于直接include了interface目录
+target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}) 
+
+# CMAKE自动去重，不会链接两次
+target_link_libraries(${MODULE_NAME} PUBLIC  memory_pool module_manager) 

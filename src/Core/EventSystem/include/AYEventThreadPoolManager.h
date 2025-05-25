@@ -1,11 +1,12 @@
 #pragma once
-#include "ECEventDependence.h"
-#include "IAYEventSystem.h"
+
 #include <set>
 #include <mutex>
 #include <queue>
+#include <functional>
 #include <unordered_map>
 #include <list>
+#include "ECEventDependence.h"
 
 class IAYEvent;
 class AYEventToken;
@@ -18,25 +19,27 @@ class AYThreadPoolBase;
 		2）单帧事件合并       （基于事件提供的merge方法）
 		3）无视帧循环触发     （直接本地线程计算/提交到单例线程计算）
 */
-class AYEventThreadPoolManager : public IAYEventSystem
+class AYEventThreadPoolManager
 {
+public:
+	using EventHandler = std::function<void(const IAYEvent&)>;
 public:
 	AYEventThreadPoolManager();
 	~AYEventThreadPoolManager();
 
 	//将事件添加进待处理集合中，等待统一执行
-	void publish(std::unique_ptr<IAYEvent> in_event) override;
+	void publish(std::unique_ptr<IAYEvent> in_event);
 
 	//统一执行所有事件
-	void update() override;
+	void update();
 
 	//void executeAsync();
-	void execute(std::shared_ptr<const IAYEvent> in_event) override;
-	void executeJoin(std::unique_ptr<IAYEvent> in_event)override;
+	void execute(std::shared_ptr<const IAYEvent> in_event);
+	void executeJoin(std::unique_ptr<IAYEvent> in_event);
 
 
-	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback) override;
-	void unsubscribe(const std::string& event_name, EventHandler event_callback) override;
+	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback);
+	void unsubscribe(const std::string& event_name, EventHandler event_callback);
 
 protected:
 	//对待处理事件集合进行优先级队列处理

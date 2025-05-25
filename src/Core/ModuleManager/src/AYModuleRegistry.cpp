@@ -7,11 +7,14 @@ AYModuleManager& AYModuleManager::getInstance()
 	return mInstance;
 }
 
-void AYModuleManager::registerModule(const std::string& name, std::shared_ptr<IAYModule> module)
+bool AYModuleManager::registerModule(const std::string& name, std::shared_ptr<IAYModule> module)
 {
 	std::unique_lock<std::shared_mutex> lock(_moduleMutex);
-	if(module)
+	if (module)
+	{
 		_moduleMap[name] = std::move(module);
+		return true;
+	}
 }
 
 std::shared_ptr<IAYModule> AYModuleManager::getModule(const std::string& name) const

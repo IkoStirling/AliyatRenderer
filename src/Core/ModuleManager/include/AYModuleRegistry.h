@@ -5,6 +5,11 @@
 #include <shared_mutex>
 #include <mutex>
 
+#define GET_MODULE(MODULE_NAME) \
+	AYModuleManager::getInstance().getModule(MODULE_NAME)
+
+#define GET_CAST_MODULE(CAST_TYPE, MODULE_NAME) \
+	std::dynamic_pointer_cast<CAST_TYPE>(AYModuleManager::getInstance().getModule(MODULE_NAME))
 
 class IAYModule;
 
@@ -13,7 +18,7 @@ class AYModuleManager
 public:
 	static AYModuleManager& getInstance();
 
-	void registerModule(const std::string& name, std::shared_ptr<IAYModule> module);
+	bool registerModule(const std::string& name, std::shared_ptr<IAYModule> module);
 
 	std::shared_ptr<IAYModule> getModule(const std::string& name) const;
 

@@ -1,8 +1,7 @@
 #pragma once
 #include <memory>
+#include "ECRegisterModule.h"
 
-#define GetEngine() AYEngineCore::getInstance()
-#define GetEventSystem() AYEngineCore::getInstance().getEventSystem()
 
 class AYEventSystem;
 
@@ -16,9 +15,9 @@ class AYEventSystem;
 class AYEngineCore
 {
 private:
-	std::shared_ptr<AYEventSystem> _eventSystem;
+
 public:
-	std::shared_ptr<AYEventSystem> getEventSystem();
+
 public:
 	static AYEngineCore& getInstance();
 
@@ -27,7 +26,7 @@ public:
 	bool update();
 
 private:
-	AYEngineCore();
+	AYEngineCore() = default;
 	~AYEngineCore();
 	AYEngineCore(const AYEngineCore&) = delete;
 	AYEngineCore(AYEngineCore&&) = delete;

@@ -1,7 +1,11 @@
 #include "AYResourceManager.h"
 #include "AYResourceRegistry.h"
-#include "boost/json.hpp"
+#include <nlohmann/json.hpp>
 #include <fstream>
+
+using json = nlohmann::json;
+
+
 AYResourceManager& AYResourceManager::getInstance()
 {
     static AYResourceManager mInstance;
@@ -82,7 +86,15 @@ void AYResourceManager::trim()
 
 void AYResourceManager::update()
 {
+    AYAsyncTracker::getInstance().update();
+}
 
+void AYResourceManager::init()
+{
+    _listenEvents();
+    loadPersistentCache("assets/core/config/persistentResources.json");
+    std::cout << "AYResourceManager::init()\n";
+    //_preloadFromConfig("assets/core/preloadResource.json");
 }
 
 std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::string& filepath)
@@ -156,7 +168,7 @@ void AYResourceManager::printTaggedStats(const Tag& tag)
 
 void AYResourceManager::savePersistentCache(const std::string& savePath)
 {
-    boost::json::object j;
+    json j;
 
     for (const auto& [path, entry] : _strongCache) {
         j[path] = {
@@ -168,7 +180,7 @@ void AYResourceManager::savePersistentCache(const std::string& savePath)
     }
 
     std::ofstream out(savePath);
-    out << boost::json::serialize(j);
+    out << j.dump(4);
 }
 
 void AYResourceManager::loadPersistentCache(const std::string& loadPath)
@@ -176,13 +188,12 @@ void AYResourceManager::loadPersistentCache(const std::string& loadPath)
     std::ifstream in(loadPath);
     if (!in) return;
 
-    boost::json::value v;
-    in >> v;
-    boost::json::object j = v.as_object();
+    json j;
+    in >> j;
 
 
-    for (auto& [path, val] : j) {
-        std::string typeName = std::string(val.at("type").as_string());
+    for (auto& [path, val] : j.items()) {
+        std::string typeName = val.at("type").get<std::string>();
         auto resource = AYResourceRegistry::getInstance().create(typeName);
         if (resource && resource->load(path)) {
             size_t size = resource->sizeInBytes();
@@ -202,15 +213,14 @@ void AYResourceManager::_preloadFromConfig(const std::string& configPath)
     std::ifstream in(configPath);
     if (!in) return;
 
-    boost::json::value v;
-    in >> v;
-    boost::json::object j = v.as_object();
+    json j;
+    in >> j;
 
-    if (j.contains("texture"))
+    if (j.contains(AYTexture::staticGetType()))
     {
-        for (const auto& tex : j["texture"].as_array())
+        for (const auto& tex : j[AYTexture::staticGetType()])
         {
-            loadAsync<AYTexture>(std::string(tex.as_string()));
+            loadAsync<AYTexture>(tex.get<std::string>());
         }
     }
 
@@ -227,9 +237,7 @@ void AYResourceManager::_preloadFromConfig(const std::string& configPath)
 
 AYResourceManager::AYResourceManager()
 {
-    _listenEvents();
-    loadPersistentCache("assets/core/config/persistentResources.json");
-    //_preloadFromConfig("assets/core/preloadResource.json");
+
 }
 
 AYResourceManager::~AYResourceManager()

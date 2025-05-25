@@ -1,14 +1,18 @@
 ﻿#pragma once
-#include "core_event_system.h"
-#include "Core/EngineCore/AYEngineCore.h"
-#include "IAYResource.h"
-#include "STResourceLoadRequest.h"
-#include "AYAsyncTracker.h"
-#include "AYTexture.h"
-#include "Event_ResourceLoadAsync.h"
 #include <memory>
 #include <unordered_map>
 #include <future>
+#include "core_event_system.h"
+#include "IAYResource.h"
+#include "STResourceLoadRequest.h"
+
+#include "AYEventRegistry.h"
+#include "AYAsyncTracker.h"
+#include "AYTexture.h"
+
+#include "Mod_ResourceManager.h"
+#include "Event_ResourceLoadAsync.h"
+
 
 template <typename T>
 class AYResourceHandle;
@@ -127,6 +131,10 @@ public:
     */
      void update();
 
+     /*
+        初始化
+     */
+     void init();
 
      /*
         手动注册要纳入管理的资源类型（继承自IAYResource）
@@ -269,7 +277,7 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
         std::chrono::seconds(10)
     );
     // 发布事件
-    AYEventRegistry::publish(GetEventSystem(), Event_ResourceLoadAsync<T>::staticGetType(), [&request](IAYEvent* event) {
+    AYEventRegistry::publish(Event_ResourceLoadAsync<T>::staticGetType(), [&request](IAYEvent* event) {
         auto eI = static_cast<Event_ResourceLoadAsync<T>*>(event);
         eI->mRequest = request;
         });
@@ -313,8 +321,24 @@ inline void AYResourceManager::registerResourceType()
             { }
         }
     };
-    auto token = SUBSCRIBE_EVENT_LAMBDA(GetEventSystem(), Event_ResourceLoadAsync<T>::staticGetType(), loader);
-    _tokens.push_back(std::unique_ptr<AYEventToken>(token));
+
+    auto system = GET_CAST_MODULE(Mod_EventSystem, "EventSystem");
+    if (system)
+    {
+        auto token = system->subscribe(Event_ResourceLoadAsync<T>::staticGetType(), loader);
+        _tokens.push_back(std::unique_ptr<AYEventToken>(token));
+    }
 }
 
 
+class AYResourceManagerAdapter : public Mod_ResourceManager
+{
+public:
+    void init() override { AYResourceManager::getInstance().init(); }
+    void update() override { AYResourceManager::getInstance().update(); }
+
+public:
+    static AYResourceManager& getInstance() { return AYResourceManager::getInstance(); }
+};
+
+REGISTER_MODULE_CLASS("ResourceManager", AYResourceManagerAdapter)

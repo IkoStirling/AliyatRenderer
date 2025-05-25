@@ -8,6 +8,11 @@
 class IAYEvent;
 class AYEventSystem;
 
+/*
+    该类作用：
+        注册所有事件类型
+        通过名称发布事件
+*/
 class AYEventRegistry 
 {
 public:
@@ -24,7 +29,7 @@ public:
 
     bool isRegistered(const std::string& typeName) const;
 
-    static void publish(std::shared_ptr<AYEventSystem> system, const std::string& typeName, std::function<void(IAYEvent*)> wrapped);
+    static void publish(const std::string& typeName, std::function<void(IAYEvent*)> wrapped);
 
 private:
     std::unordered_map<std::type_index, std::function<IAYEvent*()>> _creators;
