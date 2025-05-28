@@ -29,10 +29,17 @@ add_subdirectory(src/Core/ModuleManager)
 add_subdirectory(src/Core/MemoryPool)
 
 add_subdirectory(src/Core/EventSystem)
+add_subdirectory(src/Core/TimerManager)
 add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/Network)
 
 add_subdirectory(src/Core/EngineCore)
+
+
+add_subdirectory(utils)
+
+
+
 
 
 file(GLOB ASSETS
@@ -50,10 +57,10 @@ file(GLOB_RECURSE SRCS
 
 file(GLOB TPLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib/*")
 
-find_package(OpenSSL REQUIRED)
 
-add_executable(TESTLIBS test.cpp)
-target_link_libraries(TESTLIBS PRIVATE engine_core Boost::asio OpenSSL::SSL)
+
+add_executable(TESTLIBS test.cpp )
+target_link_libraries(TESTLIBS PRIVATE engine_core timer_manager)
 
 #Á´½Ó
 #add_executable(BaseWorld main.cpp ${SRCS})

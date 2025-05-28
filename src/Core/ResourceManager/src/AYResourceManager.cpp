@@ -84,9 +84,9 @@ void AYResourceManager::trim()
     }
 }
 
-void AYResourceManager::update()
+void AYResourceManager::update(float delta_time)
 {
-    AYAsyncTracker::getInstance().update();
+    AYAsyncTracker::getInstance().update(delta_time);
 }
 
 void AYResourceManager::init()

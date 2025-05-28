@@ -25,7 +25,7 @@ public:
             });
     }
 
-    void update() {
+    void update(float delta_time) {
         auto now = std::chrono::steady_clock::now();
         auto it = _tasks.begin();
 

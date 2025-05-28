@@ -28,7 +28,7 @@ public:
 
 	void allModuleInit();
 
-	void allModuleUpdate();
+	void allModuleUpdate(float delta_time);
 private:
 	AYModuleManager() = default;
 	AYModuleManager(const AYModuleManager&) = delete;

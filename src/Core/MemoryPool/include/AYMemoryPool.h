@@ -64,7 +64,7 @@ class AYMemoryPoolProxy : public Mod_MemoryPool
 {
 public:
 	virtual void init() override;
-	virtual void update() override {};
+	virtual void update(float delta_time) override {};
 	static void initMemoryPool();
 	static AYMemoryPool& getMemoryPool(int index);
 

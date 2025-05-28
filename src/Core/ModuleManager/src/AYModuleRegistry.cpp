@@ -38,6 +38,9 @@ bool AYModuleManager::unregisterModule(const std::string& name)
 
 void AYModuleManager::allModuleInit()
 {
+	if (hasModule("EventSystem"))
+		_moduleMap["EventSystem"]->init();
+
 	std::vector<std::shared_ptr<IAYModule>> modules;
 	{
 		std::shared_lock<std::shared_mutex> lock(_moduleMutex);
@@ -51,13 +54,13 @@ void AYModuleManager::allModuleInit()
 	}
 }
 
-void AYModuleManager::allModuleUpdate()
+void AYModuleManager::allModuleUpdate(float delta_time)
 {
 	std::shared_lock<std::shared_mutex> lock(_moduleMutex);
 	for (auto it = _moduleMap.begin(); it != _moduleMap.end(); it++)
 	{
 		if (it->second)
-			it->second->update();
+			it->second->update(delta_time);
 	}
 }
 

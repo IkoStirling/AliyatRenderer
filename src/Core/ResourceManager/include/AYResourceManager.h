@@ -129,7 +129,7 @@ public:
     /*
         TICK
     */
-     void update();
+     void update(float delta_time);
 
      /*
         初始化
@@ -335,7 +335,7 @@ class AYResourceManagerAdapter : public Mod_ResourceManager
 {
 public:
     void init() override { AYResourceManager::getInstance().init(); }
-    void update() override { AYResourceManager::getInstance().update(); }
+    void update(float delta_time) override { AYResourceManager::getInstance().update(delta_time); }
 
 public:
     static AYResourceManager& getInstance() { return AYResourceManager::getInstance(); }

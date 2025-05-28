@@ -30,7 +30,7 @@ public:
 	void setEventManager(std::unique_ptr<AYEventThreadPoolManager> in_manager);
 
 	void init() override;
-	void update() override;
+	void update(float delta_time) override;
 	void publish(std::unique_ptr<IAYEvent> in_event) override;
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback) override;
 	void unsubscribe(const std::string& event_name, EventHandler event_callback) override;

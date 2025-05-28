@@ -24,7 +24,7 @@ void AYEventSystem::init()
 		setEventManager(std::make_unique<AYEventThreadPoolManager>());
 }
 
-void AYEventSystem::update()
+void AYEventSystem::update(float delta_time)
 {
 	_eventManager->update();
 }
