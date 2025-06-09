@@ -88,7 +88,12 @@ bool AYEngineCore::update()
 
 void AYEngineCore::start()
 {
+
+#ifdef _WIN32
     timeBeginPeriod(1);
+#endif // _WIN32
+
+    
 
     using clock = std::chrono::steady_clock; // 改用steady_clock
     using sec = std::chrono::duration<float>;
@@ -101,8 +106,9 @@ void AYEngineCore::start()
     // 精确计算目标间隔时间
     const auto targetFrameDuration = ms(static_cast<int>(1000.0f / _targetFPS));
 
-
+#ifdef _WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
+#endif // _WIN32
 
     while (!_shouldClosed)
     {
@@ -122,8 +128,9 @@ void AYEngineCore::start()
         frameCount++;
         _updateFPSStats(frameCount, lastFpsUpdate);
     }
-
+#ifdef _WIN32
     timeEndPeriod(1);
+#endif // _WIN32
 }
 
 

@@ -58,7 +58,7 @@ private:
 	float _targetFPS = 30.f;          // 目标帧率
 	float _invTargetFPS = 1.f / _targetFPS;			//帧率倒数，用作性能优化
 	float _currentFPS = 0.0f;          // 实时帧率统计
-	float _timeScale = 0.02f;  // 时间缩放因子（0=暂停，0.5=慢放，2.0=加速）
+	float _timeScale = 1.f;  // 时间缩放因子（0=暂停，0.5=慢放，2.0=加速）
 	float _unscaledDeltaTime = 0.0f;  // 未缩放的真实帧时间
 
 	std::atomic<float> _accumulatedTime{ 0.0f };  // 用于时间缩放累积

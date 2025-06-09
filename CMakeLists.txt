@@ -60,7 +60,7 @@ file(GLOB TPLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib/*")
 
 
 add_executable(TESTLIBS test.cpp )
-target_link_libraries(TESTLIBS PRIVATE engine_core timer_manager)
+target_link_libraries(TESTLIBS PRIVATE engine_core timer_manager network)
 
 #Á´½Ó
 #add_executable(BaseWorld main.cpp ${SRCS})

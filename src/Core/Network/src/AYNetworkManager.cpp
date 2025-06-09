@@ -1,5 +1,5 @@
 #include "AYNetworkManager.h"
-#include "AYTcpSession.h"
+#include "AYProtocolRouter.h"
 
 namespace Network
 {
@@ -9,54 +9,34 @@ namespace Network
 		return mInstance;
 	}
 
-	void AYNetworkManager::startTcpServer(port_id port, int thread_num)
+	void AYNetworkManager::start()
 	{
-		//ep代表对端
-		tcp::endpoint ep(tcp::v4(), port);
-		_acceptor.open(ep.protocol());
-		_acceptor.set_option(tcp::acceptor::reuse_address(true));
-		_acceptor.bind(ep);
-		_acceptor.listen();
-
-		_startTcpAccept();
-
 		for (int i = 0; i < thread_num; ++i)
-			_netThreads.emplace_back([this]() { _io_context.run(); });
+			_netThreads.emplace_back([this]() {
+			std::cout << "io_context begin \n";
+			_io_context.run();
+			std::cout << "io_context end \n";
+				});
 	}
 
-	void AYNetworkManager::_startTcpAccept()
+	void AYNetworkManager::startServer(const std::string& protocol, port_id port)
 	{
-		auto newSession = AYTcpSession::create(_io_context);
-
-		_acceptor.async_accept(newSession->getSocket(),
-			[this, newSession](const boost::system::error_code& error) {
-				if (!error)
-				{
-					registerSession(newSession);
-					newSession->start([this](const STNetworkMessage& msg) {
-						_handleMessage(msg);
-						});
-				}
-				_startTcpAccept();  // 等待下一个
-			});
+		_router->startServer(protocol, port);
 	}
+
 
 	void AYNetworkManager::stop()
 	{
+		std::cout << "AYNetworkManager stop \n";
+		_workGuard.reset();
 		_io_context.stop();
 		for (auto& t : _netThreads)
 			t.join();
 	}
 
-	void AYNetworkManager::registerSession(base_pointer session)
-	{
-		std::lock_guard<std::mutex> lock(_sessionMutex);
-		_sessions[session->getSessionID()] = boost::static_pointer_cast<IAYBaseSession>(session);
-	}
-
 	AYNetworkManager::AYNetworkManager():
-		_acceptor(_io_context)
+		_workGuard(boost::asio::make_work_guard(_io_context))
 	{
-
+		_router = std::make_unique<AYProtocolRouter>(_io_context);
 	}
 }

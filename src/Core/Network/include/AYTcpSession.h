@@ -2,58 +2,79 @@
 #include "IAYBaseSession.h"
 
 
-namespace Network {
-
-#define MAX_QUEUE_SIZE 1024
+namespace Network 
+{
+	class AYTcpSession;
+	class AYNetworkHandler
+	{
+	public:
+		void onPacketReceived(AYTcpSession* session, const AYPacket& packet) {
+			std::string rstr(packet.payload.begin(), packet.payload.end());
+			std::cout << rstr << std::endl;
+		}
+		void onConnectError(const std::string& error_msg) { std::cout << error_msg; }
+		void onSessionClosed(AYTcpSession* session)	{}
+	};
+	class AYTcpPacketAssembler;
 
 	class AYTcpSession : public IAYBaseSession, public boost::enable_shared_from_this<AYTcpSession>
 	{
 	public:
 		using pointer = boost::shared_ptr<AYTcpSession>;
 	private:
-#pragma pack(push,1)
-		struct STTcpHeader
-		{
-			boost::uuids::uuid messageID;
-			uint32_t messageType;
-			uint32_t bodyLength;
-		};
-#pragma pack(pop)
+		static constexpr int RETRY_TIMES = 3;
+		static constexpr size_t RECV_BUFFER_SIZE = 8192;
+
 	public:
-		static pointer create(asio::io_context& io_context);
-		tcp::socket& getSocket();
-		boost::uuids::uuid getSessionID() const override;
-		void start(MessageHandler handler) override;
-		void send(AYMessageType type, std::vector<uint8_t>& data, ResponseHandler onResponse = nullptr) override;
+		static pointer create(asio::io_context& io_context, AYNetworkHandler& handler);
+
+		AYTcpSession(boost::asio::io_context& io_context, AYNetworkHandler& handler);
+
+		void start() override;
 		void close() override;
-		std::string remoteAddress() const override;
+		void send(const AYPacket& packet) override;
+
+		void connect(const std::string& ip_str, port_id port) {
+			boost::system::error_code ec;
+			auto ip = asio::ip::make_address(ip_str, ec);
+
+			if (ec) {
+				_handler.onConnectError("Invalid IP format: " + ec.message());
+				return;
+			}
+
+			asio::ip::tcp::endpoint endpoint(ip, port);
+
+			_socket.async_connect(endpoint,
+				[this, self = shared_from_this()](const boost::system::error_code& ec) {
+					if (!ec) {
+						std::cout << "目标服务器连接成功\r\n";
+						this->start(); // 连接成功后启动读写
+					}
+					else {
+						_handler.onConnectError(ec.message()); // 需要添加错误回调
+					}
+				}
+			);
+		}
+
+		boost::asio::ip::tcp::socket& getSocket();
+
 	private:
-		explicit AYTcpSession(asio::io_context& io_context);
-		void _doReadHeader();
-		void _doReadBody();
-		//void _doRead(); 因为拆包处理，单一doRead函数分为了处理消息头和处理消息体
+		void _startRead();
 		void _doWrite();
-		std::vector<uint8_t> _serializeMessage(const STNetworkMessage& msg);
-		STTcpHeader _deserializeHeader(const uint8_t* data);
-		void _startTimeout(int second = 30);
-		void _startIdleTimeout(int second = 300);
-		void _resetIdleTimeout();
+
 	private:
-		tcp::socket _socket;
-		STTcpHeader _headerBuffer;
-		asio::streambuf _streamBuffer;
-		MessageHandler _handler;
-		std::deque<std::vector<uint8_t>> _writeQueue;
-		std::mutex _writeMutex;
-		bool _isWriting;
+		boost::asio::ip::tcp::socket _socket;
+		AYNetworkHandler& _handler;	//callback
 
-		std::unordered_map<boost::uuids::uuid, ResponseHandler, boost::hash<boost::uuids::uuid>> _responseCallbacks;
-		std::mutex _callbackMutex;
+		std::array<uint8_t, RECV_BUFFER_SIZE> _receiveBuffer;
+		
+		std::unique_ptr<AYTcpPacketAssembler> _assembler;
 
-		asio::steady_timer _timeoutTimer; //操作超时计时器
-		asio::steady_timer _idleTimer; //全局静默计时器
-		int _idleSeconds;
+		std::queue<ByteBuffer> _sendQueue;
+		std::mutex _sendMutex;
 
-		boost::uuids::uuid _sessionID;
+		bool _isWriting = false;
 	};
 }
