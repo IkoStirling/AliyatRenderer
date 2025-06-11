@@ -1,5 +1,6 @@
 #include "AYNetworkManager.h"
 #include "AYProtocolRouter.h"
+#include "IAYBaseServer.h"
 
 namespace Network
 {
@@ -13,10 +14,8 @@ namespace Network
 	{
 		for (int i = 0; i < thread_num; ++i)
 			_netThreads.emplace_back([this]() {
-			std::cout << "io_context begin \n";
-			_io_context.run();
-			std::cout << "io_context end \n";
-				});
+				_io_context.run();
+			});
 	}
 
 	void AYNetworkManager::startServer(const std::string& protocol, port_id port)
@@ -24,6 +23,12 @@ namespace Network
 		_router->startServer(protocol, port);
 	}
 
+	void AYNetworkManager::broadcast(const std::string& protocol, const AYPacket& packet)
+	{
+		auto server = _router->getServer(protocol);
+		if (server)
+			server->broadcast(packet);
+	}
 
 	void AYNetworkManager::stop()
 	{

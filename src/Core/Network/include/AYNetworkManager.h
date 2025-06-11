@@ -20,6 +20,8 @@ namespace Network
 
 		void startServer(const std::string& protocol, port_id port);
 
+		void broadcast(const std::string& protocol, const AYPacket& packet);
+
 		asio::io_context _io_context;
 	private:
 		std::unique_ptr<AYProtocolRouter> _router;

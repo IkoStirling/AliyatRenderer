@@ -15,8 +15,18 @@
 #include <functional>
 #include <mutex>
 
+
+
 namespace Network
 {
+    inline void printBytes(const void* data, size_t len) {
+        const uint8_t* bytes = (const uint8_t*)data;
+        for (size_t i = 0; i < len; i++) {
+            printf("%02X ", bytes[i]);
+        }
+        printf("\n");
+    }
+
 	using boost::asio::ip::tcp;
 	namespace asio = boost::asio;
 
@@ -30,6 +40,19 @@ namespace Network
         uint16_t packetId;
         uint16_t payloadSize;
         uint32_t checksum;
+    public:
+        void hostToNetwork()
+        {
+            packetId = htons(packetId);
+            payloadSize = htons(payloadSize);
+            checksum = htonl(checksum);
+        }
+        void networkToHost()
+        {
+            packetId = ntohs(packetId);
+            payloadSize = ntohs(payloadSize);
+            checksum = ntohl(checksum);
+        }
     };
 #pragma pack(pop)
 
@@ -147,6 +170,16 @@ namespace Network
             return *this;
         }
 
+        // 模板特化
+        template<>
+        void write<STPacketHeader>(const STPacketHeader& header)
+        {
+            write(header.packetId);
+            write(header.payloadSize);
+            write(header.checksum);
+        }
+
+
         // 原始块操作
         void append(const uint8_t* data, size_t size) {
             ensureCapacity(_dataSize + size);
@@ -213,6 +246,7 @@ namespace Network
                 _dataBuffer.resize(std::max(requiredCapacity, _dataBuffer.size() * 2));
             }
         }
+
     };
 
 

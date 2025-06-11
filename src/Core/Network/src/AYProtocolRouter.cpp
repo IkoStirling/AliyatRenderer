@@ -29,3 +29,8 @@ void Network::AYProtocolRouter::startServer(const std::string& protocol, port_id
 
 	}
 }
+
+std::shared_ptr<Network::IAYBaseServer>  Network::AYProtocolRouter::getServer(const std::string& protocol)
+{
+	return _servers[protocol];
+}

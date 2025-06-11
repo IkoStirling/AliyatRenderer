@@ -1,5 +1,6 @@
 #include "AYTcpSession.h"
 #include "AYTcpPacketAssembler.h"
+#include "AYNetworkHandler.h"
 
 namespace Network {
 
@@ -44,9 +45,7 @@ namespace Network {
 	{
 		ByteBuffer buffer;
 		// 写入包头
-		buffer << packet.header.packetId;
-		buffer << packet.header.payloadSize;
-		buffer << packet.header.checksum;
+		buffer << packet.header;
 
 		// 写入有效载荷
 		if (!packet.payload.empty()) {
@@ -60,6 +59,30 @@ namespace Network {
 
 		if (!_isWriting)
 			_doWrite();
+	}
+
+	void AYTcpSession::connect(const std::string& ip_str, port_id port) {
+		boost::system::error_code ec;
+		auto ip = asio::ip::make_address(ip_str, ec);
+
+		if (ec) {
+			_handler.onConnectError("Invalid IP format: " + ec.message());
+			return;
+		}
+
+		asio::ip::tcp::endpoint endpoint(ip, port);
+
+		_socket.async_connect(endpoint,
+			[this, self = shared_from_this()](const boost::system::error_code& ec) {
+				if (!ec) {
+					std::cout << "目标服务器连接成功\r\n";
+					this->start(); // 连接成功后启动读写
+				}
+				else {
+					_handler.onConnectError(ec.message()); // 需要添加错误回调
+				}
+			}
+		);
 	}
 
 	tcp::socket& AYTcpSession::getSocket()

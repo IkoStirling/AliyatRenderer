@@ -30,6 +30,6 @@ namespace Network
 		size_t _processedPos = 0;
 		bool _inHeader = true;
 
-		
+		STPacketHeader _headerBuffer;
 	};
 }

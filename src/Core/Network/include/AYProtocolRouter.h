@@ -13,6 +13,8 @@ namespace Network
 
 		void startServer(const std::string& protocol, port_id port);
 
+		std::shared_ptr<IAYBaseServer> getServer(const std::string& protocol);
+
 	private:
 		asio::io_context& _io_context;
 		std::unordered_map<std::string, std::shared_ptr<IAYBaseServer>> _servers;

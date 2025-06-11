@@ -5,16 +5,8 @@
 namespace Network 
 {
 	class AYTcpSession;
-	class AYNetworkHandler
-	{
-	public:
-		void onPacketReceived(AYTcpSession* session, const AYPacket& packet) {
-			std::string rstr(packet.payload.begin(), packet.payload.end());
-			std::cout << rstr << std::endl;
-		}
-		void onConnectError(const std::string& error_msg) { std::cout << error_msg; }
-		void onSessionClosed(AYTcpSession* session)	{}
-	};
+	class AYNetworkHandler;
+
 	class AYTcpPacketAssembler;
 
 	class AYTcpSession : public IAYBaseSession, public boost::enable_shared_from_this<AYTcpSession>
@@ -34,29 +26,7 @@ namespace Network
 		void close() override;
 		void send(const AYPacket& packet) override;
 
-		void connect(const std::string& ip_str, port_id port) {
-			boost::system::error_code ec;
-			auto ip = asio::ip::make_address(ip_str, ec);
-
-			if (ec) {
-				_handler.onConnectError("Invalid IP format: " + ec.message());
-				return;
-			}
-
-			asio::ip::tcp::endpoint endpoint(ip, port);
-
-			_socket.async_connect(endpoint,
-				[this, self = shared_from_this()](const boost::system::error_code& ec) {
-					if (!ec) {
-						std::cout << "目标服务器连接成功\r\n";
-						this->start(); // 连接成功后启动读写
-					}
-					else {
-						_handler.onConnectError(ec.message()); // 需要添加错误回调
-					}
-				}
-			);
-		}
+		void connect(const std::string& ip_str, port_id port);
 
 		boost::asio::ip::tcp::socket& getSocket();
 
