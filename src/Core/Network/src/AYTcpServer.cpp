@@ -2,7 +2,7 @@
 #include "AYTcpSession.h"
 #include "AYNetworkHandler.h"
 
-Network::AYTcpServer::AYTcpServer(asio::io_context& io_context):
+Network::AYTcpServer::AYTcpServer(asio::io_context& io_context) :
 	IAYBaseServer(io_context),
 	_acceptor(io_context)
 {
@@ -58,8 +58,8 @@ void Network::AYTcpServer::_doAccept()
 void Network::AYTcpServer::broadcast(const AYPacket& packet)
 {
 	for (auto& session : _sessions) {
-		if(session)
-			session->send(packet); 
+		if (session)
+			session->send(packet);
 	}
 }
 

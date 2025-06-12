@@ -9,7 +9,7 @@ namespace Network {
 		return pointer(new AYTcpSession(io_context, handler));
 	}
 
-	AYTcpSession::AYTcpSession(boost::asio::io_context& io_context, AYNetworkHandler& handler):
+	AYTcpSession::AYTcpSession(boost::asio::io_context& io_context, AYNetworkHandler& handler) :
 		_socket(io_context),
 		_handler(handler)
 	{

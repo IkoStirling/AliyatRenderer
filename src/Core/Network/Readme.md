@@ -11,7 +11,7 @@
 
 	消息类型：手动管理读取消息长度+asio::async_xxx_some
 
-2025.06.03 更新：
+更新(1)：
 
 	模块主类： AYNetworkManager
 	协议路由： AYProtocolRouter -> TCP / UDP(KCP)
@@ -33,3 +33,12 @@
 	安全处理：
 		AYEncryption			端到端加密	发送前/接收后
 		AYCheatDetection		异常行为分析	接收→分析
+
+更新(2)：
+	
+	目前仅实现TCP通讯，包协议，在没有序列化数据的配合下难以继续开发
+	
+	数据序列化AYPacketSerializer可以取消，
+	转换为二进制由其他模块处理，网络模块仅处理数据收发
+
+	session管理需要从server中移动到networkManager中

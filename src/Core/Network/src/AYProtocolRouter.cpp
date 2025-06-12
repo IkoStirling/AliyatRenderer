@@ -1,7 +1,7 @@
 #include "AYProtocolRouter.h"
 #include "AYTcpServer.h"
 
-Network::AYProtocolRouter::AYProtocolRouter(asio::io_context& io_context):
+Network::AYProtocolRouter::AYProtocolRouter(asio::io_context& io_context) :
 	_io_context(io_context)
 {
 

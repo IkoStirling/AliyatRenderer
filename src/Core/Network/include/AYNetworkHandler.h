@@ -4,7 +4,7 @@ namespace Network {
 	class AYNetworkHandler
 	{
 	public:
-		AYNetworkHandler(AYTcpServer* server):
+		AYNetworkHandler(AYTcpServer* server) :
 			_server(server)
 		{
 

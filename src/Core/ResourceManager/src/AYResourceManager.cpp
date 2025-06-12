@@ -242,7 +242,7 @@ AYResourceManager::AYResourceManager()
 
 AYResourceManager::~AYResourceManager()
 {
-    savePersistentCache("assets/core/config/persistentResources.json");
+    //savePersistentCache("assets/core/config/persistentResources.json");
 }
 
 void AYResourceManager::_cleanupResources()

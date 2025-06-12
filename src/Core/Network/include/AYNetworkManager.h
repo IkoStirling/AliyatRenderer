@@ -19,6 +19,8 @@ namespace Network
 		void stop();
 
 		void startServer(const std::string& protocol, port_id port);
+		void startClient(const std::string& protocol, const std::string& ip_str, port_id port);
+
 
 		void broadcast(const std::string& protocol, const AYPacket& packet);
 
@@ -26,7 +28,7 @@ namespace Network
 	private:
 		std::unique_ptr<AYProtocolRouter> _router;
 
-	//Common ----------------------------------------------------------------
+		//Common ----------------------------------------------------------------
 	public:
 
 	private:

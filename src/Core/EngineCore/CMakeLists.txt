@@ -12,4 +12,6 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	event_system
 	resource_manager
 	memory_pool
+	network
+	renderer
 )

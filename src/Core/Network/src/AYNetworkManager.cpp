@@ -14,8 +14,8 @@ namespace Network
 	{
 		for (int i = 0; i < thread_num; ++i)
 			_netThreads.emplace_back([this]() {
-				_io_context.run();
-			});
+			_io_context.run();
+				});
 	}
 
 	void AYNetworkManager::startServer(const std::string& protocol, port_id port)
@@ -39,7 +39,7 @@ namespace Network
 			t.join();
 	}
 
-	AYNetworkManager::AYNetworkManager():
+	AYNetworkManager::AYNetworkManager() :
 		_workGuard(boost::asio::make_work_guard(_io_context))
 	{
 		_router = std::make_unique<AYProtocolRouter>(_io_context);

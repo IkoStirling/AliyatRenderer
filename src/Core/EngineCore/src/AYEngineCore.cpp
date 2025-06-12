@@ -74,7 +74,6 @@ bool AYEngineCore::update()
         _accumulatedTime -= delta;
 
         {
-            std::cout << "update once\r\n";
             /*
                 请在将来将渲染模块的更新单独拎出来，时间变慢但是渲染不能变成ppt
                  
@@ -133,6 +132,10 @@ void AYEngineCore::start()
 #endif // _WIN32
 }
 
+void AYEngineCore::close()
+{
+    _shouldClosed = true;
+}
 
 void AYEngineCore::_regulateFrameRate(std::chrono::high_resolution_clock::time_point frameStartTime)
 {

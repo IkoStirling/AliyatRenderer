@@ -25,6 +25,7 @@ public:
 	void init();
 	void start();
 	bool update();
+	void close();
 
 public:
 	void setTargetFPS(float fps);

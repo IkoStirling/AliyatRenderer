@@ -31,6 +31,8 @@ add_subdirectory(src/Core/MemoryPool)
 add_subdirectory(src/Core/EventSystem)
 add_subdirectory(src/Core/TimerManager)
 add_subdirectory(src/Core/ResourceManager)
+add_subdirectory(src/Core/Renderer)
+
 add_subdirectory(src/Core/Network)
 
 add_subdirectory(src/Core/EngineCore)
@@ -51,7 +53,7 @@ file(GLOB ASSETS
 file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 
 file(GLOB_RECURSE SRCS
-	"src/core/*.cpp"
+	"src/unused/*.cpp"
 	"src/*.c"
 	)
 
@@ -60,7 +62,7 @@ file(GLOB TPLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib/*")
 
 
 add_executable(TESTLIBS test.cpp )
-target_link_libraries(TESTLIBS PRIVATE engine_core timer_manager network)
+target_link_libraries(TESTLIBS PRIVATE engine_core )
 
 #Á´½Ó
 #add_executable(BaseWorld main.cpp ${SRCS})
@@ -75,10 +77,10 @@ target_link_libraries(TESTLIBS PRIVATE engine_core timer_manager network)
 #add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp)
 #target_link_libraries(UnitTest_EventSystem utils ${TPLIB})
 
-#add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp ${SRCS})
-#target_link_libraries(UnitTest_ResourceManager utils ${TPLIB})
+add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp)
+target_link_libraries(UnitTest_ResourceManager PRIVATE engine_core)
 
-#add_executable(UnitTest_Network unitest/Network/UnitTest.cpp ${SRCS})
-#target_link_libraries(UnitTest_Network PRIVATE utils ${TPLIB} ${OpenCV_LIBS} Boost::asio Boost::json)
+add_executable(UnitTest_Network unitest/Network/UnitTest.cpp)
+target_link_libraries(UnitTest_Network PRIVATE engine_core)
 
 

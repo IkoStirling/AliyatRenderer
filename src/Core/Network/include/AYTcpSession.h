@@ -2,7 +2,7 @@
 #include "IAYBaseSession.h"
 
 
-namespace Network 
+namespace Network
 {
 	class AYTcpSession;
 	class AYNetworkHandler;
@@ -25,8 +25,9 @@ namespace Network
 		void start() override;
 		void close() override;
 		void send(const AYPacket& packet) override;
-
 		void connect(const std::string& ip_str, port_id port);
+
+		void getSessionID() {};
 
 		boost::asio::ip::tcp::socket& getSocket();
 
@@ -39,7 +40,7 @@ namespace Network
 		AYNetworkHandler& _handler;	//callback
 
 		std::array<uint8_t, RECV_BUFFER_SIZE> _receiveBuffer;
-		
+
 		std::unique_ptr<AYTcpPacketAssembler> _assembler;
 
 		std::queue<ByteBuffer> _sendQueue;

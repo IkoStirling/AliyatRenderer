@@ -158,9 +158,9 @@ public:
     void savePersistentCache(const std::string& savePath);
     void loadPersistentCache(const std::string& loadPath);
 
+    ~AYResourceManager();
 private:
     AYResourceManager();
-    ~AYResourceManager();
 
     /*
         清理失效的weakCache

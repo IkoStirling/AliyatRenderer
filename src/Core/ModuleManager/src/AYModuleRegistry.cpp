@@ -38,6 +38,9 @@ bool AYModuleManager::unregisterModule(const std::string& name)
 
 void AYModuleManager::allModuleInit()
 {
+	if (hasModule("MemoryPool"))
+		_moduleMap["MemoryPool"]->init();
+
 	if (hasModule("EventSystem"))
 		_moduleMap["EventSystem"]->init();
 
