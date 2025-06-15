@@ -43,7 +43,12 @@ public:
     }
 
 	virtual bool unload() = 0;
-	virtual bool reload(const std::string& filepath) = 0;
+    virtual bool reload(const std::string& filepath)
+    {
+        unload();
+        load(filepath);
+        return true;
+    }
 	virtual size_t sizeInBytes() = 0;
 
 public:
@@ -71,6 +76,7 @@ public:
 protected:
     TagSet _tags;
     std::string _resourcePath;
+    bool _loaded = false;
 
 public:
     virtual ~IAYResource() = default;

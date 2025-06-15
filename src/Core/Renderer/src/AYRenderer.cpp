@@ -1,5 +1,18 @@
 #include "AYRenderer.h"
 
+AYRenderer::AYRenderer(AYRenderDevice* device) : 
+    _device(device)
+{
+    _initFontRenderer();
+    _initSpriteRenderer();
+}
+
+AYRenderer::~AYRenderer()
+{
+    delete _fontRenderer;
+    delete _spriteRenderer;
+}
+
 void AYRenderer::clearScreen(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);
@@ -36,4 +49,27 @@ void AYRenderer::drawFullscreenQuad()
 void AYRenderer::setViewport(int x, int y, int width, int height)
 {
     glViewport(x, y, width, height);
+    _spriteRenderer->setViewportSize(width, height);
+}
+
+void AYRenderer::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color)
+{
+    _fontRenderer->renderText(text, x, y, scale, color);
+}
+
+AYSpriteRenderer* AYRenderer::getSpriteRenderer()
+{
+    return _spriteRenderer;
+}
+
+void AYRenderer::_initFontRenderer()
+{
+    
+    _fontRenderer = new AYFontRenderer(_device);
+    _fontRenderer->loadFont("C:/Windows/Fonts/msyh.ttc", 24);
+}
+
+void AYRenderer::_initSpriteRenderer()
+{
+    _spriteRenderer = new AYSpriteRenderer(_device);
 }
