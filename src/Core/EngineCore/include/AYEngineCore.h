@@ -2,14 +2,14 @@
 #include <memory>
 #include <chrono>
 #include "ECRegisterModule.h"
-#include "Mod_EngineCore.h"
+
 
 class AYEventSystem;
 
 /*
 	这个类管理什么？
 	管理窗口和输入？
-			X
+	        X
 	窗口由渲染模块进行处理，输入由输入系统进行处理
 
 */
@@ -24,7 +24,7 @@ public:
 
 	void init();
 	void start();
-	void update();
+	bool update();
 	void close();
 
 public:
@@ -56,7 +56,7 @@ private:
 	bool _shouldClosed = false;
 
 	bool _noLimitFPS = false;
-	float _targetFPS = 60.f;          // 目标帧率
+	float _targetFPS = 30.f;          // 目标帧率
 	float _invTargetFPS = 1.f / _targetFPS;			//帧率倒数，用作性能优化
 	float _currentFPS = 0.0f;          // 实时帧率统计
 	float _timeScale = 1.f;  // 时间缩放因子（0=暂停，0.5=慢放，2.0=加速）
@@ -65,23 +65,3 @@ private:
 	std::atomic<float> _accumulatedTime{ 0.0f };  // 用于时间缩放累积
 	std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 };
-
-class AYEngineCoreAdapter : public Mod_EngineCore
-{
-public:
-	void init() override {};
-
-	void update(float delta_time) override {};
-
-	void setTargetFPS(float fps) override { AYEngineCore::getInstance().setTargetFPS(fps); }
-
-	void setTimeScale(float scale) override { AYEngineCore::getInstance().setTimeScale(scale); }
-
-	float getCurrentFPS() const override { return AYEngineCore::getInstance().getCurrentFPS(); }
-
-	float getDeltaTime() const override { return AYEngineCore::getInstance().getDeltaTime(); }
-
-	float getUnscaledDeltaTime() const override { return AYEngineCore::getInstance().getUnscaledDeltaTime(); }
-};
-
-REGISTER_MODULE_CLASS("EngineCore", AYEngineCoreAdapter)

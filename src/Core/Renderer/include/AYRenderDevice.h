@@ -11,9 +11,8 @@ public:
     GLuint createVertexBuffer(const void* data, size_t size);
     GLuint createIndexBuffer(const void* data, size_t size);
     GLuint createVertexArray();
-    GLuint createTexture2D(const uint8_t* pixels, int width, int height, int channels = 4);
-    GLuint createFontTexture(const uint8_t* pixels, int width, int height);
-    GLuint createShaderProgram(const char* vtx_src, const char* frag_src);
+    GLuint createTexture2D(const uint8_t* pixels, int width, int height);
+
 private:
-    std::atomic<GLFWwindow*> _window {nullptr};
+    GLFWwindow* _window = nullptr;
 };

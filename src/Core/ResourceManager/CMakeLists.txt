@@ -15,12 +15,5 @@ file(GLOB SRCS
 add_library(${MODULE_NAME} STATIC
     ${SRCS}
 )
-
-find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
-
-
 target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME} module_manager event_system
-	PRIVATE
-	${OpenCV_LIBS}
-)
+target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME} module_manager event_system)
