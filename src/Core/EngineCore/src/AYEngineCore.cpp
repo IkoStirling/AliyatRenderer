@@ -3,6 +3,8 @@
 #include <mmsystem.h>  // 必须包含这个头文件
 #pragma comment(lib, "winmm.lib") 
 
+#include "AYRendererManager.h"
+
 AYEngineCore& AYEngineCore::getInstance()
 {
 	static AYEngineCore mInstance;
@@ -12,7 +14,17 @@ AYEngineCore& AYEngineCore::getInstance()
 void AYEngineCore::init()
 {
     _lastFrameTime = std::chrono::steady_clock::now();
-	AYModuleManager::getInstance().allModuleInit();
+
+    AYModuleManager::getInstance().getModule("MemoryPool")->init();
+    AYModuleManager::getInstance().getModule("EventSystem")->init();
+    AYModuleManager::getInstance().getModule("ResourceManager")->init();
+    AYModuleManager::getInstance().getModule("Renderer")->init();
+
+    std::dynamic_pointer_cast<Mod_Renderer>(
+        AYModuleManager::getInstance().getModule("Renderer")
+    )->setWindowCloseCallback([this]() { 
+        close(); 
+        });
 }
 
 
@@ -57,14 +69,14 @@ void AYEngineCore::_updateFPSStats(int& frameCount, std::chrono::steady_clock::t
         frameCount = 0;
         lastFpsUpdate = now;
 
-        std::cout << "Current FPS: " << _currentFPS
-            << " | Frame time: " << _unscaledDeltaTime * 1000.0f << "ms"
-            << " | Time scale: " << _timeScale
-            << std::endl;
+        //std::cout << "Current FPS: " << _currentFPS
+        //    << " | Frame time: " << _unscaledDeltaTime * 1000.0f << "ms"
+        //    << " | Time scale: " << _timeScale
+        //    << std::endl;
     }
 }
 
-bool AYEngineCore::update()
+void AYEngineCore::update()
 {
     _accumulatedTime += _unscaledDeltaTime * _timeScale;
 
@@ -74,15 +86,14 @@ bool AYEngineCore::update()
         _accumulatedTime -= delta;
 
         {
-            /*
-                请在将来将渲染模块的更新单独拎出来，时间变慢但是渲染不能变成ppt
-                 
-            */
-            AYModuleManager::getInstance().allModuleUpdate(delta);
-        }
+            AYModuleManager::getInstance().getModule("MemoryPool")->update(delta);
+            AYModuleManager::getInstance().getModule("EventSystem")->update(delta);
+            AYModuleManager::getInstance().getModule("ResourceManager")->update(delta);
 
+        }
     }
-    return true;
+    AYModuleManager::getInstance().getModule("Renderer")->update(_invTargetFPS);
+
 }
 
 void AYEngineCore::start()
@@ -117,8 +128,7 @@ void AYEngineCore::start()
         _unscaledDeltaTime = std::chrono::duration_cast<sec>(frameStartTime - _lastFrameTime).count();
         _lastFrameTime = frameStartTime;
 
-        if (!update())
-            break;
+        update();
 
         // 帧率控制 - 精确睡眠
         _regulateFrameRate(frameStartTime);
@@ -127,6 +137,7 @@ void AYEngineCore::start()
         frameCount++;
         _updateFPSStats(frameCount, lastFpsUpdate);
     }
+
 #ifdef _WIN32
     timeEndPeriod(1);
 #endif // _WIN32

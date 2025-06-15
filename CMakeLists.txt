@@ -8,6 +8,14 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+if (MSVC)
+message(STATUS "MSVC: xxx")
+    # 启用 UTF-8 编码
+    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+    
+endif()
+
 
 #--------------第三方大型库-------------#
 find_package(Boost CONFIG REQUIRED COMPONENTS json asio uuid)
@@ -63,7 +71,9 @@ file(GLOB TPLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib/*")
 
 add_executable(TESTLIBS test.cpp )
 target_link_libraries(TESTLIBS PRIVATE engine_core )
-
+if (MSVC)
+    target_compile_options(TESTLIBS PRIVATE "/execution-charset:utf-8")
+endif()
 #链接
 #add_executable(BaseWorld main.cpp ${SRCS})
 #add_executable(Server server.cpp ${SRCS})

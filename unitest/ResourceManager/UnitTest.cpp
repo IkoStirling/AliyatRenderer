@@ -1,9 +1,9 @@
 #include <iostream>
-#include <Core/EngineCore/AYEngineCore.h>
-#include "Core/EventSystem/AYEventSystem.h"
-#include "Core/SystemEventType/Event_ResourceLoadAsync.h"
-#include "Core/SystemResourceType/AYTexture.h"
-#include "Core/ResourceManager/AYResourceManager.h"
+#include <AYEngineCore.h>
+#include "AYEventSystem.h"
+#include "Event_ResourceLoadAsync.h"
+#include "AYTexture.h"
+#include "AYResourceManager.h"
 
 
 namespace ResourceManager {
@@ -13,11 +13,11 @@ namespace ResourceManager {
 		{
 			auto x = AYResourceManager::getInstance().loadAsync<AYTexture>("12345");
 		}
-		GetEventSystem()->update();
+		AYModuleManager::getInstance().getModule("EventSystem")->update(1);
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 		AYResourceManager::getInstance().printStats();
 
-		AYAsyncTracker::getInstance().update();
+		AYAsyncTracker::getInstance().update(1);
 		AYResourceManager::getInstance().printStats();	
 	}
 
@@ -42,9 +42,10 @@ namespace ResourceManager {
 
 int main()
 {
-	GetEngine().init();
-	//ResourceManager::benchmark_ResourceCount();
-	//ResourceManager::benchmark_Tags();
+	AYEngineCore::getInstance().init();
+	//AYEngineCore::getInstance().start();
+	ResourceManager::benchmark_ResourceCount();
+	ResourceManager::benchmark_Tags();
 	ResourceManager::benchmark_Persistent();
 	return 0;
 }
