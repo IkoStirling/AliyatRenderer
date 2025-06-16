@@ -140,10 +140,8 @@ public:
     */
     bool loadFont(const std::string& fontPath, unsigned int fontSize, const std::map<std::string, float>& axisValues = {});
     void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
-    void renderText(const std::u8string& text, float x, float y, float scale, const glm::vec3& color)
-    {
-        renderText(reinterpret_cast<const char*>(text.c_str()), x, y, scale, color);
-    }
+    bool setVariationAxis(const std::string& axisName, float value);
+    bool getVariationAxisRange(const std::string& axisName, float& min, float& max, float& def);
 
     void saveAtlas()
     {
@@ -172,8 +170,7 @@ public:
         弃用
     */
     void preloadCommonChineseCharacters();
-    bool setVariationAxis(const std::string& axisName, float value);
-    bool getVariationAxisRange(const std::string& axisName, float& min, float& max, float& def);
+
 
 
 private:
@@ -194,9 +191,10 @@ private:
     };
 
     const std::vector<std::pair<uint32_t, uint32_t>> _chineseRanges = {
-        {0x4E00, 0x4EFF},   // 基本汉字区（包含"一丁七万丈三上下不与"等）
-        {0x4F00, 0x4FDF},   // 扩展A区常用部分（"丢乒乓乔乖乘"等）
+        {0x4E00, 0x9FFF},   // 基本汉字区（包含"一丁七万丈三上下不与"等）
+        {0x4E8D, 0x4EFF},   // 继续补充常用汉字
         {0x3400, 0x4DBF},   // 扩展A区全部（覆盖更多姓氏用字）
+        //{0x4F00, 0x4FDF},   // 扩展A区常用部分（"丢乒乓乔乖乘"等）
         //{0x20000, 0x2A6DF}  // 扩展B-F区（按需加载）
     };
 

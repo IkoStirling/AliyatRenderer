@@ -1,15 +1,30 @@
 #include "AYAnimatedSprite.h"
 
 
-AYAnimatedSprite::AYAnimatedSprite(AYSpriteRenderer* renderer, GLuint texture):
-    _renderer(renderer),
-    _texture(texture) ,
-    _animator(glm::vec2(100, 100), glm::vec2(600, 100))
-{}
-
-void AYAnimatedSprite::update(float deltaTime) 
+AYAnimatedSprite::AYAnimatedSprite(AYSpriteRenderer* renderer, std::shared_ptr<AYSpriteAtlas> atlas):
+    _renderer(renderer)
 {
-    _animator.update(deltaTime);
+    addAtlas(atlas);
+}
+
+void AYAnimatedSprite::playAnimation(const std::string& name, bool forceRestart)
+{
+    for (int i = 0; i < _atlases.size(); i++)
+    {
+        if (!_atlases[i])
+            continue;
+        if (_atlases[i]->hasAnimation(name))
+        {
+            auto clip = _atlases[i]->getAnimation(name);
+            _controller.play(clip, forceRestart);
+            _curAtlas = i; //用于索引纹理ID
+        }
+    }
+}
+
+void AYAnimatedSprite::update(float deltaTime)
+{
+    _controller.update(deltaTime);
 }
 
 void AYAnimatedSprite::render(const glm::vec2& position,
@@ -18,11 +33,11 @@ void AYAnimatedSprite::render(const glm::vec2& position,
     const glm::vec4& color,
     const glm::vec2& origin) 
 {
-    if (!_animator.isPlaying()) return;
+    if (!_controller.isPlaying()) return;
 
-    const auto& frame = _animator.getCurrentFrame();
+    const auto& frame = _controller.getCurrentFrame();
     _renderer->drawSpriteFromAtlas(
-        _texture,
+        _atlases[_curAtlas]->getTexture(),
         position,
         size,
         frame.uvOffset,
@@ -32,3 +47,11 @@ void AYAnimatedSprite::render(const glm::vec2& position,
         origin
     );
 }
+
+void AYAnimatedSprite::addAtlas(std::shared_ptr<AYSpriteAtlas> atlas)
+{
+    if (atlas)
+        _atlases.push_back(atlas);
+}
+
+

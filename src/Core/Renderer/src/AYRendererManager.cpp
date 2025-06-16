@@ -3,6 +3,7 @@
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYAnimatedSprite.h"
+#include "AYAnimationManager.h"
 
 void AYRendererManager::init()
 {
@@ -10,23 +11,35 @@ void AYRendererManager::init()
 	if (!_device->init(1920, 1080))
 		return;
 	_renderer = new AYRenderer(_device);
-	
+
 	tex_ID = loadTexture("assets/core/textures/checkerboard.png");
 
-	auto spriteAtlas = loadTexture("assets/core/textures/sprite/testpack/Characters/Orc/Orc/Orc-Attack01.png");
-	_character = new AYAnimatedSprite(_renderer->getSpriteRenderer(), spriteAtlas);
-	glm::vec2 spriteSize(100, 100);
-	glm::vec2 atlasSize(600, 100); // 整个图集尺寸
-	AYSpriteAnimator::Animation attackAnim;
-	for (int i = 0; i < 6; i++) {
-		AYSpriteAnimator::AnimationFrame frame;
-		frame.uvOffset = glm::vec2(i * 100.0f / 600.0f, 0.0f); // 第一行走动画
-		frame.uvSize = glm::vec2(100.0f / 600.0f, 100.0f / 100.0f);
-		frame.duration = 0.1f;
-		attackAnim.frames.push_back(frame);
-	}
-	_character->getAnimator().addAnimation("atk", attackAnim.frames, true);
-	_character->getAnimator().play("atk");
+	_animaMana = new AYAnimationManager(_device);
+
+	auto data = _animaMana->makeAnimationData(
+		glm::vec2(100, 100),
+		glm::vec2(800, 600),
+		{
+			{"idle01", 0, 6},
+			{"walk01", 8, 8},
+			{"atk01", 16, 6},
+			{"atk02", 24, 6},
+			{"eff01", 32, 4},
+			{"dead01",40, 4}
+		}
+	);
+
+	auto orcAtlas = _animaMana->loadAtlas(
+		"orc",
+		"assets/core/textures/sprite/testpack/Characters/Orc/Orc/Orc.png",
+		glm::vec2(100, 100),
+		data);
+
+	orcSprite = std::make_shared<AYAnimatedSprite>(
+		_renderer->getSpriteRenderer(),
+		orcAtlas
+	);
+
 }
 
 void AYRendererManager::update(float delta_time)
@@ -59,21 +72,28 @@ void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClose
 GLuint AYRendererManager::loadTexture(const std::string& path)
 {
 	auto tex = AYResourceManager::getInstance().load<AYTexture>(path);
-	auto id = _device->createTexture2D(tex->getPixelData(), tex->getWidth(), tex->getHeight(), tex->getChannels());
-	//AYResourceManager::getInstance().unloadResource(path);
-	return id;
+	if (!tex || !tex->isLoaded()) {
+		std::cerr << "Failed to load texture: " << path << std::endl;
+		return 0;
+	}
+	return _device->createTexture2D(
+		tex->getPixelData(),
+		tex->getWidth(),
+		tex->getHeight(),
+		tex->getChannels());
 }
 
 void AYRendererManager::_displayDebugInfo()
 {
-	std::string fps = "侍fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
+	std::string fps = "当前fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
 	_renderer->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	constexpr float speed = 200.f;
+	constexpr float pos = 200.f;
 	static float x = 0.f, y = 0.f;
 	static bool l = true, d = true;
-	x += (l? speed : -speed) * delta;
-	y += (d? speed : -speed) * delta;
+	x += (l ? speed : -speed) * delta;
+	y += (d ? speed : -speed) * delta;
 	if (x > 1920.f)
 		l = false;
 	if (x < 0.f)
@@ -88,11 +108,12 @@ void AYRendererManager::_displayDebugInfo()
 		glm::vec2(x, y),  // 位置
 		glm::vec2(300.0f, 300.0f),  // 大小
 		0.0f,                       // 旋转
-		glm::vec4(0.0f,1.f,0.f,1.f),// 颜色
+		glm::vec4(0.0f, 1.f, 0.f, 0.5f),// 颜色
 		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
 	);
 
-	_character->update(delta);
-	_character->render(glm::vec2(-45, -55+1080), glm::vec2(100, 100));
-	
+	orcSprite->playAnimation("walk01");
+	orcSprite->update(delta);
+	orcSprite->render(glm::vec2(-45 + pos, -55 + 1080 - pos), glm::vec2(200, 200));
+
 }

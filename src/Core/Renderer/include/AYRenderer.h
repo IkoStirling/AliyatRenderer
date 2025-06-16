@@ -25,6 +25,4 @@ private:
 
     GLuint _screenVAO = 0;
 
-private:
-
 };

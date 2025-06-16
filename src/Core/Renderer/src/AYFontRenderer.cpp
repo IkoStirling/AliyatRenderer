@@ -222,16 +222,6 @@ void AYFontRenderer::_renderCharacter(const Character& ch, float& x, float& y, f
         { xpos,     ypos,       u1, v2 }  // 左上
     };
 
-    //float vertices[6][4] = {
-    //    // 位置              // 纹理坐标
-    //    { xpos,     ypos,     ch.atlasPos.x,                  ch.atlasPos.y + ch.atlasSize.y }, // 左下
-    //    { xpos + w, ypos,     ch.atlasPos.x + ch.atlasSize.x, ch.atlasPos.y + ch.atlasSize.y }, // 右下
-    //    { xpos + w, ypos + h, ch.atlasPos.x + ch.atlasSize.x, ch.atlasPos.y },                  // 右上
-    //    { xpos,     ypos,     ch.atlasPos.x,                  ch.atlasPos.y + ch.atlasSize.y }, // 左下
-    //    { xpos + w, ypos + h, ch.atlasPos.x + ch.atlasSize.x, ch.atlasPos.y },                  // 右上
-    //    { xpos,     ypos + h, ch.atlasPos.x,                  ch.atlasPos.y }                   // 左上
-    //};
-
     //上传并绘制
     glBindTexture(GL_TEXTURE_2D, ch.textureID);
     glBindBuffer(GL_ARRAY_BUFFER, _vbo);

@@ -1,5 +1,7 @@
 #pragma once
 #include <unordered_set>
+#include <string>
+#include <typeindex>
 
 #define DECLARE_RESOURCE_CLASS(CLASS_NAME, RESOURCE_TYPE_NAME) \
 public: \
@@ -50,6 +52,10 @@ public:
         return true;
     }
 	virtual size_t sizeInBytes() = 0;
+
+    virtual bool isLoaded() {
+        return _loaded;
+    }
 
 public:
     void addTag(const Tag& tag) {

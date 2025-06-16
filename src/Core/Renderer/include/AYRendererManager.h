@@ -29,6 +29,8 @@ private:
 	GLuint tex_ID = 0;
 	float delta;
 	class AYAnimatedSprite* _character;
+	std::shared_ptr<AYAnimatedSprite> orcSprite;
+	class AYAnimationManager* _animaMana;
 };
 
 REGISTER_MODULE_CLASS("Renderer", AYRendererManager)
