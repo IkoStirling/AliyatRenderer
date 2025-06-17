@@ -156,7 +156,7 @@ namespace detail
 		GLM_FUNC_QUALIFIER static vec<L, T, Q> call(vec<L, T, Q> const& x)
 		{
 			T const Shift(static_cast<T>(sizeof(T) * 8 - 1));
-			vec<L, T, Q> const y(vec<L, typename detail::make_unsigned<T>::type, Q>(-x) >> typename detail::make_unsigned<T>::type(Shift));
+			vec<L, T, Q> const y(vec<L, typename detail::make_unsigned<T>::_type, Q>(-x) >> typename detail::make_unsigned<T>::_type(Shift));
 
 			return (x >> Shift) | y;
 		}

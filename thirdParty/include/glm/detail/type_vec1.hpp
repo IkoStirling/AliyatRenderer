@@ -19,7 +19,7 @@ namespace glm
 		// -- Implementation detail --
 
 		typedef T value_type;
-		typedef vec<1, T, Q> type;
+		typedef vec<1, T, Q> _type;
 		typedef vec<1, bool, Q> bool_type;
 
 		// -- Data --
@@ -47,7 +47,7 @@ namespace glm
 				T r;
 				T s;
 
-				typename detail::storage<1, T, detail::is_aligned<Q>::value>::type data;
+				typename detail::storage<1, T, detail::is_aligned<Q>::value>::_type data;
 /*
 #				if GLM_CONFIG_SWIZZLE == GLM_SWIZZLE_OPERATOR
 					_GLM_SWIZZLE1_2_MEMBERS(T, Q, x)

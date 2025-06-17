@@ -1894,7 +1894,7 @@ typedef void (* GLFWscrollfun)(GLFWwindow* window, double xoffset, double yoffse
  *
  *  @ingroup input
  */
-typedef void (* GLFWkeyfun)(GLFWwindow* window, int key, int scancode, int action, int mods);
+typedef void (* GLFWkeyfun)(GLFWwindow* window, int _key, int scancode, int action, int mods);
 
 /*! @brief The function pointer type for Unicode character callbacks.
  *
@@ -4832,7 +4832,7 @@ GLFWAPI int glfwRawMouseMotionSupported(void);
  *
  *  @ingroup input
  */
-GLFWAPI const char* glfwGetKeyName(int key, int scancode);
+GLFWAPI const char* glfwGetKeyName(int _key, int scancode);
 
 /*! @brief Returns the platform-specific scancode of the specified key.
  *
@@ -4859,7 +4859,7 @@ GLFWAPI const char* glfwGetKeyName(int key, int scancode);
  *
  *  @ingroup input
  */
-GLFWAPI int glfwGetKeyScancode(int key);
+GLFWAPI int glfwGetKeyScancode(int _key);
 
 /*! @brief Returns the last reported state of a keyboard key for the specified
  *  window.
@@ -4898,7 +4898,7 @@ GLFWAPI int glfwGetKeyScancode(int key);
  *
  *  @ingroup input
  */
-GLFWAPI int glfwGetKey(GLFWwindow* window, int key);
+GLFWAPI int glfwGetKey(GLFWwindow* window, int _key);
 
 /*! @brief Returns the last reported state of a mouse button for the specified
  *  window.

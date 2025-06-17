@@ -97,7 +97,7 @@ namespace glm {
 #if GLM_LANG & GLM_LANG_CXX11_FLAG
 	template <qualifier Q>
 	GLM_FUNC_QUALIFIER
-	typename std::enable_if<detail::is_aligned<Q>::value, mat<4, 4, float, Q>>::type
+	typename std::enable_if<detail::is_aligned<Q>::value, mat<4, 4, float, Q>>::_type
 	operator*(mat<4, 4, float, Q> const & m1, mat<4, 4, float, Q> const & m2)
 	{
 		auto MulRow = [&](int l) {

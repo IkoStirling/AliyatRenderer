@@ -40,6 +40,7 @@ add_subdirectory(src/Core/EventSystem)
 add_subdirectory(src/Core/TimerManager)
 add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/Renderer)
+add_subdirectory(src/Core/InputSystem)
 
 add_subdirectory(src/Core/Network)
 
@@ -69,7 +70,7 @@ file(GLOB TPLIB "${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib/*")
 
 
 
-add_executable(TESTLIBS test.cpp )
+add_executable(TESTLIBS test.cpp)
 target_link_libraries(TESTLIBS PRIVATE engine_core )
 if (MSVC)
     target_compile_options(TESTLIBS PRIVATE "/execution-charset:utf-8")

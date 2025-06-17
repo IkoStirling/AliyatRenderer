@@ -84,26 +84,26 @@ namespace detail
 	template<length_t L, typename T, bool is_aligned>
 	struct storage
 	{
-		typedef struct type {
+		typedef struct _type {
 			T data[L];
-		} type;
+		} _type;
 	};
 
 #	if GLM_HAS_ALIGNOF
 		template<length_t L, typename T>
 		struct storage<L, T, true>
 		{
-			typedef struct alignas(L * sizeof(T)) type {
+			typedef struct alignas(L * sizeof(T)) _type {
 				T data[L];
-			} type;
+			} _type;
 		};
 
 		template<typename T>
 		struct storage<3, T, true>
 		{
-			typedef struct alignas(4 * sizeof(T)) type {
+			typedef struct alignas(4 * sizeof(T)) _type {
 				T data[4];
-			} type;
+			} _type;
 		};
 #	endif
 
@@ -111,37 +111,37 @@ namespace detail
 	template<>
 	struct storage<4, float, true>
 	{
-		typedef glm_f32vec4 type;
+		typedef glm_f32vec4 _type;
 	};
 
 	template<>
 	struct storage<4, int, true>
 	{
-		typedef glm_i32vec4 type;
+		typedef glm_i32vec4 _type;
 	};
 
 	template<>
 	struct storage<4, unsigned int, true>
 	{
-		typedef glm_u32vec4 type;
+		typedef glm_u32vec4 _type;
 	};
 
 	template<>
 	struct storage<2, double, true>
 	{
-		typedef glm_f64vec2 type;
+		typedef glm_f64vec2 _type;
 	};
 
 	template<>
 	struct storage<2, detail::int64, true>
 	{
-		typedef glm_i64vec2 type;
+		typedef glm_i64vec2 _type;
 	};
 
 	template<>
 	struct storage<2, detail::uint64, true>
 	{
-		typedef glm_u64vec2 type;
+		typedef glm_u64vec2 _type;
 	};
 #	endif
 
@@ -149,7 +149,7 @@ namespace detail
 	template<>
 	struct storage<4, double, true>
 	{
-		typedef glm_f64vec4 type;
+		typedef glm_f64vec4 _type;
 	};
 #	endif
 
@@ -157,13 +157,13 @@ namespace detail
 	template<>
 	struct storage<4, detail::int64, true>
 	{
-		typedef glm_i64vec4 type;
+		typedef glm_i64vec4 _type;
 	};
 
 	template<>
 	struct storage<4, detail::uint64, true>
 	{
-		typedef glm_u64vec4 type;
+		typedef glm_u64vec4 _type;
 	};
 #	endif
 
@@ -171,19 +171,19 @@ namespace detail
 	template<>
 	struct storage<4, float, true>
 	{
-		typedef glm_f32vec4 type;
+		typedef glm_f32vec4 _type;
 	};
 
 	template<>
 	struct storage<4, int, true>
 	{
-		typedef glm_i32vec4 type;
+		typedef glm_i32vec4 _type;
 	};
 
 	template<>
 	struct storage<4, unsigned int, true>
 	{
-		typedef glm_u32vec4 type;
+		typedef glm_u32vec4 _type;
 	};
 #	endif
 
@@ -204,7 +204,7 @@ namespace detail
 		static const genTypeEnum GENTYPE = GENTYPE_MAT;
 	};
 
-	template<typename genType, genTypeEnum type>
+	template<typename genType, genTypeEnum _type>
 	struct init_gentype
 	{
 	};

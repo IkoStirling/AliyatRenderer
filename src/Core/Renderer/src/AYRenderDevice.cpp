@@ -1,13 +1,4 @@
 #include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
-#include "AYRenderDevice.h"
 
 
 bool AYRenderDevice::init(int width, int height)
@@ -25,11 +16,6 @@ bool AYRenderDevice::init(int width, int height)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
 
     //glfwSetFramebufferSizeCallback(windowInstance, framebufferSizeCallback);
-    glfwSetKeyCallback(_window, keyCallbackWrapper);
-    glfwSetMouseButtonCallback(_window, mouseButtonCallbackWrapper);
-    glfwSetCursorPosCallback(_window, mouseCallbackWrapper);
-    glfwSetScrollCallback(_window, scrollCallbackWrapper);
-    glfwSetWindowUserPointer(_window, this);
 
     glfwSwapInterval(1);
 
@@ -141,56 +127,4 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
     glDeleteShader(fragmentShader);
 
     return shaderProgram;
-}
-
-void AYRenderDevice::setKeyCallback(const KeyCallback& callback)
-{
-    _keyCallback = callback;
-}
-
-void AYRenderDevice::setMouseCallback(const MouseCallback& callback)
-{
-    _mouseCallback = callback;
-}
-
-void AYRenderDevice::setMouseButtonCallback(const MouseButtonCallback& callback)
-{
-    _mouseButtonCallback = callback;
-}
-
-void AYRenderDevice::setScrollCallback(const ScrollCallback& callback)
-{
-    _scrollCallback = callback;
-}
-
-void AYRenderDevice::keyCallbackWrapper(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    auto device = static_cast<AYRenderDevice*>(glfwGetWindowUserPointer(window));
-    if (device && device->_keyCallback) {
-        device->_keyCallback(key, scancode, action, mods);
-    }
-}
-
-void AYRenderDevice::mouseCallbackWrapper(GLFWwindow* window, double xpos, double ypos)
-{
-    auto device = static_cast<AYRenderDevice*>(glfwGetWindowUserPointer(window));
-    if (device && device->_mouseCallback) {
-        device->_mouseCallback(xpos, ypos);
-    }
-}
-
-void AYRenderDevice::mouseButtonCallbackWrapper(GLFWwindow* window, int button, int action, int mods)
-{
-    auto device = static_cast<AYRenderDevice*>(glfwGetWindowUserPointer(window));
-    if (device && device->_mouseButtonCallback) {
-        device->_mouseButtonCallback(button, action, mods);
-    }
-}
-
-void AYRenderDevice::scrollCallbackWrapper(GLFWwindow* window, double xoffset, double yoffset)
-{
-    auto device = static_cast<AYRenderDevice*>(glfwGetWindowUserPointer(window));
-    if (device && device->_scrollCallback) {
-        device->_scrollCallback(xoffset, yoffset);
-    }
 }

@@ -7,3 +7,5 @@
 #include "AYMemoryPool.h"
 #include "AYEventSystem.h"
 #include "AYResourceManager.h"
+#include "AYRendererManager.h"
+#include "AYInputSystem.h"

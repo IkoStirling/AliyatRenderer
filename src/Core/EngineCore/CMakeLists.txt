@@ -14,4 +14,5 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	memory_pool
 	network
 	renderer
+	input_system
 )

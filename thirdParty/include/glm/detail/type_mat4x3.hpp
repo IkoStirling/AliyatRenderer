@@ -15,7 +15,7 @@ namespace glm
 	{
 		typedef vec<3, T, Q> col_type;
 		typedef vec<4, T, Q> row_type;
-		typedef mat<4, 3, T, Q> type;
+		typedef mat<4, 3, T, Q> _type;
 		typedef mat<3, 4, T, Q> transpose_type;
 		typedef T value_type;
 

@@ -510,16 +510,16 @@
 
 #if (GLM_COMPILER & GLM_COMPILER_VC) || ((GLM_COMPILER & GLM_COMPILER_INTEL) && (GLM_PLATFORM & GLM_PLATFORM_WINDOWS))
 #	define GLM_DEPRECATED __declspec(deprecated)
-#	define GLM_ALIGNED_TYPEDEF(type, name, alignment) typedef __declspec(align(alignment)) type name
+#	define GLM_ALIGNED_TYPEDEF(_type, name, alignment) typedef __declspec(align(alignment)) _type name
 #elif GLM_COMPILER & (GLM_COMPILER_GCC | GLM_COMPILER_CLANG | GLM_COMPILER_INTEL)
 #	define GLM_DEPRECATED __attribute__((__deprecated__))
-#	define GLM_ALIGNED_TYPEDEF(type, name, alignment) typedef type name __attribute__((aligned(alignment)))
+#	define GLM_ALIGNED_TYPEDEF(_type, name, alignment) typedef _type name __attribute__((aligned(alignment)))
 #elif GLM_COMPILER & GLM_COMPILER_CUDA
 #	define GLM_DEPRECATED
-#	define GLM_ALIGNED_TYPEDEF(type, name, alignment) typedef type name __align__(x)
+#	define GLM_ALIGNED_TYPEDEF(_type, name, alignment) typedef _type name __align__(x)
 #else
 #	define GLM_DEPRECATED
-#	define GLM_ALIGNED_TYPEDEF(type, name, alignment) typedef type name
+#	define GLM_ALIGNED_TYPEDEF(_type, name, alignment) typedef _type name
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -708,67 +708,67 @@ namespace detail
 	template<>
 	struct make_unsigned<char>
 	{
-		typedef unsigned char type;
+		typedef unsigned char _type;
 	};
 
 	template<>
 	struct make_unsigned<signed char>
 	{
-		typedef unsigned char type;
+		typedef unsigned char _type;
 	};
 
 	template<>
 	struct make_unsigned<short>
 	{
-		typedef unsigned short type;
+		typedef unsigned short _type;
 	};
 
 	template<>
 	struct make_unsigned<int>
 	{
-		typedef unsigned int type;
+		typedef unsigned int _type;
 	};
 
 	template<>
 	struct make_unsigned<long>
 	{
-		typedef unsigned long type;
+		typedef unsigned long _type;
 	};
 
 	template<>
 	struct make_unsigned<int64>
 	{
-		typedef uint64 type;
+		typedef uint64 _type;
 	};
 
 	template<>
 	struct make_unsigned<unsigned char>
 	{
-		typedef unsigned char type;
+		typedef unsigned char _type;
 	};
 
 	template<>
 	struct make_unsigned<unsigned short>
 	{
-		typedef unsigned short type;
+		typedef unsigned short _type;
 	};
 
 	template<>
 	struct make_unsigned<unsigned int>
 	{
-		typedef unsigned int type;
+		typedef unsigned int _type;
 	};
 
 	template<>
 	struct make_unsigned<unsigned long>
 	{
-		typedef unsigned long type;
+		typedef unsigned long _type;
 	};
 
 	template<>
 	struct make_unsigned<uint64>
 	{
-		typedef uint64 type;
+		typedef uint64 _type;
 	};
 }//namespace detail
 }//namespace glm

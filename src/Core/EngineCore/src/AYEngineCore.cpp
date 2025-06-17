@@ -1,9 +1,11 @@
 #include "AYEngineCore.h"
 #include <windows.h>
-#include <mmsystem.h>  // 必须包含这个头文件
+#include <mmsystem.h> 
 #pragma comment(lib, "winmm.lib") 
 
 #include "AYRendererManager.h"
+#include "AYInputSystem.h"
+#include "AYInputBinding.h"
 
 AYEngineCore& AYEngineCore::getInstance()
 {
@@ -15,16 +17,22 @@ void AYEngineCore::init()
 {
     _lastFrameTime = std::chrono::steady_clock::now();
 
-    AYModuleManager::getInstance().getModule("MemoryPool")->init();
-    AYModuleManager::getInstance().getModule("EventSystem")->init();
-    AYModuleManager::getInstance().getModule("ResourceManager")->init();
-    AYModuleManager::getInstance().getModule("Renderer")->init();
+    GET_MODULE("MemoryPool")->init();
+    GET_MODULE("EventSystem")->init();
+    GET_MODULE("ResourceManager")->init();
+    GET_MODULE("Renderer")->init();
+    GET_MODULE("InputSystem")->init();
 
-    std::dynamic_pointer_cast<Mod_Renderer>(
-        AYModuleManager::getInstance().getModule("Renderer")
-    )->setWindowCloseCallback([this]() { 
+    GET_CAST_MODULE(Mod_Renderer, "Renderer")->setWindowCloseCallback([this]() { 
         close(); 
         });
+
+    auto binding = std::make_shared<AYInputBinding>();
+    binding->addAction("double_click", AYInputAction::Type::LongPress, KeyboardInput{GLFW_KEY_W});
+    binding->addAction("Mouse_Left", AYInputAction::Type::LongPress, MouseButtonInput{GLFW_MOUSE_BUTTON_LEFT});
+    binding->addAction("GamePad_X", AYInputAction::Type::LongPress, GamepadButtonInput{GLFW_GAMEPAD_BUTTON_X});
+    auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
+    inputSystem->addInputMapping("default", binding);
 }
 
 
@@ -86,13 +94,13 @@ void AYEngineCore::update()
         _accumulatedTime -= delta;
 
         {
-            AYModuleManager::getInstance().getModule("MemoryPool")->update(delta);
-            AYModuleManager::getInstance().getModule("EventSystem")->update(delta);
-            AYModuleManager::getInstance().getModule("ResourceManager")->update(delta);
-
+            GET_MODULE("MemoryPool")->update(delta);
+            GET_MODULE("EventSystem")->update(delta);
+            GET_MODULE("ResourceManager")->update(delta);
         }
     }
-    AYModuleManager::getInstance().getModule("Renderer")->update(_invTargetFPS);
+    GET_MODULE("InputSystem")->update(_invTargetFPS);
+    GET_MODULE("Renderer")->update(_invTargetFPS);
 
 }
 

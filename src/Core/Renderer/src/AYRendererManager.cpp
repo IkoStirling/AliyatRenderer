@@ -5,6 +5,9 @@
 #include "AYAnimatedSprite.h"
 #include "AYAnimationManager.h"
 
+
+#include "Mod_InputSystem.h"
+
 void AYRendererManager::init()
 {
 	_device = new AYRenderDevice();
@@ -89,7 +92,7 @@ void AYRendererManager::_displayDebugInfo()
 	_renderer->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	constexpr float speed = 200.f;
-	constexpr float pos = 200.f;
+	static glm::vec2 pos = glm::vec2(200);
 	static float x = 0.f, y = 0.f;
 	static bool l = true, d = true;
 	x += (l ? speed : -speed) * delta;
@@ -112,8 +115,36 @@ void AYRendererManager::_displayDebugInfo()
 		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
 	);
 
-	orcSprite->playAnimation("walk01");
+	auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
+
+	auto speedX = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX, 5.f });
+	auto speedY = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftY, 5.f });
+
+	if (fabs(speedX) > fabs(speedY))
+	{
+		pos.x += speedX;
+	}
+	else
+	{
+		pos.y += speedY;
+	}
+
+
+	if (inputSystem->isActionActive("default.GamePad_X"))
+	{
+		orcSprite->playAnimation("atk01");
+	}
+	else if (speedX || speedY)
+	{
+		orcSprite->playAnimation("walk01");
+	}
+	else
+	{
+		orcSprite->playAnimation("idle01");
+	}
+
+	
 	orcSprite->update(delta);
-	orcSprite->render(glm::vec2(-45 + pos, -55 + 1080 - pos), glm::vec2(200, 200));
+	orcSprite->render(glm::vec2(-45 + pos.x, -55 + pos.y), glm::vec2(200, 200));
 
 }

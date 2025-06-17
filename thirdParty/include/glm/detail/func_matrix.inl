@@ -360,11 +360,11 @@ namespace detail
 	}
 
 	template<length_t DA, length_t DB, typename T, qualifier Q>
-	GLM_FUNC_QUALIFIER typename detail::outerProduct_trait<DA, DB, T, Q>::type outerProduct(vec<DA, T, Q> const& c, vec<DB, T, Q> const& r)
+	GLM_FUNC_QUALIFIER typename detail::outerProduct_trait<DA, DB, T, Q>::_type outerProduct(vec<DA, T, Q> const& c, vec<DB, T, Q> const& r)
 	{
 		GLM_STATIC_ASSERT(std::numeric_limits<T>::is_iec559 || GLM_CONFIG_UNRESTRICTED_GENTYPE, "'outerProduct' only accept floating-point inputs");
 
-		typename detail::outerProduct_trait<DA, DB, T, Q>::type m;
+		typename detail::outerProduct_trait<DA, DB, T, Q>::_type m;
 		for(length_t i = 0; i < m.length(); ++i)
 			m[i] = c * r[i];
 		return m;
