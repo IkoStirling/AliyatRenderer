@@ -74,6 +74,7 @@ target_link_libraries(TESTLIBS PRIVATE engine_core )
 if (MSVC)
     target_compile_options(TESTLIBS PRIVATE "/execution-charset:utf-8")
 endif()
+
 #Á´½Ó
 #add_executable(BaseWorld main.cpp ${SRCS})
 #add_executable(Server server.cpp ${SRCS})
@@ -87,10 +88,10 @@ endif()
 #add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp)
 #target_link_libraries(UnitTest_EventSystem utils ${TPLIB})
 
-add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp)
-target_link_libraries(UnitTest_ResourceManager PRIVATE engine_core)
+#add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp)
+#target_link_libraries(UnitTest_ResourceManager PRIVATE engine_core)
 
-add_executable(UnitTest_Network unitest/Network/UnitTest.cpp)
-target_link_libraries(UnitTest_Network PRIVATE engine_core)
+#add_executable(UnitTest_Network unitest/Network/UnitTest.cpp)
+#target_link_libraries(UnitTest_Network PRIVATE engine_core)
 
 

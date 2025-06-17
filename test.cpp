@@ -11,7 +11,5 @@ int main()
 	AYEngineCore::getInstance().init();
 	AYEngineCore::getInstance().start();
 
-
-
 	return 0;
 }
