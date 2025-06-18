@@ -18,7 +18,10 @@ public:
         const glm::vec2& size = glm::vec2(1.0f),
         float rotation = 0.0f,
         const glm::vec4& color = glm::vec4(1.0f),
-        const glm::vec2& origin = glm::vec2(0.5f));
+        bool flipHorizontal = false,
+        bool flipVertical = false,
+        const glm::vec2& origin = glm::vec2(0.5f)
+        );
 
     /*
         精灵图集（动画用）
@@ -30,7 +33,10 @@ public:
         const glm::vec2& uvSize,
         float rotation = 0.0f,
         const glm::vec4& color = glm::vec4(1.0f),
-        const glm::vec2& origin = glm::vec2(0.5f));
+        bool flipHorizontal = false,
+        bool flipVertical = false,
+        const glm::vec2& origin = glm::vec2(0.5f)
+        );
 
     void setViewportSize(int width, int height);
 

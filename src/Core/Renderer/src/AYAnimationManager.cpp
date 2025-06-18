@@ -9,7 +9,8 @@ AYAnimationManager::AYAnimationManager(AYRenderDevice* device) :
 std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& atlasName,
 	const std::string& texturePath,
 	const glm::vec2& spriteSize,
-	const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations)
+	const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
+	const std::vector<bool>& loops)
 {
 	// 检查是否已加载
 	if (auto it = _atlasMap.find(atlasName); it != _atlasMap.end()) {
@@ -33,8 +34,10 @@ std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& 
 	);
 
 	// 添加动画切片
+	size_t i = 0;
 	for (const auto& [name, frames] : animations) {
-		auto clip = std::make_shared<AYAnimationClip>(name);
+		auto loop = i < loops.size() ? loops[i++] : false;
+		auto clip = std::make_shared<AYAnimationClip>(name,loop);
 		for (const auto& frame : frames) {
 			clip->addFrame(frame);
 		}

@@ -123,7 +123,7 @@ bool AYFontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize
 
     //设置字体大小
     _currentFontSize = fontSize;
-    //加载中英文
+    //加载英文，中文使用时加载
     _reloadCharacters();
 
     return true;
@@ -148,19 +148,16 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
     std::u32string utf32 = utf8_to_utf32(text);
 
     for (char32_t c : utf32) {
-        bool found = false;
-        for (const auto& atlas : _atlases) {
-            auto it = atlas.characters.find(c);
-            if (it != atlas.characters.end()) {
-                
-                _renderCharacter(it->second, x, y, scale);
-                found = true;
-                break;
-            }
-        }
+        Character theChar;
 
-        if (!found) {
-            std::cerr << "Character not loaded: " << static_cast<uint32_t>(c) << std::endl;
+        if (_findChar(theChar, c)) {
+            _renderCharacter(theChar, x, y, scale);
+        }
+        else
+        {
+            _loadChar(_currentFace, c);
+            _findChar(theChar, c);
+            _renderCharacter(theChar, x, y, scale);
         }
     }
 
@@ -278,20 +275,25 @@ void AYFontRenderer::_reloadCharacters()
     //设置上传纹理无对齐（默认4字节）
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    // 重新加载所有字符
+    // 重新加载face中的字符
     FT_Set_Pixel_Sizes(_currentFace, 0, _currentFontSize);
 
     // 重新加载ASCII字符
     for (char32_t c = 32; c < 128; c++) {
         _loadChar(_currentFace, c);
     }
+}
 
-    // 重新加载中文
-    for (const auto& range : _chineseRanges) {
-        for (uint32_t c = range.first; c <= range.second; c++) {
-            _loadChar(_currentFace, c);
+bool AYFontRenderer::_findChar(Character& theChar, char32_t charCode)
+{
+    for (const auto& atlas : _atlases) {
+        auto it = atlas.characters.find(charCode);
+        if (it != atlas.characters.end()) {
+            theChar = it->second;
+            return true;
         }
     }
+    return false;
 }
 
 void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
@@ -345,37 +347,6 @@ void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
     // 没有足够空间，创建新图集
     _createNewAtlas();
     _addCharToAtlas(face, charCode);
-}
-
-void AYFontRenderer::preloadCommonChineseCharacters()
-{
-
-    FT_Library ft;
-    if (FT_Init_FreeType(&ft)) return;
-
-    FT_Face face;
-    if (FT_New_Face(ft, "assets/core/fonts/apache/arimo/Arimo[wght].ttf", 0, &face)) {
-        FT_Done_FreeType(ft);
-        return;
-    }
-
-    FT_Set_Pixel_Sizes(face, 0, 24); // 使用默认字号
-
-    // 常用汉字Unicode范围
-    const std::vector<std::pair<uint32_t, uint32_t>> ranges = {
-        {0x4E00, 0x4E8F}, // 常用汉字第一部分
-        {0x4E90, 0x4F5F}, // 常用汉字第二部分
-        {0x4F60, 0x4FDF}  // 常用汉字第三部分
-    };
-
-    for (const auto& range : ranges) {
-        for (uint32_t c = range.first; c <= range.second; c++) {
-            _loadChar(face, c);
-        }
-    }
-
-    FT_Done_Face(face);
-    FT_Done_FreeType(ft);
 }
 
 bool AYFontRenderer::setVariationAxis(const std::string& axisName, float value)
@@ -451,4 +422,27 @@ void AYFontRenderer::_setupShader()
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+}
+
+void AYFontRenderer::saveAtlas()
+{
+    static int count = 0;
+    for (auto& a : _atlases)
+    {
+        glBindTexture(GL_TEXTURE_2D, a.textureID);
+        int width = a.width;  // 纹理宽度
+        int height = a.height; // 纹理高度
+
+        std::vector<unsigned char> pixels(width * height * 4); // RGBA 格式
+
+        // 读取纹理数据（GL_RGBA, GL_UNSIGNED_BYTE）
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+
+        cv::Mat image(height, width, CV_8UC4, pixels.data());
+        //cv::flip(image, image, 0);
+        std::string str = "texture_atlas(" + std::to_string(count) + ").png";
+        cv::imwrite(str, image);
+
+        count++;
+    }
 }

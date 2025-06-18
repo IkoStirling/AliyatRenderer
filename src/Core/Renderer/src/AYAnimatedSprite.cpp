@@ -9,18 +9,23 @@ AYAnimatedSprite::AYAnimatedSprite(AYSpriteRenderer* renderer, std::shared_ptr<A
 
 void AYAnimatedSprite::playAnimation(const std::string& name, bool forceRestart)
 {
-    for (int i = 0; i < _atlases.size(); i++)
-    {
-        if (!_atlases[i])
-            continue;
-        if (_atlases[i]->hasAnimation(name))
-        {
-            auto clip = _atlases[i]->getAnimation(name);
-            _controller.play(clip, forceRestart);
-            _curAtlas = i; //用于索引纹理ID
-        }
-    }
+    auto clip = _findClip(name);
+    if (clip)
+        _controller.play(clip, forceRestart);
 }
+
+void AYAnimatedSprite::queueAnimation(const std::string& name)
+{
+    auto clip = _findClip(name);
+    if (clip)
+        _controller.queueAnimation(clip);
+}
+
+bool AYAnimatedSprite::isCurrentAnimationDone() const 
+{
+    return _controller.isCurrentAnimationDone();
+}
+
 
 void AYAnimatedSprite::update(float deltaTime)
 {
@@ -31,6 +36,8 @@ void AYAnimatedSprite::render(const glm::vec2& position,
     const glm::vec2& size,
     float rotation,
     const glm::vec4& color,
+    bool flipHorizontal,
+    bool flipVertical,
     const glm::vec2& origin) 
 {
     if (!_controller.isPlaying()) return;
@@ -44,6 +51,8 @@ void AYAnimatedSprite::render(const glm::vec2& position,
         frame.uvSize,
         rotation,
         color,
+        flipHorizontal,
+        flipVertical,
         origin
     );
 }
@@ -52,6 +61,27 @@ void AYAnimatedSprite::addAtlas(std::shared_ptr<AYSpriteAtlas> atlas)
 {
     if (atlas)
         _atlases.push_back(atlas);
+}
+
+AYAnimationController& AYAnimatedSprite::getController()
+{
+    return _controller;
+}
+
+std::shared_ptr<AYAnimationClip> AYAnimatedSprite::_findClip(const std::string& name)
+{
+    for (int i = 0; i < _atlases.size(); i++)
+    {
+        if (!_atlases[i])
+            continue;
+        if (_atlases[i]->hasAnimation(name))
+        {
+            auto clip = _atlases[i]->getAnimation(name);
+            _curAtlas = i; //用于索引纹理ID
+            return clip;
+        }
+    }
+    return nullptr;
 }
 
 

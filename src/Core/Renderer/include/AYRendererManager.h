@@ -14,6 +14,7 @@ public:
 	void update(float delta_time) override;
 
 	void setWindowCloseCallback(WindowCloseCallback onWindowClosed);
+
 	AYRenderDevice* getRenderDevice() { return _device; };
 
 	GLuint loadTexture(const std::string& path);

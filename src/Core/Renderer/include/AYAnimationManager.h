@@ -20,7 +20,8 @@ public:
     std::shared_ptr<AYSpriteAtlas> loadAtlas(const std::string& atlasName, 
         const std::string& texturePath,
         const glm::vec2& spriteSize,
-        const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations);
+        const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
+        const std::vector<bool>& loops = {});
 
     std::shared_ptr<AYSpriteAtlas> getAtlas(const std::string& atlasName);
 

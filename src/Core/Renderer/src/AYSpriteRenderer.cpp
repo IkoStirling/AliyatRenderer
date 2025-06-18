@@ -11,10 +11,19 @@ const char* SPRITE_VERTEX_SHADER = R"(
     
     uniform mat4 model;
     uniform mat4 projection;
+    uniform float flipH;
+    uniform float flipW;
     
     void main() {
+        vec2 texCoord = aTexCoord;
+        if(flipH < 0.0) {
+            texCoord.x = 1.0 - texCoord.x; // 水平翻转UV坐标
+        }
+        if(flipW < 0.0) {
+            texCoord.y = 1.0 - texCoord.y; // 垂直翻转UV坐标
+        }
+        TexCoord = texCoord;
         gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
-        TexCoord = aTexCoord;
     }
 )";
 
@@ -44,10 +53,19 @@ const char* SPRITE_VERTEX_SHADER_ATLAS = R"(
         uniform mat4 projection;
         uniform vec2 uvOffset;
         uniform vec2 uvSize;
+        uniform float flipH;
+        uniform float flipW;
         
         void main() {
+            vec2 texCoord = aTexCoord;
+            if(flipH < 0.0) {
+                texCoord.x = 1.0 - texCoord.x; // 水平翻转UV坐标
+            }
+            if(flipW < 0.0) {
+                texCoord.y = 1.0 - texCoord.y; // 垂直翻转UV坐标
+            }
+            TexCoord = uvOffset + texCoord * uvSize;
             gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
-            TexCoord = uvOffset + aTexCoord * uvSize;
         }
     )";
 
@@ -77,7 +95,15 @@ void AYSpriteRenderer::init()
     _initAtlasShader();
 }
 
-void AYSpriteRenderer::drawSprite(GLuint texture, const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color, const glm::vec2& origin)
+void AYSpriteRenderer::drawSprite(GLuint texture,
+    const glm::vec2& position,
+    const glm::vec2& size,
+    float rotation,
+    const glm::vec4& color,
+    bool flipHorizontal,
+    bool flipVertical,
+    const glm::vec2& origin
+)
 {
     glm::mat4 model = _prepareModel(position, size, rotation, origin);
     glm::mat4 projection = _getProjecction();
@@ -89,6 +115,8 @@ void AYSpriteRenderer::drawSprite(GLuint texture, const glm::vec2& position, con
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniform4fv(glGetUniformLocation(_shaderProgram, "spriteColor"), 1, glm::value_ptr(color));
+    glUniform1f(glGetUniformLocation(_shaderProgram, "flipH"), flipHorizontal ? -1.0f : 1.0f);
+    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? -1.0f : 1.0f);
 
     // 绑定纹理
     glActiveTexture(GL_TEXTURE0);
@@ -100,7 +128,17 @@ void AYSpriteRenderer::drawSprite(GLuint texture, const glm::vec2& position, con
     glBindVertexArray(0);
 }
 
-void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture, const glm::vec2& position, const glm::vec2& size, const glm::vec2& uvOffset, const glm::vec2& uvSize, float rotation, const glm::vec4& color, const glm::vec2& origin)
+void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
+    const glm::vec2& position,
+    const glm::vec2& size,
+    const glm::vec2& uvOffset,
+    const glm::vec2& uvSize, 
+    float rotation, 
+    const glm::vec4& color,
+    bool flipHorizontal,
+    bool flipVertical,
+    const glm::vec2& origin
+)
 {
     glm::mat4 model = _prepareModel(position, size, rotation, origin);
     glm::mat4 projection = _getProjecction();
@@ -114,6 +152,8 @@ void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture, const glm::vec2& posi
     glUniform4fv(glGetUniformLocation(_atlasShaderProgram, "spriteColor"), 1, glm::value_ptr(color));
     glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvOffset"), 1, glm::value_ptr(uvOffset));
     glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvSize"), 1, glm::value_ptr(uvSize));
+    glUniform1f(glGetUniformLocation(_shaderProgram, "flipH"), flipHorizontal ? -1.0f : 1.0f);
+    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? -1.0f : 1.0f);
 
     // 绑定纹理
     glActiveTexture(GL_TEXTURE0);

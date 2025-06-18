@@ -62,12 +62,16 @@ AYSpriteRenderer* AYRenderer::getSpriteRenderer()
     return _spriteRenderer;
 }
 
+AYFontRenderer* AYRenderer::getFontRenderer()
+{
+    return _fontRenderer;
+}
+
 void AYRenderer::_initFontRenderer()
 {
     
     _fontRenderer = new AYFontRenderer(_device);
     _fontRenderer->loadFont("C:/Windows/Fonts/msyh.ttc", 24);
-    _fontRenderer->saveAtlas();
 }
 
 void AYRenderer::_initSpriteRenderer()

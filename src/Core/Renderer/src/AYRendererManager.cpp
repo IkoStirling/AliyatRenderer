@@ -36,7 +36,15 @@ void AYRendererManager::init()
 		"orc",
 		"assets/core/textures/sprite/testpack/Characters/Orc/Orc/Orc.png",
 		glm::vec2(100, 100),
-		data);
+		data,
+		{
+			true,
+			true,
+			false,
+			false,
+			false,
+			false
+		});
 
 	orcSprite = std::make_shared<AYAnimatedSprite>(
 		_renderer->getSpriteRenderer(),
@@ -88,9 +96,6 @@ GLuint AYRendererManager::loadTexture(const std::string& path)
 
 void AYRendererManager::_displayDebugInfo()
 {
-	std::string fps = "当前fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
-	_renderer->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-
 	constexpr float speed = 200.f;
 	static glm::vec2 pos = glm::vec2(200);
 	static float x = 0.f, y = 0.f;
@@ -106,45 +111,68 @@ void AYRendererManager::_displayDebugInfo()
 	if (y < 0.f)
 		d = true;
 
-	_renderer->getSpriteRenderer()->drawSprite(
-		tex_ID,
-		glm::vec2(x, y),  // 位置
-		glm::vec2(300.0f, 300.0f),  // 大小
-		0.0f,                       // 旋转
-		glm::vec4(0.0f, 1.f, 0.f, 0.5f),// 颜色
-		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-	);
+
+	std::string fps = "当前fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
+	_renderer->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+
+
 
 	auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
 
 	auto speedX = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX, 5.f });
 	auto speedY = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftY, 5.f });
 
-	if (fabs(speedX) > fabs(speedY))
-	{
-		pos.x += speedX;
-	}
-	else
-	{
-		pos.y += speedY;
-	}
+	static bool hDir = false;
+	if (speedX < 0) hDir = true;
+	else if (speedX > 0) hDir = false;
+	else {}
 
+	if (orcSprite->getController().isCurrentAnimationDone())
+	{
+		if (fabs(speedX) > fabs(speedY))
+		{
+			pos.x += speedX;
+		}
+		else
+		{
+			pos.y += speedY;
+		}
 
-	if (inputSystem->isActionActive("default.GamePad_X"))
-	{
-		orcSprite->playAnimation("atk01");
+		if (inputSystem->getUniversalInputState(MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT }) ||
+			inputSystem->isActionActive("default.GamePad_X"))
+		{
+			orcSprite->playAnimation("atk01");
+		}
+		else if (speedX || speedY)
+		{
+			orcSprite->playAnimation("walk01");
+		}
+		else
+		{
+			orcSprite->playAnimation("idle01");
+		}
 	}
-	else if (speedX || speedY)
-	{
-		orcSprite->playAnimation("walk01");
-	}
-	else
-	{
-		orcSprite->playAnimation("idle01");
-	}
-
 	
 	orcSprite->update(delta);
-	orcSprite->render(glm::vec2(-45 + pos.x, -55 + pos.y), glm::vec2(200, 200));
+	orcSprite->render(
+		glm::vec2(-45 + pos.x, -55 + pos.y),
+		glm::vec2(200, 200),
+		0.f,
+		glm::vec4(1.f),
+		hDir,
+		false,
+		glm::vec2(0.5f));
 
+
+
+	_renderer->getSpriteRenderer()->drawSprite(
+		tex_ID,
+		glm::vec2(x, y),  // 位置
+		glm::vec2(300.0f, 300.0f),  // 大小
+		0.0f,                       // 旋转
+		glm::vec4(0.0f, 1.f, 0.f, 0.1f),// 颜色
+		false,
+		false,
+		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	);
 }
