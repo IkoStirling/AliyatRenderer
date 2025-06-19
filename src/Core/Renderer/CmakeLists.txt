@@ -25,7 +25,6 @@ target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME})
 
 file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
 find_package(Freetype REQUIRED)
-find_package(Iconv REQUIRED)
 find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
 
 # CMAKE自动去重，不会链接两次
@@ -33,6 +32,5 @@ target_link_libraries(${MODULE_NAME} PUBLIC module_manager resource_manager
 	PRIVATE
 	${RENDER_LIBS}
 	Freetype::Freetype
-	Iconv::Iconv
 	${OpenCV_LIBS}
 ) 

@@ -93,8 +93,7 @@ void AYResourceManager::init()
 {
     _listenEvents();
     loadPersistentCache("assets/core/config/persistentResources.json");
-    std::cout << "AYResourceManager::init()\n";
-    //_preloadFromConfig("assets/core/preloadResource.json");
+    _preloadFromConfig("assets/core/preloadResource.json");
 }
 
 std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::string& filepath)
@@ -242,7 +241,7 @@ AYResourceManager::AYResourceManager()
 
 AYResourceManager::~AYResourceManager()
 {
-    //savePersistentCache("assets/core/config/persistentResources.json");
+    savePersistentCache("assets/core/config/persistentResources.json");
 }
 
 void AYResourceManager::_cleanupResources()

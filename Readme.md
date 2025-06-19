@@ -1,6 +1,8 @@
 # AliyatRenderer
 ---
 ### Project Architecture
+This project use the "cmake + vcpkg"
+
 	--Core
 		--EngineCore
 		--ModuleManager
@@ -29,6 +31,25 @@
 		Class name (without prefix) with large camel hump
 		Member functions and variables use small humps
 		Private variables use underscore prefix
+### Project Dependence
+Before execute this program, preparing these packages:
+
+	1. Boost::asio
+		Network && TimerManager(Unused)
+	2. Opencv4
+		Renderer...(Picture loaded)
+	3. Glm
+		Renderer...(Math)
+	4. nlohmann json
+		...(Serialize)
+	5. freetype
+		Renderer(Font loaded)
+	6. openssl
+		Network
+
+Run the following commands:
+
+	vcpkg install boost-asio boost-system opencv4 nlohmann-json
 ### Project Progress
 1. This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation
 
