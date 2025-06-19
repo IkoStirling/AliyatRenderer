@@ -54,4 +54,8 @@ Run the following commands:
 1. This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation
 
 	![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)
+2. Core code lines: 6820
+	
+	   Use this in powershell under "src/Core/":
+	   Get-ChildItem -Recurse -Include *.cpp,*.h,*.cxx,*.hpp | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum
 
