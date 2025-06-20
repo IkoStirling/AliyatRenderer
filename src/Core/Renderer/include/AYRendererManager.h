@@ -1,6 +1,7 @@
 #pragma once
 #include "Mod_Renderer.h"
-
+#include "BaseRendering/IAYRenderable.h"
+#include <vector>
 class AYRenderer;
 
 class AYRendererManager : public Mod_Renderer
@@ -12,6 +13,10 @@ public:
 	AYRendererManager() = default;
 	void init() override;
 	void update(float delta_time) override;
+	void renderAll() override;
+	void registerRenderable(IAYRenderable* renderable) override;
+	void removeRenderable(IAYRenderable* renderable) override;
+	AYRenderContext& getRenderContext() { return _context; }
 
 	void setWindowCloseCallback(WindowCloseCallback onWindowClosed);
 
@@ -23,6 +28,8 @@ private:
 	AYRenderDevice* _device = nullptr;      // OpenGL上下文管理
 	AYRenderer* _renderer = nullptr;        // 具体绘制逻辑
 	WindowCloseCallback _onWindowClosed;
+	std::vector<IAYRenderable*> _renderables; //不管理可渲染对象
+	AYRenderContext _context;
 
 private:
 	//******************debug**********************

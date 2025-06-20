@@ -1,4 +1,4 @@
-set(MODULE_NAME renderer)
+set(MODULE_NAME game_logic)
 set(INTERFACE_NAME ${MODULE_NAME}_xxx)
 
 
@@ -9,9 +9,8 @@ target_include_directories(${INTERFACE_NAME} INTERFACE
 )
 
 
-file(GLOB_RECURSE SRCS
-	"*.cpp"
-	"*.c"
+file(GLOB SRCS
+	"src/*.cpp"
 )
 add_library(${MODULE_NAME} STATIC
     ${SRCS}
@@ -23,14 +22,5 @@ target_include_directories(${MODULE_NAME} PUBLIC
 # 严格来说接口库是需要方链接，这里相当于直接include了interface目录
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}) 
 
-file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
-find_package(Freetype REQUIRED)
-find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
-
 # CMAKE自动去重，不会链接两次
-target_link_libraries(${MODULE_NAME} PUBLIC module_manager resource_manager
-	PRIVATE
-	${RENDER_LIBS}
-	Freetype::Freetype
-	${OpenCV_LIBS}
-) 
+target_link_libraries(${MODULE_NAME} PUBLIC module_manager renderer) 

@@ -15,4 +15,5 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	network
 	renderer
 	input_system
+	game_logic
 )

@@ -1,4 +1,4 @@
-#include "AYAnimationClip.h"
+#include "2DRendering/AYAnimationClip.h"
 
 AYAnimationClip::AYAnimationClip(const std::string& name, bool isLoop)
     : name(name), isLoop(isLoop) {

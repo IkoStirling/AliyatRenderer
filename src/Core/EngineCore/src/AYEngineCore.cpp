@@ -6,6 +6,9 @@
 #include "AYRendererManager.h"
 #include "AYInputSystem.h"
 #include "AYInputBinding.h"
+#include "AYGameObject.h"
+#include "Component/AYTransformComponent.h"
+#include "Component/AYSpriteRenderComponent.h"
 
 AYEngineCore& AYEngineCore::getInstance()
 {
@@ -33,6 +36,11 @@ void AYEngineCore::init()
     binding->addAction("GamePad_X", AYInputAction::Type::LongPress, GamepadButtonInput{GLFW_GAMEPAD_BUTTON_X});
     auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
     inputSystem->addInputMapping("default", binding);
+
+    auto obj = std::make_unique<AYGameObject>();
+    obj->addComponent<AYTransformComponent>();
+    obj->addComponent<AYSpriteRenderComponent>();
+    obj->removeComponents<AYSpriteRenderComponent>();
 }
 
 
@@ -94,9 +102,11 @@ void AYEngineCore::update()
         _accumulatedTime -= delta;
 
         {
-            GET_MODULE("MemoryPool")->update(delta);
             GET_MODULE("EventSystem")->update(delta);
             GET_MODULE("ResourceManager")->update(delta);
+            //GET_MODULE("Network")->update(delta);
+            //GET_MODULE("SceneManager")->update(delta);
+            //GET_MODULE("Physics")->update(delta);
         }
     }
     GET_MODULE("InputSystem")->update(_invTargetFPS);

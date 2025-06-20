@@ -2,8 +2,8 @@
 #include "AYRenderer.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
-#include "AYAnimatedSprite.h"
-#include "AYAnimationManager.h"
+#include "2DRendering/AYAnimatedSprite.h"
+#include "2DRendering/AYAnimationManager.h"
 
 
 #include "Mod_InputSystem.h"
@@ -67,12 +67,32 @@ void AYRendererManager::update(float delta_time)
 
 	// 2. TODO: Ö´ÐÐÊµ¼ÊäÖÈ¾Âß¼­
 
+	renderAll();
 
 	_displayDebugInfo();
 	// 3. ½»»»»º³åÇø
 	glfwSwapBuffers(_device->getWindow());
 
 	glfwPollEvents();
+}
+
+void AYRendererManager::renderAll()
+{
+	for (auto renderable : _renderables)
+	{
+		if (renderable)
+			renderable->render(_context);
+	}
+}
+
+void AYRendererManager::registerRenderable(IAYRenderable* renderable)
+{
+	_renderables.push_back(renderable);
+}
+
+void AYRendererManager::removeRenderable(IAYRenderable* renderable)
+{
+	std::erase(_renderables, renderable);
 }
 
 void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClosed)

@@ -36,6 +36,8 @@ add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/Renderer)
 add_subdirectory(src/Core/InputSystem)
 add_subdirectory(src/Core/Network)
+add_subdirectory(src/Core/GameLogic)
+add_subdirectory(src/Core/SceneManager)
 add_subdirectory(src/Core/EngineCore)
 
 

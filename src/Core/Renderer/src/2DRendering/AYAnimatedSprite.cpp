@@ -1,4 +1,4 @@
-#include "AYAnimatedSprite.h"
+#include "2DRendering/AYAnimatedSprite.h"
 
 
 AYAnimatedSprite::AYAnimatedSprite(AYSpriteRenderer* renderer, std::shared_ptr<AYSpriteAtlas> atlas):

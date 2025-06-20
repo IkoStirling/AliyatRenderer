@@ -1,7 +1,7 @@
 #pragma once
 #include "AYRenderDevice.h"
-#include "AYFontRenderer.h"
-#include "AYSpriteRenderer.h"
+#include "2DRendering/AYFontRenderer.h"
+#include "2DRendering/AYSpriteRenderer.h"
 
 class AYRenderer
 {

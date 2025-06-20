@@ -1,4 +1,4 @@
-#include "AYSpriteAtlas.h"
+#include "2DRendering/AYSpriteAtlas.h"
 
 AYSpriteAtlas::AYSpriteAtlas(GLuint textureId,
     const glm::vec2& spriteSize,
