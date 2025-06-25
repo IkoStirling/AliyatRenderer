@@ -4,6 +4,12 @@
 #include <memory>
 #include <string>
 
+
+AYGameObject::AYGameObject(const std::string& name):
+    _name(name)
+{
+}
+
 AYGameObject::~AYGameObject()
 {
 	_components.clear();

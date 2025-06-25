@@ -50,8 +50,13 @@ file(GLOB ASSETS
 file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 
 
-add_executable(TESTLIBS test.cpp)
+add_executable(TESTLIBS test.cpp )
 target_link_libraries(TESTLIBS PRIVATE engine_core )
+
+#--------------Project0001-------------#
+add_subdirectory(src/Project0001)
+add_executable(Project0001 src/Project0001/main.cpp )
+target_link_libraries(Project0001 PRIVATE project_0001)
 
 
 #file(GLOB_RECURSE SRCS

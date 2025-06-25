@@ -11,11 +11,8 @@
 class AYGameObject 
 {
 public:
-    AYGameObject() = default;
+    AYGameObject(const std::string& name = "GameObject");
     ~AYGameObject();
-
-    AYGameObject(const AYGameObject&) = delete;
-    AYGameObject& operator=(const AYGameObject&) = delete;
 
     AYGameObject(AYGameObject&&) noexcept;
     AYGameObject& operator=(AYGameObject&&) noexcept;
@@ -38,12 +35,22 @@ public:
     template<typename T>
     void removeComponents();
 
+    template<typename T>
+    void removeComponent(const std::string& name);
+
+    virtual void beginPlay();
     virtual void update(float delta_time);
+    virtual void endPlay();
 
     void setActive(bool active) { _active = active; }
     bool isActive() const { return _active; }
 
 private:
+    AYGameObject(const AYGameObject&) = delete;
+    AYGameObject& operator=(const AYGameObject&) = delete;
+
+protected:
+    std::string _name;
     std::unordered_multimap<std::type_index, std::unique_ptr<IAYComponent>> _components;
     bool _active = true;
 };
@@ -109,3 +116,8 @@ inline void AYGameObject::removeComponents()
     _components.erase(std::type_index(typeid(T)));
 }
 
+template<typename T>
+inline void AYGameObject::removeComponent(const std::string& name)
+{
+
+}
