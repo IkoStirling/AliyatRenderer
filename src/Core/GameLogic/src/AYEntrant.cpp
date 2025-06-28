@@ -1,10 +1,10 @@
-#include "AYEntrants.h"
+#include "AYEntrant.h"
 
-AYEntrants::AYEntrants(const std::string& name):
+AYEntrant::AYEntrant(const std::string& name):
 	AYGameObject(name)
 {
 }
 
-AYEntrants::~AYEntrants()
+AYEntrant::~AYEntrant()
 {
 }

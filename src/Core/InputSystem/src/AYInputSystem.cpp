@@ -36,7 +36,8 @@ void AYInputSystem::init()
 	glfwSetScrollCallback(window, &AYInputSystem::scrollCallbackWrapper);
 
 	initGamepad();
-	getInputState(GamepadButtonInput{ GLFW_GAMEPAD_BUTTON_X });
+	for(int i = 0; i < GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1; i++)
+		getInputState(GamepadButtonInput{ i });
 }
 
 void AYInputSystem::update(float delta_time)

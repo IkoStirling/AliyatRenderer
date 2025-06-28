@@ -38,17 +38,41 @@ public:
     template<typename T>
     void removeComponent(const std::string& name);
 
-    virtual void beginPlay();
+    virtual void beginPlay() {};
     virtual void update(float delta_time);
-    virtual void endPlay();
+    virtual void endPlay() {};
 
-    void setActive(bool active) { _active = active; }
+    void setName(std::string& name) { _name = name; }
+    const std::string& getName() { return _name; }
+    void setActive(bool active) 
+    { 
+        if (_active == active) return;
+
+        _active = active;
+        _handleRenderComponents(active);
+    }
     bool isActive() const { return _active; }
 
 private:
     AYGameObject(const AYGameObject&) = delete;
     AYGameObject& operator=(const AYGameObject&) = delete;
 
+    void _handleRenderComponents(bool shouldRegister)
+    {
+        auto renderer = GET_CAST_MODULE(AYRendererManager, "Renderer");
+        if (!renderer) return;
+
+        for (auto& comp : _components) {
+            if (auto* renderComp = dynamic_cast<IAYRenderComponent*>(comp.second.get())) {
+                if (shouldRegister) {
+                    renderer->registerRenderable(renderComp);
+                }
+                else {
+                    renderer->removeRenderable(renderComp);
+                }
+            }
+        }
+    }
 protected:
     std::string _name;
     std::unordered_multimap<std::type_index, std::unique_ptr<IAYComponent>> _components;

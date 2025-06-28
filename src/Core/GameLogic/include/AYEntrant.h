@@ -1,12 +1,13 @@
+#pragma once
 #include "AYGameObject.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
 struct STTransform
 {
-	glm::vec3 position;
-	glm::vec3 rotation;
-	float scale;
+	glm::vec3 position = glm::vec3(0.f);
+	glm::vec3 rotation = glm::vec3(0.f);
+	float scale = 1.f;
 
     glm::mat4 GetTransformMatrix() const {
         glm::mat4 matrix(1.0f);

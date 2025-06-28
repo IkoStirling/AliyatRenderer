@@ -9,6 +9,8 @@
 #include "AYGameObject.h"
 #include "Component/AYTransformComponent.h"
 #include "Component/AYSpriteRenderComponent.h"
+#include "Preset/Orc.h"
+#include "Preset/Orc_scene.h"
 
 AYEngineCore& AYEngineCore::getInstance()
 {
@@ -25,6 +27,7 @@ void AYEngineCore::init()
     GET_MODULE("ResourceManager")->init();
     GET_MODULE("Renderer")->init();
     GET_MODULE("InputSystem")->init();
+    GET_MODULE("SceneManager")->init();
 
     GET_CAST_MODULE(Mod_Renderer, "Renderer")->setWindowCloseCallback([this]() { 
         close(); 
@@ -37,10 +40,9 @@ void AYEngineCore::init()
     auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
     inputSystem->addInputMapping("default", binding);
 
-    auto obj = std::make_unique<AYGameObject>();
-    obj->addComponent<AYTransformComponent>();
-    obj->addComponent<AYSpriteRenderComponent>();
-    obj->removeComponents<AYSpriteRenderComponent>();
+    auto sm = GET_CAST_MODULE(AYSceneManager, "SceneManager");
+    sm->addScene<Orc_scene>("level0");
+    sm->loadScene("level0");
 }
 
 
@@ -84,11 +86,6 @@ void AYEngineCore::_updateFPSStats(int& frameCount, std::chrono::steady_clock::t
         _currentFPS = frameCount / elapsed;
         frameCount = 0;
         lastFpsUpdate = now;
-
-        //std::cout << "Current FPS: " << _currentFPS
-        //    << " | Frame time: " << _unscaledDeltaTime * 1000.0f << "ms"
-        //    << " | Time scale: " << _timeScale
-        //    << std::endl;
     }
 }
 
@@ -105,7 +102,7 @@ void AYEngineCore::update()
             GET_MODULE("EventSystem")->update(delta);
             GET_MODULE("ResourceManager")->update(delta);
             //GET_MODULE("Network")->update(delta);
-            //GET_MODULE("SceneManager")->update(delta);
+            GET_MODULE("SceneManager")->update(delta);
             //GET_MODULE("Physics")->update(delta);
         }
     }
@@ -119,9 +116,7 @@ void AYEngineCore::start()
 
 #ifdef _WIN32
     timeBeginPeriod(1);
-#endif // _WIN32
-
-    
+#endif
 
     using clock = std::chrono::steady_clock; // ¸ÄÓÃsteady_clock
     using sec = std::chrono::duration<float>;
@@ -136,7 +131,7 @@ void AYEngineCore::start()
 
 #ifdef _WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
-#endif // _WIN32
+#endif
 
     while (!_shouldClosed)
     {
@@ -158,7 +153,7 @@ void AYEngineCore::start()
 
 #ifdef _WIN32
     timeEndPeriod(1);
-#endif // _WIN32
+#endif
 }
 
 void AYEngineCore::close()

@@ -103,7 +103,7 @@ std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>
 AYAnimationManager::makeAnimationData(
 	const glm::vec2& spriteSize,
 	const glm::vec2& atlasSize,
-	std::vector<AnimeDataCreator> indexs,
+	const std::vector<AnimeDataCreator>& indexs,
 	float duration)
 {
 	std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>> data;

@@ -23,4 +23,4 @@ target_include_directories(${MODULE_NAME} PUBLIC
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}) 
 
 # CMAKE自动去重，不会链接两次
-target_link_libraries(${MODULE_NAME} PUBLIC module_manager game_logic) 
+target_link_libraries(${MODULE_NAME} PUBLIC module_manager game_logic renderer) 
