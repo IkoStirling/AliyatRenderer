@@ -1,4 +1,5 @@
 ﻿#include "2DRendering/AYSpriteRenderer.h"
+#include "AYRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> ​​
 
@@ -10,6 +11,7 @@ const char* SPRITE_VERTEX_SHADER = R"(
     out vec2 TexCoord;
     
     uniform mat4 model;
+    uniform mat4 view;
     uniform mat4 projection;
     uniform float flipH;
     uniform float flipW;
@@ -23,7 +25,7 @@ const char* SPRITE_VERTEX_SHADER = R"(
             texCoord.y = 1.0 - texCoord.y; // 垂直翻转UV坐标
         }
         TexCoord = texCoord;
-        gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
+        gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
     }
 )";
 
@@ -50,6 +52,7 @@ const char* SPRITE_VERTEX_SHADER_ATLAS = R"(
         out vec2 TexCoord;
         
         uniform mat4 model;
+        uniform mat4 view;
         uniform mat4 projection;
         uniform vec2 uvOffset;
         uniform vec2 uvSize;
@@ -58,19 +61,17 @@ const char* SPRITE_VERTEX_SHADER_ATLAS = R"(
         
         void main() {
             vec2 texCoord = aTexCoord;
-            if(flipH < 0.0) {
-                texCoord.x = 1.0 - texCoord.x; // 水平翻转UV坐标
-            }
-            if(flipW < 0.0) {
-                texCoord.y = 1.0 - texCoord.y; // 垂直翻转UV坐标
-            }
+            if(flipH < 0.0) texCoord.x = 1.0 - texCoord.x; 
+            if(flipW < 0.0) texCoord.y = 1.0 - texCoord.y; 
+
             TexCoord = uvOffset + texCoord * uvSize;
-            gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
+            gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
         }
     )";
 
-AYSpriteRenderer::AYSpriteRenderer(AYRenderDevice* device)
-    : _device(device)
+AYSpriteRenderer::AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer):
+    _device(device),
+    _renderer(renderer)
 {
     init();
 }
@@ -105,13 +106,18 @@ void AYSpriteRenderer::drawSprite(GLuint texture,
     const glm::vec2& origin
 )
 {
-    glm::mat4 model = _prepareModel(position, size, rotation, origin);
-    glm::mat4 projection = _getProjecction();
+    const auto& context = _renderer->getRenderContext();
+    glm::mat4 projection = context.currentCamera->getProjectionMatrix();
+    glm::mat4 view = context.currentCamera->getViewMatrix();
+
+    glm::vec2 originOffset = size * origin;
+    glm::mat4 model = _prepareModel(position - originOffset, size, rotation, origin);
 
     // 使用着色器
     glUseProgram(_shaderProgram);
 
     // 设置uniform
+    glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniform4fv(glGetUniformLocation(_shaderProgram, "spriteColor"), 1, glm::value_ptr(color));
@@ -140,14 +146,19 @@ void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
     const glm::vec2& origin
 )
 {
-    glm::mat4 model = _prepareModel(position, size, rotation, origin);
-    glm::mat4 projection = _getProjecction();
+    const auto& context = _renderer->getRenderContext();
+    glm::mat4 projection = context.currentCamera->getProjectionMatrix();
+    glm::mat4 view = context.currentCamera->getViewMatrix();
+
+    glm::vec2 originOffset = size * origin;
+    glm::mat4 model = _prepareModel(position - originOffset, size, rotation, origin);
 
     // 使用图集着色器
     glUseProgram(_atlasShaderProgram);
 
     // 设置uniform
     glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniform4fv(glGetUniformLocation(_atlasShaderProgram, "spriteColor"), 1, glm::value_ptr(color));
     glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvOffset"), 1, glm::value_ptr(uvOffset));

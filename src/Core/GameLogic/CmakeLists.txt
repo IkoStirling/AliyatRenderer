@@ -9,8 +9,9 @@ target_include_directories(${INTERFACE_NAME} INTERFACE
 )
 
 
-file(GLOB SRCS
-	"src/*.cpp"
+file(GLOB_RECURSE SRCS
+	"*.cpp"
+	"*.c"
 )
 add_library(${MODULE_NAME} STATIC
     ${SRCS}

@@ -1,4 +1,5 @@
-﻿#include "2DRendering/AYFontRenderer.h"
+﻿#include "AYRenderer.h"
+#include "2DRendering/AYFontRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> ​​
 #include <vector>
@@ -29,8 +30,9 @@ void main() {
 }
 )";
 
-AYFontRenderer::AYFontRenderer(AYRenderDevice* device):
-    _device(device)
+AYFontRenderer::AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer):
+    _device(device),
+    _renderer(renderer)
 {
     //初始化FT库
     if (FT_Init_FreeType(&_ftLibrary)) {

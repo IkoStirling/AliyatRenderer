@@ -1,8 +1,8 @@
 #pragma once
 #include "IAYRenderComponent.h"
 #include "2DRendering/AYAnimationManager.h"
-
 #include "AYEntrant.h"
+
 
 class AYSpriteRenderComponent : public IAYRenderComponent
 {
@@ -14,13 +14,14 @@ public:
 		bool loop;
 	};
 
-	virtual void init() override {};
+	virtual void beginPlay() override {};
 	virtual void update(float delta_time) override 
 	{
 		if (_sprite) {
 			_sprite->update(delta_time);
 		}
 	};
+	virtual void endPlay() override {};
 	virtual void render(const AYRenderContext& context) override
 	{
 		if (!_sprite)

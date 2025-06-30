@@ -1,4 +1,5 @@
 #pragma once
+#include "Core.h"
 #include <unordered_set>
 #include <string>
 #include <typeindex>

@@ -4,7 +4,6 @@
 #include "AYMemoryPool.h"
 #include <iostream>
 #include <atomic>
-//#include <GLFW/glfw3.h>
 #include "opencv2/opencv.hpp"
 
 
@@ -42,7 +41,7 @@ public:
 		//  π”√OpenCVº”‘ÿÕºœÒ
 		_imageData = cv::imread(filepath, cv::IMREAD_UNCHANGED);
 		if (_imageData.empty()) {
-			std::cerr << "Failed to load texture with OpenCV: " << filepath << std::endl;
+			//spdlog::error("Failed to load texture with OpenCV: ", filepath);
 			return false;
 		}
 
@@ -60,7 +59,7 @@ public:
 
 		IAYResource::load(filepath);
 
-		std::cout << "Texture loading info: " << _resourcePath << std::endl;
+		//spdlog::debug("Texture loading info: ", _resourcePath);
 
 		_loaded = true;
 		return true;
@@ -76,7 +75,8 @@ public:
 	virtual bool reload(const std::string& filepath)override
 	{
 		IAYResource::reload(filepath);
-		std::cout << "Texture reload" << std::endl;
+		//spdlog::debug("Texture reload");
+
 		return true;
 	}
 	virtual size_t sizeInBytes()override

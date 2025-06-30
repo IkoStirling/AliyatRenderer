@@ -18,7 +18,7 @@ public:
     AYGameObject& operator=(AYGameObject&&) noexcept;
 
     template<typename T, typename... Args>
-    T* addComponent(Args&&... args);
+    T* addComponent(const std::string& name, Args&&... args);
 
     template<typename T>
     std::vector<T*> getComponents() const;
@@ -29,50 +29,26 @@ public:
     template<typename T>
     bool hasComponent() const;
 
-    /*
-        组件一旦绑定不建议移除，尽管这里依旧会提供接口
-    */
     template<typename T>
     void removeComponents();
 
     template<typename T>
     void removeComponent(const std::string& name);
 
-    virtual void beginPlay() {};
+    virtual void beginPlay();
     virtual void update(float delta_time);
-    virtual void endPlay() {};
+    virtual void endPlay();
 
-    void setName(std::string& name) { _name = name; }
+    void setName(const std::string& name) { _name = name; }
     const std::string& getName() { return _name; }
-    void setActive(bool active) 
-    { 
-        if (_active == active) return;
-
-        _active = active;
-        _handleRenderComponents(active);
-    }
+    void setActive(bool active);
     bool isActive() const { return _active; }
 
 private:
     AYGameObject(const AYGameObject&) = delete;
     AYGameObject& operator=(const AYGameObject&) = delete;
 
-    void _handleRenderComponents(bool shouldRegister)
-    {
-        auto renderer = GET_CAST_MODULE(AYRendererManager, "Renderer");
-        if (!renderer) return;
-
-        for (auto& comp : _components) {
-            if (auto* renderComp = dynamic_cast<IAYRenderComponent*>(comp.second.get())) {
-                if (shouldRegister) {
-                    renderer->registerRenderable(renderComp);
-                }
-                else {
-                    renderer->removeRenderable(renderComp);
-                }
-            }
-        }
-    }
+    void _handleRenderComponents(bool shouldRegister);
 protected:
     std::string _name;
     std::unordered_multimap<std::type_index, std::unique_ptr<IAYComponent>> _components;
@@ -80,12 +56,13 @@ protected:
 };
 
 template<typename T, typename ...Args>
-inline T* AYGameObject::addComponent(Args && ...args)
+inline T* AYGameObject::addComponent(const std::string& name, Args && ...args)
 {
     static_assert(std::is_base_of_v<IAYComponent, T>, "T must inherit from IAYComponent");
     
     auto component = std::make_unique<T>(std::forward<Args>(args)...);
     component->setOwner(this);
+    component->setName(name);
     T* rawPtr = component.get();
     
     if constexpr (std::is_base_of_v<IAYRenderComponent, T>)
@@ -94,7 +71,6 @@ inline T* AYGameObject::addComponent(Args && ...args)
     }
 
     _components.emplace(std::type_index(typeid(T)), std::move(component));
-    rawPtr->init();
     
     return rawPtr;
 }

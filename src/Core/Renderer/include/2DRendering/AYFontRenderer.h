@@ -10,6 +10,7 @@
 #include <codecvt>
 #include <opencv2/opencv.hpp>
 
+class AYRenderer;
 
 static std::u32string utf8_to_utf32(const std::string& utf8) {
     std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
@@ -31,7 +32,7 @@ struct Character {
 */
 class AYFontRenderer {
 public:
-    AYFontRenderer(AYRenderDevice* device);
+    AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer);
     ~AYFontRenderer();
 
     /*
@@ -87,6 +88,7 @@ private:
 
 private:
     AYRenderDevice* _device;
+    AYRenderer* _renderer;
     std::vector<TextureAtlas> _atlases;
     GLuint _vao, _vbo;
     GLuint _shaderProgram;

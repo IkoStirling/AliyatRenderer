@@ -3,9 +3,11 @@
 #include <glm/glm.hpp>
 #include <memory>
 
+class AYRenderer;
+
 class AYSpriteRenderer {
 public:
-    AYSpriteRenderer(AYRenderDevice* device);
+    AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer);
     ~AYSpriteRenderer();
 
     void init();
@@ -41,6 +43,8 @@ public:
     void setViewportSize(int width, int height);
 
 private:
+    AYRenderer* _renderer;
+
     glm::mat4 _prepareModel(const glm::vec2& position,
         const glm::vec2& size,
         float rotation,

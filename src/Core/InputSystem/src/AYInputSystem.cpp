@@ -232,6 +232,7 @@ void AYInputSystem::initGamepad(int joystickId)
 	glfwSetJoystickCallback([](int jid, int event) {
 		if (event == GLFW_CONNECTED)
 		{
+
 			std::cout << "手柄 " << jid << " 已连接" << std::endl;
 		}
 		else if (event == GLFW_DISCONNECTED)

@@ -1,4 +1,4 @@
-set(MODULE_NAME modify_this)
+set(MODULE_NAME camera_system)
 set(INTERFACE_NAME ${MODULE_NAME}_xxx)
 
 

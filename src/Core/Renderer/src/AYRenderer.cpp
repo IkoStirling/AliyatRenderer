@@ -9,8 +9,6 @@ AYRenderer::AYRenderer(AYRenderDevice* device) :
 
 AYRenderer::~AYRenderer()
 {
-    delete _fontRenderer;
-    delete _spriteRenderer;
 }
 
 void AYRenderer::clearScreen(float r, float g, float b, float a)
@@ -59,22 +57,22 @@ void AYRenderer::renderText(const std::string& text, float x, float y, float sca
 
 AYSpriteRenderer* AYRenderer::getSpriteRenderer()
 {
-    return _spriteRenderer;
+    return _spriteRenderer.get();
 }
 
 AYFontRenderer* AYRenderer::getFontRenderer()
 {
-    return _fontRenderer;
+    return _fontRenderer.get();
 }
 
 void AYRenderer::_initFontRenderer()
 {
     
-    _fontRenderer = new AYFontRenderer(_device);
+    _fontRenderer = std::make_unique<AYFontRenderer>(_device, this);
     _fontRenderer->loadFont("C:/Windows/Fonts/msyh.ttc", 24);
 }
 
 void AYRenderer::_initSpriteRenderer()
 {
-    _spriteRenderer = new AYSpriteRenderer(_device);
+    _spriteRenderer = std::make_unique<AYSpriteRenderer>(_device, this);
 }

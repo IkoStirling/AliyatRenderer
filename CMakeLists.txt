@@ -8,7 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 if (MSVC)
-	#如不添加编译命令，会默认采用本地解码硬编码字符串，也就是gbk，程序将在字体渲染时崩溃
+	# 如不添加编译命令，会默认采用本地gbk解码硬编码字符串，程序将在字体渲染时崩溃
+	# spdlog已经添加了utf-8选项
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
 endif()
@@ -33,6 +34,7 @@ add_subdirectory(src/Core/MemoryPool)
 add_subdirectory(src/Core/EventSystem)
 add_subdirectory(src/Core/TimerManager)
 add_subdirectory(src/Core/ResourceManager)
+add_subdirectory(src/Core/CameraSystem)
 add_subdirectory(src/Core/Renderer)
 add_subdirectory(src/Core/InputSystem)
 add_subdirectory(src/Core/Network)

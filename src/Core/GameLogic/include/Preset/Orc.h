@@ -1,6 +1,8 @@
 #pragma once
 #include "AYEntrant.h"
 #include "Component/AYSpriteRenderComponent.h"
+#include "Component/AYCameraComponent.h"
+#include "Path.h"
 
 class Orc : public AYEntrant
 {
@@ -8,11 +10,14 @@ public:
     Orc(const std::string& name = "Orc") :
         AYEntrant(name)
     {
-		_orcSprite = addComponent<AYSpriteRenderComponent>();
+		_orcSprite = addComponent<AYSpriteRenderComponent>("_orcSprite");
+		_camera = addComponent<AYCameraComponent>("_orcCamera");
+		_camera->setupCamera(IAYCamera::Type::ORTHOGRAPHIC_2D);
+		_camera->active();
 
 		_orcSprite->setup_sprite(
 			_name,
-			"assets/core/textures/sprite/testpack/Characters/Orc/Orc/Orc.png",
+			Path::Engine::getPresetTexturePath() + "Orc.png",
 			glm::vec2(100, 100),
 			glm::vec2(800, 600),
 			{
@@ -41,7 +46,7 @@ public:
 			auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
 
 			glm::vec2 movement(0.0f);
-			static float moveSpeed = 200.f;
+			float moveSpeed = 200.f * (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_LEFT_SHIFT }) ? 5.f : 1.f);
 			movement.x = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX, moveSpeed });
 			movement.y = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftY, moveSpeed });
 			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_A })) movement.x = -moveSpeed;
@@ -89,4 +94,5 @@ public:
     }
 private:
     AYSpriteRenderComponent* _orcSprite;
+	AYCameraComponent* _camera;
 };

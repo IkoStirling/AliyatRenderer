@@ -6,8 +6,9 @@
 class AYTransformComponent : public IAYComponent
 {
 public:
-    virtual void init() override {}
+    virtual void beginPlay() override {}
     virtual void update(float delta_time) override {}
+    virtual void endPlay() override {}
 
     glm::vec3 position{ 0.0f, 0.0f, 0.0f };
     glm::vec3 rotation{ 0.0f, 0.0f, 0.0f };

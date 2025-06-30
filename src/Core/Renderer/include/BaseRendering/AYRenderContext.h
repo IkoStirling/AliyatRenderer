@@ -1,8 +1,12 @@
 #pragma once
-#include "AYCamera.h"
+#include "BaseRendering/Camera/IAYCamera.h"
 #include <memory>
 
 struct AYRenderContext
 {
-	std::shared_ptr<AYCamera> camera;
+	IAYCamera* currentCamera = nullptr;
+
+	void validate() const {
+		assert(currentCamera && "Camera must be set before rendering");
+	}
 };

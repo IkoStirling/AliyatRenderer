@@ -2,6 +2,8 @@
 #include "AYRenderDevice.h"
 #include "2DRendering/AYFontRenderer.h"
 #include "2DRendering/AYSpriteRenderer.h"
+#include "BaseRendering/AYRenderContext.h"
+#include <memory>
 
 class AYRenderer
 {
@@ -14,6 +16,7 @@ public:
     void setViewport(int x, int y, int width, int height);
     void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
 
+    AYRenderContext& getRenderContext() { return _context; }
     AYSpriteRenderer* getSpriteRenderer();
     AYFontRenderer* getFontRenderer();
 private:
@@ -21,8 +24,11 @@ private:
     void _initSpriteRenderer();
 
     AYRenderDevice* _device;
-    AYFontRenderer* _fontRenderer;
-    AYSpriteRenderer* _spriteRenderer;
+    std::unique_ptr<AYFontRenderer> _fontRenderer;
+    std::unique_ptr<AYSpriteRenderer> _spriteRenderer;
+
+
+    AYRenderContext _context;
 
     GLuint _screenVAO = 0;
 

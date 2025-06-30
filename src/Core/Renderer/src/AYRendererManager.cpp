@@ -1,24 +1,22 @@
 #include "AYRendererManager.h"
-#include "AYRendererManager.h"
-#include "AYRendererManager.h"
-#include "AYRenderer.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 
 
-
-#include "Mod_InputSystem.h"
-
 void AYRendererManager::init()
 {
-	_device = new AYRenderDevice();
+	_device = std::make_unique<AYRenderDevice>();
 	if (!_device->init(1920, 1080))
 		return;
-	_renderer = new AYRenderer(_device);
-	_animeMana = new AYAnimationManager(_device);
+	_renderer = std::make_unique<AYRenderer>(getRenderDevice());
+	_animeMana = std::make_unique<AYAnimationManager>(getRenderDevice());
+	_cameraSystem = std::make_unique<AYCameraSystem>();
 
-	tex_ID = loadTexture("assets/core/textures/checkerboard.png");
 
+
+
+
+	tex_ID = loadTexture("assets/core/textures/500_497.png");
 }
 
 void AYRendererManager::update(float delta_time)
@@ -35,7 +33,7 @@ void AYRendererManager::update(float delta_time)
 
 	// 2. TODO: 执行实际渲染逻辑
 
-	renderAll();
+	_renderAll(delta_time);
 
 	_displayDebugInfo();
 	// 3. 交换缓冲区
@@ -44,13 +42,28 @@ void AYRendererManager::update(float delta_time)
 	glfwPollEvents();
 }
 
-void AYRendererManager::renderAll()
+void AYRendererManager::_renderAll(float delta_time)
 {
+	_updateCameraActive(delta_time);
+
 	for (auto renderable : _renderables)
 	{
 		if (renderable)
-			renderable->render(_context);
+			renderable->render(_renderer->getRenderContext());
 	}
+}
+
+void AYRendererManager::_updateCameraActive(float delta_time)
+{
+	auto* camera = _cameraSystem->getActiveCamera();
+	auto& context = _renderer->getRenderContext();
+	context.currentCamera = camera;
+	context.validate();
+	context.currentCamera->update(delta_time);
+	const auto& viewport = context.currentCamera->getViewport();
+	_renderer->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
+
+	//.......
 }
 
 void AYRendererManager::registerRenderable(IAYRenderable* renderable)
@@ -71,6 +84,11 @@ void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClose
 void AYRendererManager::setScreenCleanColor(const glm::vec3& color)
 {
 	_color = color;
+}
+
+AYRenderContext& AYRendererManager::getRenderContext()
+{
+	return _renderer->getRenderContext();
 }
 
 GLuint AYRendererManager::loadTexture(const std::string& path)
@@ -119,7 +137,7 @@ void AYRendererManager::_displayDebugInfo()
 		glm::vec2(x, y),  // 位置
 		glm::vec2(300.0f, 300.0f),  // 大小
 		0.0f,                       // 旋转
-		glm::vec4(0.0f, 1.f, 0.f, 0.1f),// 颜色
+		glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
 		false,
 		false,
 		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
