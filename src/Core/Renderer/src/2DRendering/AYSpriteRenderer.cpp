@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp> ​​
 
 const char* SPRITE_VERTEX_SHADER = R"(
-    #version 330 core
+    #version 460 core
     layout (location = 0) in vec2 aPos;
     layout (location = 1) in vec2 aTexCoord;
     
@@ -30,7 +30,7 @@ const char* SPRITE_VERTEX_SHADER = R"(
 )";
 
 const char* SPRITE_FRAGMENT_SHADER = R"(
-    #version 330 core
+    #version 460 core
     in vec2 TexCoord;
     out vec4 FragColor;
     

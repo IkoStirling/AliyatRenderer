@@ -20,8 +20,8 @@ public: // transform
     glm::vec3 getRotation() const { return _transform.rotation; }
     void setRotation(const glm::vec3& rotation) { _transform.rotation = rotation; }
 
-    float getScale() const { return _transform.scale; }
-    void setScale(float scale) { _transform.scale = scale; }
+    glm::vec3 getScale() const { return _transform.scale; }
+    void setScale(const glm::vec3& scale) { _transform.scale = scale; }
 
 protected:
     STTransform _transform;

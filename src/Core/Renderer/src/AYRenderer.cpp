@@ -5,6 +5,7 @@ AYRenderer::AYRenderer(AYRenderDevice* device) :
 {
     _initFontRenderer();
     _initSpriteRenderer();
+    _initCoreRenderer();
 }
 
 AYRenderer::~AYRenderer()
@@ -65,6 +66,11 @@ AYFontRenderer* AYRenderer::getFontRenderer()
     return _fontRenderer.get();
 }
 
+AYCoreRenderer* AYRenderer::getCoreRenderer()
+{
+    return _coreRenderer.get();
+}
+
 void AYRenderer::_initFontRenderer()
 {
     
@@ -75,4 +81,9 @@ void AYRenderer::_initFontRenderer()
 void AYRenderer::_initSpriteRenderer()
 {
     _spriteRenderer = std::make_unique<AYSpriteRenderer>(_device, this);
+}
+
+void AYRenderer::_initCoreRenderer()
+{
+    _coreRenderer = std::make_unique<AYCoreRenderer>(_device, this);
 }

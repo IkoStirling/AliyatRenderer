@@ -3,6 +3,7 @@
 #include "2DRendering/AYFontRenderer.h"
 #include "2DRendering/AYSpriteRenderer.h"
 #include "BaseRendering/AYRenderContext.h"
+#include "BaseRendering/AYCoreRenderer.h"
 #include <memory>
 
 class AYRenderer
@@ -19,17 +20,19 @@ public:
     AYRenderContext& getRenderContext() { return _context; }
     AYSpriteRenderer* getSpriteRenderer();
     AYFontRenderer* getFontRenderer();
+    AYCoreRenderer* getCoreRenderer();
+
 private:
     void _initFontRenderer();
     void _initSpriteRenderer();
+    void _initCoreRenderer();
 
     AYRenderDevice* _device;
-    std::unique_ptr<AYFontRenderer> _fontRenderer;
-    std::unique_ptr<AYSpriteRenderer> _spriteRenderer;
-
-
     AYRenderContext _context;
 
-    GLuint _screenVAO = 0;
+    std::unique_ptr<AYFontRenderer> _fontRenderer;
+    std::unique_ptr<AYSpriteRenderer> _spriteRenderer;
+    std::unique_ptr<AYCoreRenderer> _coreRenderer;
 
+    GLuint _screenVAO = 0;
 };

@@ -15,14 +15,14 @@ bool AYRenderDevice::init(int width, int height)
     glfwMakeContextCurrent(_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
 
-    //glfwSetFramebufferSizeCallback(windowInstance, framebufferSizeCallback);
-
     glfwSwapInterval(1);
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    _stateManager = std::make_unique<AYGLStateManager>();
 
+    _stateManager->setDepthTest(true);
+    _stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    _shaderManager = std::make_unique<AYShaderManager>();
     return true;
 }
 
@@ -37,14 +37,19 @@ GLFWwindow* AYRenderDevice::getWindow()
     return win;
 }
 
-
-
-GLuint AYRenderDevice::createVertexBuffer(const void* data, size_t size)
+GLuint AYRenderDevice::createVertexBuffer(const void* data, size_t size, const std::string& type)
 {
     GLuint vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    if (type == "dynamic")
+    {
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+    }
+    else
+    {
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    }
     return vbo;
 }
 
@@ -111,6 +116,7 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
     glShaderSource(vertexShader, 1, &vtx_src, NULL);
     glCompileShader(vertexShader);
 
+
     // ¥¥Ω®∆¨∂Œ◊≈…´∆˜
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &frag_src, NULL);
@@ -122,9 +128,51 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
+
+
     // …æ≥˝◊≈…´∆˜∂‘œÛ
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
     return shaderProgram;
+}
+
+GLuint AYRenderDevice::getShaderV(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
+{
+    if (reload)
+        _shaderManager->reloadShader(name);
+    return _shaderManager->loadShader(name, vertex_shaderPath, fragment_shaderPath);
+}
+
+void AYRenderDevice::restoreGLState()
+{
+    // ª÷∏¥≥Ã–Ú
+    _stateManager->useProgram(_previousState.currentProgram);
+
+    // ª÷∏¥…Ó∂»≤‚ ‘
+    _stateManager->setDepthTest(_previousState.depthTestEnabled);
+
+    // ª÷∏¥ªÏ∫œ◊¥Ã¨
+    _stateManager->setBlend(_previousState.blendEnabled,
+        _previousState.currentBlendFunc.src,
+        _previousState.currentBlendFunc.dst);
+
+    // ª÷∏¥VAO/VBO
+    _stateManager->bindVertexArray(_previousState.currentVAO);
+    _stateManager->bindBuffer(GL_ARRAY_BUFFER, _previousState.currentVBO);
+    _stateManager->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _previousState.currentEBO);
+
+    // ª÷∏¥Œ∆¿Ì
+    for (GLuint unit = 0; unit < _previousState.currentTextureUnits.size(); ++unit) {
+        _stateManager->bindTexture(GL_TEXTURE_2D, _previousState.currentTextureUnits[unit], unit);
+    }
+
+    // ª÷∏¥ ”ø⁄
+    _stateManager->setViewport(_previousState.currentViewport.x,
+        _previousState.currentViewport.y,
+        _previousState.currentViewport.w,
+        _previousState.currentViewport.h);
+
+    // ª÷∏¥œﬂøÌ
+    _stateManager->setLineWidth(_previousState.lineWidth);
 }

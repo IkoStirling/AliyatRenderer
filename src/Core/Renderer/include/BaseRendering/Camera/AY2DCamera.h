@@ -14,12 +14,8 @@ public:
 
     void update(float delta_time) 
     {
-        /*std::cout << "[(" << _currentPos.x << ", " << _currentPos.y << "), ("
-            << _targetPos.x << ", " << _targetPos.y << ")\n";*/
-            // 1. 计算目标点在屏幕空间的位置
-        glm::vec2 screenCenter = glm::vec2(_viewport.z, _viewport.w) * 0.5f;
-        glm::vec2 screenPos = _targetPos - _currentPos + screenCenter;
-
+        // 1. 计算目标点在屏幕空间的位置
+        glm::vec2 screenPos = _targetPos - _currentPos + getScreenCenter();
         // 2. 计算死区边界（像素坐标）
         glm::vec2 deadzoneMin(_viewport.z * _deadzone.x, _viewport.w * _deadzone.z);
         glm::vec2 deadzoneMax(_viewport.z * _deadzone.y, _viewport.w * _deadzone.w);
@@ -43,17 +39,17 @@ public:
         newPos.y = glm::clamp(newPos.y,
             _mapBounds.z + _viewport.w * _deadzone.z,
             _mapBounds.w - _viewport.w * (1 - _deadzone.w));
+        //std::cout << "screenPos: (" << screenPos.x << ", " << screenPos.y << ")\n";
 
         _currentPos = newPos;
     }
 
     glm::mat4 getViewMatrix() const override 
     {
-        // 将屏幕中心定义为(0,0)
+        // 将屏幕中心定义为(0,0), 正常是在左上角
         return glm::translate(glm::mat4(1.0f),
             -glm::vec3(
-                _currentPos.x - _viewport.z / 2 + _additionalOffset.x,
-                _currentPos.y - _viewport.w / 2 + _additionalOffset.y,
+                _currentPos - getScreenCenter() + _additionalOffset,
                 0.0f));
     }
 
@@ -65,7 +61,10 @@ public:
     void setDeadzone(const glm::vec4& zone) { _deadzone = zone; } // left, right, bottom, top
     void setTargetPosition(const glm::vec2& targetPos) { _targetPos = targetPos; }
     void setCurrentPosition(const glm::vec2& currentPos) { _currentPos = currentPos; }
-
+    glm::vec2 getScreenCenter() const
+    {
+        return  glm::vec2(_viewport.z, _viewport.w) * 0.5f;
+    }
 private:
     glm::vec2 _targetPos{ 0.0f };
     glm::vec2 _currentPos{ 0.0f };

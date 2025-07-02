@@ -5,7 +5,7 @@
 #include <vector>
 
 const char* textVertexShader = R"(
-#version 330 core
+#version 460 core
 layout (location = 0) in vec4 vertex;
 out vec2 TexCoords;
 
@@ -18,7 +18,7 @@ void main() {
 )";
 
 const char* textFragmentShader = R"(
-#version 330 core
+#version 460 core
 in vec2 TexCoords;
 out vec4 color;
 

@@ -2,7 +2,7 @@
 #include "AYEntrant.h"
 #include "Component/AYSpriteRenderComponent.h"
 #include "Component/AYCameraComponent.h"
-#include "Path.h"
+#include "AYPath.h"
 
 class Orc : public AYEntrant
 {
@@ -17,7 +17,7 @@ public:
 
 		_orcSprite->setup_sprite(
 			_name,
-			Path::Engine::getPresetTexturePath() + "Orc.png",
+			AYPath::Engine::getPresetTexturePath() + "Orc.png",
 			glm::vec2(100, 100),
 			glm::vec2(800, 600),
 			{
@@ -70,6 +70,12 @@ public:
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_K }))
 			{
 				_orcSprite->playAnimation("dead01");
+			}
+			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_V }))
+			{
+				static int rad = 0;
+				auto& trans = getTransform();
+				setRotation(glm::vec3( 0.f,0.f,glm::radians((float)(rad++ % 160))));
 			}
 			else if (movement != glm::vec2(0.0f))
 			{

@@ -1,4 +1,5 @@
 #include "AYEngineCore.h"
+#define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h> 
 #pragma comment(lib, "winmm.lib") 
@@ -59,7 +60,7 @@ void AYEngineCore::setTargetFPS(float fps)
 
 void AYEngineCore::setTimeScale(float scale)
 {
-    _timeScale = max(0.0f, scale);
+    _timeScale = std::max(0.0f, scale);
 }
 
 float AYEngineCore::getCurrentFPS() const

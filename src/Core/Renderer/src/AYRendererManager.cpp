@@ -30,12 +30,15 @@ void AYRendererManager::update(float delta_time)
 	}
 	delta = delta_time;
 	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
+	_renderer->getCoreRenderer()->beginDraw();
 
 	// 2. TODO: 执行实际渲染逻辑
 
 	_renderAll(delta_time);
 
 	_displayDebugInfo();
+
+	_renderer->getCoreRenderer()->endDraw();
 	// 3. 交换缓冲区
 	glfwSwapBuffers(_device->getWindow());
 
@@ -131,15 +134,38 @@ void AYRendererManager::_displayDebugInfo()
 	std::string fps = "当前fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
 	_renderer->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
+	auto* dr = _renderer->getCoreRenderer();
+	//dr->drawArrow2D({}, glm::vec3(100.f), glm::vec3(600.f), 20.f, glm::vec4(1.f, 0.f, 0.f, 1.f));
+	//dr->drawLine2D(glm::vec2(0,0),glm::vec2(1920,1080),glm::vec4(1.f));
 
-	_renderer->getSpriteRenderer()->drawSprite(
-		tex_ID,
-		glm::vec2(x, y),  // 位置
-		glm::vec2(300.0f, 300.0f),  // 大小
-		0.0f,                       // 旋转
-		glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
-		false,
-		false,
-		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-	);
+	dr->drawLine2D({ {glm::vec2(10.f),0}, glm::vec4(0, 1, 0, 1) },
+		{ {glm::vec2(500.f),0}, glm::vec4(0, 0, 1, 1) },
+		AYCoreRenderer::Space::World);
+
+	dr->drawLine2D({ {glm::vec3(100.f, 100.f, 0.f)}, glm::vec4(0, 1, 0, 1) },
+		{ {glm::vec3(600.f, 500.f, 0.f)}, glm::vec4(0, 1, 0, 1) },
+		AYCoreRenderer::Space::World);
+
+	dr->drawLine2D({ glm::vec3(300.f, 100.f, 0.f), glm::vec4(0, 1, 0, 1) },
+		{ glm::vec3(-600.f, 500.f, 0.f),
+		glm::vec4(0, 1, 0, 1) },
+		AYCoreRenderer::Space::World);
+
+	dr->drawArrow2D({}, glm::vec3(100.f, 400.f, 0.f), glm::vec3(600.f, -500.f, 0.f), 20.f, glm::vec4(1.f, 0.f, 0.f, 1.f));
+	for (int i = 0; i < 100; i++) {
+		dr->drawRect2D({ glm::vec3(i * 100.f, 0, 0) }, glm::vec2(50.f), glm::vec4(0, 1, 0, 1), false);
+		dr->drawRect2D({ glm::vec3(i * -100.f, 0, 0) }, glm::vec2(30.f), glm::vec4(0, 0, 1, 1), true);
+	}
+
+	//_renderer->getSpriteRenderer()->drawSprite(
+	//	tex_ID,
+	//	//glm::vec2(x, y),  // 位置
+	//	glm::vec2(0.f),
+	//	glm::vec2(1200.0f),  // 大小
+	//	0.0f,                       // 旋转
+	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
+	//	false,
+	//	false,
+	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	//);
 }

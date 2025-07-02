@@ -1,7 +1,4 @@
 ﻿#pragma once
-#include <memory>
-#include <unordered_map>
-#include <future>
 #include "core_event_system.h"
 #include "IAYResource.h"
 #include "STResourceLoadRequest.h"
@@ -12,6 +9,11 @@
 
 #include "Mod_ResourceManager.h"
 #include "Event_ResourceLoadAsync.h"
+
+#include <memory>
+#include <unordered_map>
+#include <future>
+
 
 
 template <typename T>
