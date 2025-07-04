@@ -1,6 +1,5 @@
 #pragma once
 #include <iostream>
-#include <Windows.h>
 #include "AYEngineCore.h"
 
 int main()

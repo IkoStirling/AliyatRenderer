@@ -116,6 +116,7 @@ public:
 		if (it == _shaders.end())
 			return;
 		auto& shader = it->second;
+		glDeleteProgram(shader.shaderProgram);
 		loadShader(name, shader.vertexShaderPath, shader.fragmentShaderPath, true);
 	}
 private:

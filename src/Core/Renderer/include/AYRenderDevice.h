@@ -10,7 +10,7 @@ public:
 
     GLFWwindow* getWindow();
 
-    // type: "dynamic" or "static"
+    // type: "dynamic" or "static", 只传入数据
     GLuint createVertexBuffer(const void* data, size_t size, const std::string& type = "static");
     GLuint createIndexBuffer(const void* data, size_t size);
     GLuint createVertexArray();

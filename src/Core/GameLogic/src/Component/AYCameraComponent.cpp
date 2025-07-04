@@ -69,7 +69,7 @@ void AYCameraComponent::bindCamera(IAYCamera* camera)
     _boundCamera = camera;
 }
 
-void AYCameraComponent::active()
+void AYCameraComponent::activate()
 {
     auto cameraSystem = GET_CAST_MODULE(AYRendererManager, "Renderer")->getCameraSystem();
     cameraSystem->switchCamera(getOwner()->getName() + "_" + _name);
@@ -126,11 +126,14 @@ void AYCameraComponent::_update3DCamera(const STTransform& ownerTrans)
     if (!cam3D) return;
 
     // 示例：第三人称跟随
-    glm::vec3 offset(0, 2.0f, -5.0f); // 后方上方偏移
-    glm::vec3 eye = ownerTrans.position + offset;
-    glm::vec3 center = ownerTrans.position;
-
-    cam3D->setLookAt(eye, center, glm::vec3(0, 1, 0));
+    auto& pos = ownerTrans.position;
+    glm::vec3 offset(0, 20.0f, -500.0f); // 后方上方偏移
+    cam3D->setTargetPosition(pos + offset);
+    cam3D->setLookAt(
+        pos + offset,
+        pos,
+        glm::vec3(0, 1, 0)
+    );
 }
 
 void AYCameraComponent::_applyShakeEffect(float delta)
@@ -145,12 +148,7 @@ void AYCameraComponent::_applyShakeEffect(float delta)
         0
     );
 
-    if (auto* cam2D = dynamic_cast<AY2DCamera*>(_boundCamera)) {
-        cam2D->setAdditionalOffset(randomOffset);
-    }
-    else if (auto* cam3D = dynamic_cast<AY3DCamera*>(_boundCamera)) {
-        cam3D->setAdditionalOffset(randomOffset);
-    }
+    _boundCamera->setAdditionalOffset(randomOffset);
 }
 
 

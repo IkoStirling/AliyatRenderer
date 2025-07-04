@@ -8,7 +8,6 @@
 #include "2DRendering/AYAnimationManager.h"
 #include <vector>
 
-class AYRenderer;
 class AYRendererManager : public Mod_Renderer
 {
 

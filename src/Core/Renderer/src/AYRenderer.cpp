@@ -6,6 +6,7 @@ AYRenderer::AYRenderer(AYRenderDevice* device) :
     _initFontRenderer();
     _initSpriteRenderer();
     _initCoreRenderer();
+    _initSkyboxRenderer();
 }
 
 AYRenderer::~AYRenderer()
@@ -48,7 +49,6 @@ void AYRenderer::drawFullscreenQuad()
 void AYRenderer::setViewport(int x, int y, int width, int height)
 {
     glViewport(x, y, width, height);
-    _spriteRenderer->setViewportSize(width, height);
 }
 
 void AYRenderer::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color)
@@ -71,6 +71,11 @@ AYCoreRenderer* AYRenderer::getCoreRenderer()
     return _coreRenderer.get();
 }
 
+AYSkyboxRenderer* AYRenderer::getSkyboxRenderer()
+{
+    return _skyboxRenderer.get();
+}
+
 void AYRenderer::_initFontRenderer()
 {
     
@@ -86,4 +91,9 @@ void AYRenderer::_initSpriteRenderer()
 void AYRenderer::_initCoreRenderer()
 {
     _coreRenderer = std::make_unique<AYCoreRenderer>(_device, this);
+}
+
+void AYRenderer::_initSkyboxRenderer()
+{
+    _skyboxRenderer = std::make_unique<AYSkyboxRenderer>(_device, this);
 }

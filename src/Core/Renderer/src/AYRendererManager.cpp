@@ -14,8 +14,6 @@ void AYRendererManager::init()
 
 
 
-
-
 	tex_ID = loadTexture("assets/core/textures/500_497.png");
 }
 
@@ -29,16 +27,12 @@ void AYRendererManager::update(float delta_time)
 		return;
 	}
 	delta = delta_time;
-	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
-	_renderer->getCoreRenderer()->beginDraw();
+
+	_updateCameraActive(delta_time);
 
 	// 2. TODO: Ö´ÐÐÊµ¼ÊäÖÈ¾Âß¼­
-
 	_renderAll(delta_time);
 
-	_displayDebugInfo();
-
-	_renderer->getCoreRenderer()->endDraw();
 	// 3. ½»»»»º³åÇø
 	glfwSwapBuffers(_device->getWindow());
 
@@ -47,13 +41,21 @@ void AYRendererManager::update(float delta_time)
 
 void AYRendererManager::_renderAll(float delta_time)
 {
-	_updateCameraActive(delta_time);
+	//_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
+	_renderer->clearScreen(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
+	_renderer->getCoreRenderer()->beginDraw();
+	_displayDebugInfo();
+	_renderer->getCoreRenderer()->endDraw();
 
 	for (auto renderable : _renderables)
 	{
 		if (renderable)
 			renderable->render(_renderer->getRenderContext());
 	}
+
+
 }
 
 void AYRendererManager::_updateCameraActive(float delta_time)

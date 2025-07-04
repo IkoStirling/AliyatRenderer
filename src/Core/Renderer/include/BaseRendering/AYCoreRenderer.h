@@ -71,6 +71,8 @@ private:
     GLuint _instanceVboDouble[2];
     int _currentBufferIndex = 0;
 private:
+    const std::string _configPath;
+
     std::string _instance;
     std::string _base;
     std::string _instanceVertexPath;
@@ -84,6 +86,7 @@ private:
     // ª∫≥Â«¯π‹¿Ì
 
     void _loadCoreRendererConfigINI();
+    void _saveCoreRendererConfigINI();
     size_t _vertexBufferSize      =   1024;
     size_t _instanceBufferSize  =   1024;
     size_t _indexBufferSize     =   1024;

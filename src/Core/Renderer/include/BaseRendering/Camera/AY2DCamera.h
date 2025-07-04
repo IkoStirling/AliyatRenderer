@@ -55,7 +55,14 @@ public:
 
     glm::mat4 getProjectionMatrix() const override 
     {
-        return glm::ortho(0.0f, _viewport.z, _viewport.w, 0.0f, -1.0f, 1.0f);
+        return glm::ortho(
+            0.f,            //left
+            _viewport.z,    //right
+            0.f,            //bottom
+            _viewport.w,    //top
+            -1.f,           //near
+            1.f             //far
+        );           
     }
 
     void setDeadzone(const glm::vec4& zone) { _deadzone = zone; } // left, right, bottom, top

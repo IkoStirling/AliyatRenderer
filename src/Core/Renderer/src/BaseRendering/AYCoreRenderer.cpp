@@ -4,6 +4,7 @@
 #include <glm/gtc/type_ptr.hpp> ​​
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include <filesystem>
 #include "AYPath.h"
 
 #define AY_CHECK_GL_ERROR(context) \
@@ -48,7 +49,8 @@ std::string mat4ToStringPretty(const glm::mat4& matrix) {
 
 AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer):
 	_device(device),
-	_renderer(renderer)
+	_renderer(renderer),
+    _configPath(AYPath::Engine::getPresetConfigPath() + "Renderer/CoreRenderer/config.ini")
 {
     _loadCoreRendererConfigINI();
     _setupDebugShader();
@@ -62,6 +64,7 @@ AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer):
 
 AYCoreRenderer::~AYCoreRenderer()
 {
+    _saveCoreRendererConfigINI();
 }
 
 void AYCoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices) 
@@ -515,14 +518,51 @@ void AYCoreRenderer::flushWithRecover()
 void AYCoreRenderer::_loadCoreRendererConfigINI()
 {
     boost::property_tree::ptree pt;
-    read_ini(AYPath::Engine::getPresetConfigPath()+"CoreRenderer/config.ini", pt);
+    if (!std::filesystem::exists(_configPath))
+    {
+        try 
+        {
+            boost::property_tree::ini_parser::write_ini(_configPath, pt);
+        }
+        catch (const std::exception& e) 
+        {
+            std::cerr << "INI write failed: " << e.what() << std::endl;
+        }
+    }
+        
+    boost::property_tree::ini_parser::read_ini(_configPath, pt);
 
     _instance = pt.get<std::string>("shader name.instance", std::string("CoreInstanceShader"));
     _base = pt.get<std::string>("shader name.base", std::string("CoreBaseShader"));
-    _instanceVertexPath = pt.get<std::string>("shader path.instance_vertex", AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.vert"));
-    _instanceFragmentPath = pt.get<std::string>("shader path.instance_fragment", AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.frag"));
-    _baseVertexPath = pt.get<std::string>("shader path.base_vertex", AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.vert"));
-    _baseFragmentPath = pt.get<std::string>("shader path.base_fragment", AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.frag"));
+    _instanceVertexPath = pt.get<std::string>("shader path.instance_vertex",
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.vert"));
+    _instanceFragmentPath = pt.get<std::string>("shader path.instance_fragment",
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.frag"));
+    _baseVertexPath = pt.get<std::string>("shader path.base_vertex",
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.vert"));
+    _baseFragmentPath = pt.get<std::string>("shader path.base_fragment",
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.frag"));
+}
+
+void AYCoreRenderer::_saveCoreRendererConfigINI()
+{
+    boost::property_tree::ptree pt;
+
+    pt.put("shader name.instance", _instance);
+    pt.put("shader name.base", _base);
+    pt.put("shader path.instance_vertex", _instanceVertexPath);
+    pt.put("shader path.instance_fragment", _instanceFragmentPath);
+    pt.put("hader path.base_vertex", _baseVertexPath);
+    pt.put("shader path.base_fragment", _baseFragmentPath);
+
+    try 
+    {
+        boost::property_tree::ini_parser::write_ini(_configPath, pt);
+    }
+    catch (const std::exception& e) 
+    {
+        std::cerr << "INI write failed: " << e.what() << std::endl;
+    }
 }
 
 GLuint AYCoreRenderer::_getBaseShader(bool reload)

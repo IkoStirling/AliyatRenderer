@@ -40,7 +40,6 @@ public:
         const glm::vec2& origin = glm::vec2(0.5f)
         );
 
-    void setViewportSize(int width, int height);
 
 private:
     AYRenderer* _renderer;
@@ -50,8 +49,6 @@ private:
         float rotation,
         const glm::vec2& origin);
 
-    glm::mat4 _getProjecction();
-
     void _initShader();
     void _initBuffers();
 
@@ -60,9 +57,6 @@ private:
     GLuint _vao = 0; //默认vao（此vao无法绑定vbo）
     GLuint _vbo = 0; //无效vbo  =》表明未初始化
     GLuint _shaderProgram = 0; //无效
-
-    int _viewportWidth = 1920;
-    int _viewportHeight = 1080;
 
     void _initAtlasShader();
     GLuint _atlasShaderProgram;

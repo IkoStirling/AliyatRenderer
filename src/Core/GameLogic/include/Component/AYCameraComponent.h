@@ -16,7 +16,7 @@ public:
 
     void bindCamera(IAYCamera* camera);
 
-    void active();
+    void activate();
 
     IAYCamera* getCamera() const;
 

@@ -113,8 +113,10 @@ void AYSpriteRenderer::drawSprite(GLuint texture,
     glm::vec2 originOffset = size * origin;
     glm::mat4 model = _prepareModel(position - originOffset, size, rotation, origin);
 
-    // 使用着色器
-    glUseProgram(_shaderProgram);
+    _device->saveGLState();
+    auto stateManager = _device->getGLStateManager();
+    stateManager->useProgram(_shaderProgram);
+    stateManager->bindVertexArray(_vao);
 
     // 设置uniform
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -122,16 +124,15 @@ void AYSpriteRenderer::drawSprite(GLuint texture,
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniform4fv(glGetUniformLocation(_shaderProgram, "spriteColor"), 1, glm::value_ptr(color));
     glUniform1f(glGetUniformLocation(_shaderProgram, "flipH"), flipHorizontal ? -1.0f : 1.0f);
-    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? -1.0f : 1.0f);
+    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? 1.0f : -1.0f);
 
     // 绑定纹理
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
     // 绘制
-    glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    _device->restoreGLState();
 }
 
 void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
@@ -153,8 +154,10 @@ void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
     glm::vec2 originOffset = size * origin;
     glm::mat4 model = _prepareModel(position - originOffset, size, rotation, origin);
 
-    // 使用图集着色器
-    glUseProgram(_atlasShaderProgram);
+    _device->saveGLState();
+    auto stateManager = _device->getGLStateManager();
+    stateManager->useProgram(_atlasShaderProgram);
+    stateManager->bindVertexArray(_vao);
 
     // 设置uniform
     glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -164,23 +167,17 @@ void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
     glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvOffset"), 1, glm::value_ptr(uvOffset));
     glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvSize"), 1, glm::value_ptr(uvSize));
     glUniform1f(glGetUniformLocation(_shaderProgram, "flipH"), flipHorizontal ? -1.0f : 1.0f);
-    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? -1.0f : 1.0f);
+    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? 1.0f : -1.0f);
 
     // 绑定纹理
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
     // 绘制
-    glBindVertexArray(_vao);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    _device->restoreGLState();
 }
 
-void AYSpriteRenderer::setViewportSize(int width, int height)
-{
-    _viewportWidth = width;
-    _viewportHeight = height;
-}
 
 glm::mat4 AYSpriteRenderer::_prepareModel(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec2& origin)
 {
@@ -204,17 +201,6 @@ glm::mat4 AYSpriteRenderer::_prepareModel(const glm::vec2& position, const glm::
     return model;
 }
 
-glm::mat4 AYSpriteRenderer::_getProjecction()
-{
-    return glm::ortho(
-        0.0f,                       // 视口左边界（x 最小值）
-        (float)_viewportWidth,      // 视口右边界（x 最大值）
-        (float)_viewportHeight,     // 视口下边界（y 最小值）
-        0.0f,                       // 视口上边界（y 最大值） 屏幕坐标系
-        -1.0f,                      // 近裁剪面（z 最小值）
-        1.0f                        // 远裁剪面（z 最大值）
-    );
-}
 
 void AYSpriteRenderer::_initShader()
 {

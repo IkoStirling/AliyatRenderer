@@ -46,16 +46,27 @@ Before execute this program, preparing these packages:
 		Renderer(Font loaded)
 	6. openssl
 		Network
+	7. Boost::property_tree
+		all(may replace nlohmann)
 
 Run the following commands:
 
 	vcpkg install boost-asio boost-system opencv4 nlohmann-json
 ### Project Progress
-1. This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation
+1. | Description               | Picture                                                                 |
+|--------------------|----------------------------------------------------------------------|
+| This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation
+        | ![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)
+		| The system now supports 3D camera functionality and equirectangular skyboxes, but there's a rendering issue with 2D sprites - they only appear at z=0 depth and remain fixed in screen space, causing them to stay in place even when the 3D camera moves.
+		| ![pic](assets/core/.projectProgress/2D_orc&3D_Skybox.png)
+		|
+		|
+		|
+		|
 
-	![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)
-2. Core code lines: 6820
+	
+2. Core code lines: 9447
 	
 	   Use this in powershell under "src/Core/":
 	   Get-ChildItem -Recurse -Include *.cpp,*.h,*.cxx,*.hpp | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum
-
+3. 

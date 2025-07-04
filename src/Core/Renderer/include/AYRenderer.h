@@ -1,9 +1,10 @@
 #pragma once
 #include "AYRenderDevice.h"
+#include "BaseRendering/AYRenderContext.h"
 #include "2DRendering/AYFontRenderer.h"
 #include "2DRendering/AYSpriteRenderer.h"
-#include "BaseRendering/AYRenderContext.h"
 #include "BaseRendering/AYCoreRenderer.h"
+#include "3DRendering/AYSkyboxRenderer.h"
 #include <memory>
 
 class AYRenderer
@@ -21,11 +22,13 @@ public:
     AYSpriteRenderer* getSpriteRenderer();
     AYFontRenderer* getFontRenderer();
     AYCoreRenderer* getCoreRenderer();
+    AYSkyboxRenderer* getSkyboxRenderer();
 
 private:
     void _initFontRenderer();
     void _initSpriteRenderer();
     void _initCoreRenderer();
+    void _initSkyboxRenderer();
 
     AYRenderDevice* _device;
     AYRenderContext _context;
@@ -33,6 +36,7 @@ private:
     std::unique_ptr<AYFontRenderer> _fontRenderer;
     std::unique_ptr<AYSpriteRenderer> _spriteRenderer;
     std::unique_ptr<AYCoreRenderer> _coreRenderer;
+    std::unique_ptr<AYSkyboxRenderer> _skyboxRenderer;
 
     GLuint _screenVAO = 0;
 };
