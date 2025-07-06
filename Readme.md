@@ -51,7 +51,7 @@ Before execute this program, preparing these packages:
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system opencv4 nlohmann-json
+	vcpkg install boost-asio boost-system boost-property-tree opencv4 nlohmann-json
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|
