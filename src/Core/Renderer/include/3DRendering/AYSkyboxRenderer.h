@@ -1,6 +1,7 @@
 #pragma once
 #include "AYRenderDevice.h"
 #include "BaseRendering/AYRenderContext.h"
+#include "AYConfigWrapper.h"
 #include <vector>
 #include <string>
 
@@ -33,6 +34,7 @@ private:
     GLuint _equirectangularTexture = 0;
     GLuint _skyboxVAO = 0, _skyboxVBO = 0;
 
+    AYConfigWrapper _config;
     const std::string _configPath;
     std::string _shaderName;
     std::string _vertexPath;

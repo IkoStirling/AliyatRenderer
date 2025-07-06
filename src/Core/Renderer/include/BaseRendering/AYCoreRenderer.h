@@ -1,11 +1,11 @@
 #pragma once
 #include "AYRenderDevice.h"
+#include "AYConfigWrapper.h"
 #include "STTransform.h"
 #include <glm/glm.hpp>
 #include <array>
 
 class AYRenderer;
-
 class AYCoreRenderer
 {
 public:
@@ -71,6 +71,7 @@ private:
     GLuint _instanceVboDouble[2];
     int _currentBufferIndex = 0;
 private:
+    AYConfigWrapper _config;
     const std::string _configPath;
 
     std::string _instance;

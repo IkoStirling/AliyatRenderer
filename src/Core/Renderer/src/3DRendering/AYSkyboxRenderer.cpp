@@ -3,9 +3,7 @@
 #include "AYPath.h"
 #include "AYResourceManager.h"
 #include <glm/gtc/type_ptr.hpp> ​​
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-#include <filesystem>
+
 
 static const float skyboxVertices[] = {
     -1.0f,  1.0f, -1.0f,
@@ -278,42 +276,20 @@ GLuint AYSkyboxRenderer::_getSkyboxShader(bool reload)
 
 void AYSkyboxRenderer::_loadSkyboxRendererConfigINI()
 {
-    boost::property_tree::ptree pt;
-    if (!std::filesystem::exists(_configPath))
-    {
-        try
-        {
-            boost::property_tree::ini_parser::write_ini(_configPath, pt);
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << "INI write failed: " << e.what() << std::endl;
-        }
-    }
+    _config.loadFromFile(_configPath, AYConfigWrapper::ConfigType::INI);
 
-    boost::property_tree::ini_parser::read_ini(_configPath, pt);
-
-    _shaderName = pt.get<std::string>("shader name.skybox", std::string("SkyboxBaseShader"));
-    _vertexPath = pt.get<std::string>("shader path.skybox_vertex",
+    _shaderName = _config.get<std::string>("shader name.skybox", std::string("SkyboxBaseShader"));
+    _vertexPath = _config.get<std::string>("shader path.skybox_vertex",
         AYPath::Engine::getPresetShaderPath() + std::string("SkyboxRenderer/skybox.vert"));
-    _fragmentPath = pt.get<std::string>("shader path.skybox_fragment",
+    _fragmentPath = _config.get<std::string>("shader path.skybox_fragment",
         AYPath::Engine::getPresetShaderPath() + std::string("SkyboxRenderer/skybox.frag"));
 }
 
 void AYSkyboxRenderer::_saveSkyboxRendererConfigINI()
 {
-    boost::property_tree::ptree pt;
+    _config.set("shader name.base", _shaderName);
+    _config.set("shader path.base_vertex", _vertexPath);
+    _config.set("shader path.base_fragment", _fragmentPath);
 
-    pt.put("shader name.base", _shaderName);
-    pt.put("shader path.base_vertex", _vertexPath);
-    pt.put("shader path.base_fragment", _fragmentPath);
-
-    try
-    {
-        boost::property_tree::ini_parser::write_ini(_configPath, pt);
-    }
-    catch (const std::exception& e)
-    {
-        std::cerr << "INI write failed: " << e.what() << std::endl;
-    }
+    _config.saveConfig(_configPath);
 }
