@@ -3,7 +3,7 @@ message(STATUS "ToolChainFile: ${CMAKE_TOOLCHAIN_FILE}")
 cmake_minimum_required(VERSION 3.12)
 project(AliyatRenderer)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)	#vs2022支持，vs2019只支持c++标准20及以下
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -28,6 +28,7 @@ link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 
 #-------------项目自定义库--------------#
 
+add_subdirectory(src/Core/ConfigWrapper)
 add_subdirectory(src/Core/ModuleManager)
 
 add_subdirectory(src/Core/MemoryPool)
