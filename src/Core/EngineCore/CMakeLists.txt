@@ -13,7 +13,6 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	resource_manager
 	memory_pool
 	network
-	camera_system
 	renderer
 	input_system
 	game_logic

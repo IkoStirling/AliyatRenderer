@@ -19,6 +19,8 @@ public:
 
     void switchCamera(const std::string& name);
 
+    void setViewportAll(const glm::vec4& viewport); //更改窗口大小后调用该函数
+
     IAYCamera* getActiveCamera() const;
 
 private:

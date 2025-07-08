@@ -8,13 +8,17 @@ void AYRendererManager::init()
 	_device = std::make_unique<AYRenderDevice>();
 	if (!_device->init(1920, 1080))
 		return;
+
 	_renderer = std::make_unique<AYRenderer>(getRenderDevice());
+
 	_animeMana = std::make_unique<AYAnimationManager>(getRenderDevice());
+
 	_cameraSystem = std::make_unique<AYCameraSystem>();
+	_device->setViewportCallback([this](int width, int height) {
+		_cameraSystem->setViewportAll(glm::vec4(0, 0, width, height));
+		});
 
 
-
-	tex_ID = loadTexture("assets/core/textures/500_497.png");
 }
 
 void AYRendererManager::update(float delta_time)
@@ -41,8 +45,7 @@ void AYRendererManager::update(float delta_time)
 
 void AYRendererManager::_renderAll(float delta_time)
 {
-	//_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
-	_renderer->clearScreen(0.2f, 0.3f, 0.3f, 1.0f);
+	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
 	_renderer->getCoreRenderer()->beginDraw();
@@ -66,7 +69,7 @@ void AYRendererManager::_updateCameraActive(float delta_time)
 	context.validate();
 	context.currentCamera->update(delta_time);
 	const auto& viewport = context.currentCamera->getViewport();
-	_renderer->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
+	_device->getGLStateManager()->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
 
 	//.......
 }

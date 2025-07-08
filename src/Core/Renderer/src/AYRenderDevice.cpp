@@ -1,5 +1,5 @@
 #include "AYRenderDevice.h"
-
+#include "AYRendererManager.h"
 
 bool AYRenderDevice::init(int width, int height)
 {
@@ -11,6 +11,7 @@ bool AYRenderDevice::init(int width, int height)
 
     _window = glfwCreateWindow(width, height, "AliyatRenderer", NULL, NULL);
     if (!_window) return false;
+    glfwSetFramebufferSizeCallback(_window, &AYRenderDevice::_viewportCallbackWrapper); 
 
     glfwMakeContextCurrent(_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
@@ -28,6 +29,7 @@ bool AYRenderDevice::init(int width, int height)
 
 void AYRenderDevice::shutdown()
 {
+    removeViewportCallback();
 }
 
 GLFWwindow* AYRenderDevice::getWindow()
@@ -35,6 +37,21 @@ GLFWwindow* AYRenderDevice::getWindow()
     GLFWwindow* win = _window.load();
     if (!win) throw std::runtime_error("Window not available");
     return win;
+}
+
+void AYRenderDevice::setViewportCallback(ViewportCallback callback)
+{
+    std::lock_guard<std::mutex> lock(_callbackMutex);
+    _callback = std::move(callback);
+}
+
+void AYRenderDevice::removeViewportCallback()
+{
+    std::lock_guard<std::mutex> lock(_callbackMutex);
+    if (_window) {
+        glfwSetFramebufferSizeCallback(_window, nullptr);
+    }
+    _callback = nullptr;
 }
 
 GLuint AYRenderDevice::createVertexBuffer(const void* data, size_t size, const std::string& type)
@@ -152,6 +169,12 @@ void AYRenderDevice::restoreGLState()
     // »Ö¸´Éî¶È²âÊÔ
     _stateManager->setDepthTest(_previousState.depthTestEnabled);
 
+    // »Ö¸´Éî¶È»º³åÐ´Èë
+    _stateManager->setDepthMask(_previousState.depthMaskEnabled);
+
+    // »Ö¸´±³ÃæÌÞ³ý
+    _stateManager->setCullFace(_previousState.cullFaceEnabled);
+
     // »Ö¸´»ìºÏ×´Ì¬
     _stateManager->setBlend(_previousState.blendEnabled,
         _previousState.currentBlendFunc.src,
@@ -175,4 +198,19 @@ void AYRenderDevice::restoreGLState()
 
     // »Ö¸´Ïß¿í
     _stateManager->setLineWidth(_previousState.lineWidth);
+}
+
+void AYRenderDevice::_viewportCallbackWrapper(GLFWwindow* window, int width, int height) {
+    auto* device = GET_CAST_MODULE(Mod_Renderer, "Renderer")->getRenderDevice();
+    if (!device) return;
+
+    std::function<void(int, int)> callback;
+    {
+        std::lock_guard<std::mutex> lock(device->_callbackMutex);
+        callback = device->_callback; 
+    }
+
+    if (device->_callback) {
+        device->_callback(width, height);
+    }
 }

@@ -1,8 +1,19 @@
 #pragma once
 #include <glm/glm.hpp>
 
+
 class IAYCamera {
 public:
+    struct OrthoInfo
+    {
+        float left = 0.f;
+        float right = 1920.f;
+        float bottom = 0.f;
+        float top = 1080.f;
+        float near = -100.f;
+        float far = 100.f;
+    };
+
     virtual ~IAYCamera() = default;
 
     // ªÒ»° ”Õºæÿ’Û£®View Matrix£©

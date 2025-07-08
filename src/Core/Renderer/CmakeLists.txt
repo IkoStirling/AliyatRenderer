@@ -8,7 +8,6 @@ target_include_directories(${INTERFACE_NAME} INTERFACE
 	${CMAKE_CURRENT_SOURCE_DIR}/interface
 )
 
-
 file(GLOB_RECURSE SRCS
 	"*.cpp"
 	"*.c"
@@ -28,7 +27,7 @@ find_package(Freetype REQUIRED)
 find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
 
 # CMAKE自动去重，不会链接两次
-target_link_libraries(${MODULE_NAME} PUBLIC module_manager resource_manager camera_system
+target_link_libraries(${MODULE_NAME} PUBLIC module_manager resource_manager
 	PRIVATE
 	${RENDER_LIBS}
 	Freetype::Freetype

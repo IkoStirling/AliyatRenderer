@@ -33,6 +33,8 @@ public:
 			}
 		);
 		_orcSprite->playAnimation("idle01");
+
+		_transform.rotation.y = 180.f;
     }
 
     virtual void beginPlay()override
@@ -136,7 +138,7 @@ public:
 				setPosition(trans.position + glm::vec3(movement * delta_time));
 				// ÉèÖÃ³¯Ïò
 				if (movement.x != 0) {
-					_orcSprite->setFlip(movement.x < 0, false);
+					_orcSprite->setFlip(movement.x > 0, false); 
 				}
 				_orcSprite->playAnimation("walk01");
 			}

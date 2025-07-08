@@ -25,6 +25,24 @@ public:
         }
     }
 
+    // 写入深度缓冲
+    void setDepthMask(bool enable) 
+    { 
+        if (state.depthMaskEnabled != enable) {
+            enable ? glDepthMask(GL_FALSE) : glDepthMask(GL_TRUE);
+            state.depthMaskEnabled = enable;
+        }
+    }
+
+    // 背面剔除
+    void setCullFace(bool enable)
+    {
+        if (state.cullFaceEnabled != enable) {
+            enable ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
+            state.cullFaceEnabled = enable;
+        }
+    }
+
     // 混合设置
     void setBlend(bool enable, GLenum srcFactor = GL_ONE, GLenum dstFactor = GL_ZERO) {
         if (enable != state.blendEnabled) {

@@ -32,7 +32,7 @@ private:
         Line,
         Triangle,
         Rectangle,
-        Cirlcle
+        Circle
     };
     struct InstanceGroup {
         std::vector<glm::mat4> matrices;

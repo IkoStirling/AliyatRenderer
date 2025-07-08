@@ -46,11 +46,6 @@ void AYRenderer::drawFullscreenQuad()
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void AYRenderer::setViewport(int x, int y, int width, int height)
-{
-    glViewport(x, y, width, height);
-}
-
 void AYRenderer::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color)
 {
     _fontRenderer->renderText(text, x, y, scale, color);

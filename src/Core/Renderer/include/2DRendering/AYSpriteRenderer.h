@@ -1,5 +1,7 @@
 #pragma once
 #include "AYRenderDevice.h"
+#include "AYConfigWrapper.h"
+#include "STTransform.h"
 #include <glm/glm.hpp>
 #include <memory>
 
@@ -10,54 +12,68 @@ public:
     AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer);
     ~AYSpriteRenderer();
 
-    void init();
-
-    /*
-        单一精灵图
-    */
     void drawSprite(GLuint texture,
-        const glm::vec2& position,
+        const STTransform& transform,
         const glm::vec2& size = glm::vec2(1.0f),
-        float rotation = 0.0f,
         const glm::vec4& color = glm::vec4(1.0f),
         bool flipHorizontal = false,
         bool flipVertical = false,
         const glm::vec2& origin = glm::vec2(0.5f)
         );
 
-    /*
-        精灵图集（动画用）
-    */
     void drawSpriteFromAtlas(GLuint texture,
-        const glm::vec2& position,
-        const glm::vec2& size,
+        const STTransform& transform,
         const glm::vec2& uvOffset,
         const glm::vec2& uvSize,
-        float rotation = 0.0f,
+        const glm::vec2& size = glm::vec2(1.0f),
         const glm::vec4& color = glm::vec4(1.0f),
         bool flipHorizontal = false,
         bool flipVertical = false,
         const glm::vec2& origin = glm::vec2(0.5f)
+        );
+
+    void drawSprite3D(GLuint texture,
+        const STTransform& transform,
+        const glm::vec3& size = glm::vec3(1.0f),
+        const glm::vec4& color = glm::vec4(1.0f),
+        bool flipHorizontal = false,
+        bool flipVertical = false,
+        const glm::vec3& origin = glm::vec3(0.5f)
+        );
+
+    void drawSpriteFromAtlas3D(GLuint texture,
+        const STTransform& transform,
+        const glm::vec2& uvOffset,
+        const glm::vec2& uvSize,
+        const glm::vec3& size = glm::vec3(1.0f),
+        const glm::vec4& color = glm::vec4(1.0f),
+        bool flipHorizontal = false,
+        bool flipVertical = false,
+        const glm::vec3& origin = glm::vec3(0.5f)
         );
 
 
 private:
+    AYRenderDevice* _device;
     AYRenderer* _renderer;
 
-    glm::mat4 _prepareModel(const glm::vec2& position,
-        const glm::vec2& size,
-        float rotation,
-        const glm::vec2& origin);
-
-    void _initShader();
     void _initBuffers();
 
+    GLuint _vao = 0; 
+    GLuint _vbo = 0; 
 
-    AYRenderDevice* _device;
-    GLuint _vao = 0; //默认vao（此vao无法绑定vbo）
-    GLuint _vbo = 0; //无效vbo  =》表明未初始化
-    GLuint _shaderProgram = 0; //无效
+private:
+    void _loadSpriteRendererConfigINI();
+    void _saveSpriteRendererConfigINI();
+    GLuint _getBaseShader(bool reload = false);
+    GLuint _getAtlasShader(bool reload = false);
 
-    void _initAtlasShader();
-    GLuint _atlasShaderProgram;
+    AYConfigWrapper _config;
+    std::string _configPath;
+    std::string _baseShader;
+    std::string _atlasShader;
+    std::string _baseVertex;
+    std::string _atlasVertex;
+    std::string _baseFragment;
+    std::string _atlasFragment;
 };

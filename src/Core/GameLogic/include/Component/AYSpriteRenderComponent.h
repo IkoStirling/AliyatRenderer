@@ -31,13 +31,13 @@ public:
 			return;
 		auto& trans = ent->getTransform();
 		_sprite->render(
-			glm::vec2(trans.position.x, trans.position.y),
+			trans,
 			_spriteSize,
-			trans.rotation.z,
 			_color,
 			_flipX,
 			_flipY,
-			_pivot);
+			_pivot
+		);
 	}
 
 	void setup_sprite(
@@ -66,7 +66,7 @@ public:
 		_sprite = std::unique_ptr<AYAnimatedSprite>(
 			renderMgr->create2DSprite(atlas)
 		);
-		_spriteSize = glm::vec2(200, 200); // 默认大小
+		_spriteSize = glm::vec3(200); // 默认大小
 	}
 
 	void playAnimation(const std::string& name) {
@@ -86,12 +86,16 @@ public:
 		_flipY = y;
 	}
 
+	void setSize(const glm::vec3& size)
+	{
+		_spriteSize = size;
+	}
 	
 public:
 	std::unique_ptr< AYAnimatedSprite> _sprite;
-	glm::vec2 _spriteSize;
+	glm::vec3 _spriteSize = glm::vec3(1.f);
 	glm::vec4 _color = glm::vec4(1.0f);
 	bool _flipX = false;
 	bool _flipY = false;
-	glm::vec2 _pivot = glm::vec2(0.5f);
+	glm::vec3 _pivot = glm::vec3(0.5f);
 };

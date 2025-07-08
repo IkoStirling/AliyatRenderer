@@ -29,6 +29,13 @@ void AYCameraSystem::switchCamera(const std::string& name) {
     }
 }
 
+void AYCameraSystem::setViewportAll(const glm::vec4& viewport)
+{
+    for (auto it = _cameras.begin(); it != _cameras.end(); it++) {
+        it->second.get()->setViewport(viewport);
+    }
+}
+
 IAYCamera* AYCameraSystem::getActiveCamera() const {
     return _activeCamera;
 }

@@ -32,24 +32,24 @@ void AYAnimatedSprite::update(float deltaTime)
     _controller.update(deltaTime);
 }
 
-void AYAnimatedSprite::render(const glm::vec2& position,
-    const glm::vec2& size,
-    float rotation,
+void AYAnimatedSprite::render(
+    const STTransform& transform,
+    const glm::vec3& size,
     const glm::vec4& color,
     bool flipHorizontal,
     bool flipVertical,
-    const glm::vec2& origin) 
+    const glm::vec3& origin
+) 
 {
     if (!_controller.isPlaying()) return;
 
     const auto& frame = _controller.getCurrentFrame();
-    _renderer->drawSpriteFromAtlas(
+    _renderer->drawSpriteFromAtlas3D(
         _atlases[_curAtlas]->getTexture(),
-        position,
-        size,
+        transform,
         frame.uvOffset,
         frame.uvSize,
-        rotation,
+        size,
         color,
         flipHorizontal,
         flipVertical,

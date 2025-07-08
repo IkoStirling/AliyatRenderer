@@ -43,7 +43,7 @@ private:
 	WindowCloseCallback _onWindowClosed;
 	std::vector<IAYRenderable*> _renderables; //不管理可渲染对象
 
-	glm::vec3 _color = { 0.f,0.f,0.f };
+	glm::vec3 _color = { 0.2f,0.3f,0.3f };
 private:
 	//******************debug**********************
 	void _displayDebugInfo();

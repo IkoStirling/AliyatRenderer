@@ -153,8 +153,8 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
     // 设置天空盒渲染状态
     auto stateManager = _device->getGLStateManager();
     stateManager->setDepthTest(false);
-    glDepthMask(GL_FALSE);
-    glDisable(GL_CULL_FACE);
+    stateManager->setDepthMask(false);
+    stateManager->setCullFace(false);
     stateManager->bindVertexArray(_skyboxVAO);
     stateManager->useProgram(shader);
     GLint posLoc = glGetAttribLocation(shader, "aPos");
@@ -194,11 +194,9 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
         glUniform1i(glGetUniformLocation(shader, "equirectangularMap"), 0);
     }
 
-    glPointSize(5.0f);
-    glDrawArrays(GL_POINTS, 0, 36);
+
     // 渲染
     glDrawArrays(GL_TRIANGLES, 0, 36);
-
     // 恢复状态
     _device->restoreGLState();
 }

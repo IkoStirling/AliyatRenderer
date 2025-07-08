@@ -14,6 +14,8 @@ public:
     void reset() {
         currentProgram = 0;
         depthTestEnabled = false;
+        depthMaskEnabled = true;
+        cullFaceEnabled = false;
         blendEnabled = false;
         currentBlendFunc = { GL_ONE, GL_ZERO };
         currentVAO = 0;
@@ -30,6 +32,8 @@ public:
     // ×´Ì¬±äÁ¿
     GLuint currentProgram;
     bool depthTestEnabled;
+    bool depthMaskEnabled;
+    bool cullFaceEnabled;
     bool blendEnabled;
     struct BlendFunc { GLenum src, dst; } currentBlendFunc;
     GLuint currentVAO;

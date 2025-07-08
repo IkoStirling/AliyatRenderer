@@ -2,10 +2,11 @@
 #include "AYRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> ​​
+#include "AYPath.h"
 
 const char* SPRITE_VERTEX_SHADER = R"(
     #version 460 core
-    layout (location = 0) in vec2 aPos;
+    layout (location = 0) in vec3 aPos;
     layout (location = 1) in vec2 aTexCoord;
     
     out vec2 TexCoord;
@@ -25,7 +26,7 @@ const char* SPRITE_VERTEX_SHADER = R"(
             texCoord.y = 1.0 - texCoord.y; // 垂直翻转UV坐标
         }
         TexCoord = texCoord;
-        gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
     }
 )";
 
@@ -46,7 +47,7 @@ const char* SPRITE_FRAGMENT_SHADER = R"(
 
 const char* SPRITE_VERTEX_SHADER_ATLAS = R"(
         #version 330 core
-        layout (location = 0) in vec2 aPos;
+        layout (location = 0) in vec3 aPos;
         layout (location = 1) in vec2 aTexCoord;
         
         out vec2 TexCoord;
@@ -65,22 +66,22 @@ const char* SPRITE_VERTEX_SHADER_ATLAS = R"(
             if(flipW < 0.0) texCoord.y = 1.0 - texCoord.y; 
 
             TexCoord = uvOffset + texCoord * uvSize;
-            gl_Position = projection * view * model * vec4(aPos, 0.0, 1.0);
+            gl_Position = projection * view * model * vec4(aPos, 1.0);
         }
     )";
 
 AYSpriteRenderer::AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer):
     _device(device),
-    _renderer(renderer)
+    _renderer(renderer),
+    _configPath(AYPath::Engine::getPresetConfigPath() + std::string("Renderer/SpriteRenderer/config.ini"))
 {
-    init();
+    _loadSpriteRendererConfigINI();
+    _initBuffers();
 }
 
 AYSpriteRenderer::~AYSpriteRenderer()
 {
-    if (_shaderProgram) {
-        glDeleteProgram(_shaderProgram);
-    }
+    _saveSpriteRendererConfigINI();
     if (_vao) {
         glDeleteVertexArrays(1, &_vao);
     }
@@ -89,85 +90,84 @@ AYSpriteRenderer::~AYSpriteRenderer()
     }
 }
 
-void AYSpriteRenderer::init()
-{
-    _initShader();
-    _initBuffers();
-    _initAtlasShader();
-}
+
 
 void AYSpriteRenderer::drawSprite(GLuint texture,
-    const glm::vec2& position,
+    const STTransform& transform,
     const glm::vec2& size,
-    float rotation,
     const glm::vec4& color,
     bool flipHorizontal,
     bool flipVertical,
     const glm::vec2& origin
 )
 {
-    const auto& context = _renderer->getRenderContext();
-    glm::mat4 projection = context.currentCamera->getProjectionMatrix();
-    glm::mat4 view = context.currentCamera->getViewMatrix();
-
-    glm::vec2 originOffset = size * origin;
-    glm::mat4 model = _prepareModel(position - originOffset, size, rotation, origin);
-
-    _device->saveGLState();
-    auto stateManager = _device->getGLStateManager();
-    stateManager->useProgram(_shaderProgram);
-    stateManager->bindVertexArray(_vao);
-
-    // 设置uniform
-    glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    glUniform4fv(glGetUniformLocation(_shaderProgram, "spriteColor"), 1, glm::value_ptr(color));
-    glUniform1f(glGetUniformLocation(_shaderProgram, "flipH"), flipHorizontal ? -1.0f : 1.0f);
-    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? 1.0f : -1.0f);
-
-    // 绑定纹理
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // 绘制
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    _device->restoreGLState();
+    drawSprite3D(
+        texture,
+        transform,
+        glm::vec3(size, 1.f),
+        color,
+        flipHorizontal,
+        flipVertical,
+        glm::vec3(origin, 0.f)
+    );
 }
 
 void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
-    const glm::vec2& position,
+    const STTransform& transform,
     const glm::vec2& size,
     const glm::vec2& uvOffset,
     const glm::vec2& uvSize, 
-    float rotation, 
     const glm::vec4& color,
     bool flipHorizontal,
     bool flipVertical,
     const glm::vec2& origin
 )
 {
+    drawSpriteFromAtlas3D(
+        texture,
+        transform,
+        uvOffset,
+        uvSize,
+        glm::vec3(size, 1.f),
+        color,
+        flipHorizontal,
+        flipVertical,
+        glm::vec3(origin, 0.f)
+    );
+}
+
+void AYSpriteRenderer::drawSprite3D(GLuint texture,
+    const STTransform& transform,
+    const glm::vec3& size,
+    const glm::vec4& color,
+    bool flipHorizontal,
+    bool flipVertical,
+    const glm::vec3& origin
+)
+{
     const auto& context = _renderer->getRenderContext();
     glm::mat4 projection = context.currentCamera->getProjectionMatrix();
     glm::mat4 view = context.currentCamera->getViewMatrix();
 
-    glm::vec2 originOffset = size * origin;
-    glm::mat4 model = _prepareModel(position - originOffset, size, rotation, origin);
+    glm::mat4 model = transform.getTransformMatrix();
+    glm::vec3 originOffset = size * origin;
+    model = glm::translate(model, -originOffset);
+    model = glm::scale(model, size);
+
+    auto shader = _getBaseShader();
 
     _device->saveGLState();
     auto stateManager = _device->getGLStateManager();
-    stateManager->useProgram(_atlasShaderProgram);
+    stateManager->useProgram(shader);
     stateManager->bindVertexArray(_vao);
 
     // 设置uniform
-    glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(_atlasShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    glUniform4fv(glGetUniformLocation(_atlasShaderProgram, "spriteColor"), 1, glm::value_ptr(color));
-    glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvOffset"), 1, glm::value_ptr(uvOffset));
-    glUniform2fv(glGetUniformLocation(_atlasShaderProgram, "uvSize"), 1, glm::value_ptr(uvSize));
-    glUniform1f(glGetUniformLocation(_shaderProgram, "flipH"), flipHorizontal ? -1.0f : 1.0f);
-    glUniform1f(glGetUniformLocation(_shaderProgram, "flipW"), flipVertical ? 1.0f : -1.0f);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniform4fv(glGetUniformLocation(shader, "spriteColor"), 1, glm::value_ptr(color));
+    glUniform1f(glGetUniformLocation(shader, "flipH"), flipHorizontal ? -1.0f : 1.0f);
+    glUniform1f(glGetUniformLocation(shader, "flipW"), flipVertical ? 1.0f : -1.0f);
 
     // 绑定纹理
     glActiveTexture(GL_TEXTURE0);
@@ -178,47 +178,66 @@ void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
     _device->restoreGLState();
 }
 
-
-glm::mat4 AYSpriteRenderer::_prepareModel(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec2& origin)
+void AYSpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
+    const STTransform& transform,
+    const glm::vec2& uvOffset,
+    const glm::vec2& uvSize,
+    const glm::vec3& size,
+    const glm::vec4& color,
+    bool flipHorizontal,
+    bool flipVertical,
+    const glm::vec3& origin
+)
 {
-    // 准备模型矩阵
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(position, 0.0f));
+    const auto& context = _renderer->getRenderContext();
+    glm::mat4 projection = context.currentCamera->getProjectionMatrix();
+    glm::mat4 view = context.currentCamera->getViewMatrix();
 
-    // 应用原点偏移
-    model = glm::translate(model, glm::vec3(origin.x * size.x, origin.y * size.y, 0.0f));
+    glm::mat4 model = transform.getTransformMatrix();
 
-    // 应用旋转
-    model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::vec3 originOffset = size * glm::vec3(origin.x, origin.y, 0.f);
+    model = glm::translate(model, -originOffset);
+    model = glm::scale(model, size);
 
-    // 应用原点偏移的反向平移
-    model = glm::translate(model, glm::vec3(-origin.x * size.x, -origin.y * size.y, 0.0f));
+    auto shader = _getAtlasShader();
 
-    // 应用缩放
-    model = glm::scale(model, glm::vec3(size, 1.0f));
+    _device->saveGLState();
+    auto stateManager = _device->getGLStateManager();
+    stateManager->useProgram(shader);
+    stateManager->setDepthTest(false);
+    stateManager->bindVertexArray(_vao);
 
-    // 准备投影矩阵（正交投影 —》 2D渲染）
-    return model;
+    // 设置uniform
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniform4fv(glGetUniformLocation(shader, "spriteColor"), 1, glm::value_ptr(color));
+    glUniform2fv(glGetUniformLocation(shader, "uvOffset"), 1, glm::value_ptr(uvOffset));
+    glUniform2fv(glGetUniformLocation(shader, "uvSize"), 1, glm::value_ptr(uvSize));
+    glUniform1f(glGetUniformLocation(shader, "flipH"), flipHorizontal ? -1.0f : 1.0f);
+    glUniform1f(glGetUniformLocation(shader, "flipW"), flipVertical ? 1.0f : -1.0f);
+
+    // 绑定纹理
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    // 绘制
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    _device->restoreGLState();
 }
 
-
-void AYSpriteRenderer::_initShader()
-{
-    _shaderProgram = _device->createShaderProgram(SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER);
-}
 
 void AYSpriteRenderer::_initBuffers()
 {
     // 顶点数据 (位置 + 纹理坐标)
     float vertices[] = {
-        // 位置       // 纹理坐标
-        0.0f, 1.0f,  0.0f, 1.0f,
-        1.0f, 0.0f,  1.0f, 0.0f,
-        0.0f, 0.0f,  0.0f, 0.0f,
+        // 位置          // 纹理坐标
+        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
 
-        0.0f, 1.0f,  0.0f, 1.0f,
-        1.0f, 1.0f,  1.0f, 1.0f,
-        1.0f, 0.0f,  1.0f, 0.0f
+        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f, 0.0f
     };
 
     // 使用AYRenderDevice创建VBO
@@ -226,25 +245,60 @@ void AYSpriteRenderer::_initBuffers()
 
     // 创建VAO
     _vao = _device->createVertexArray();
-    glBindVertexArray(_vao);
+
+    _device->saveGLState();
+    auto stateManager = _device->getGLStateManager();
+    stateManager->bindVertexArray(_vao);
 
     // 绑定VBO并设置顶点属性
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+    stateManager->bindBuffer(GL_ARRAY_BUFFER, _vbo);
 
     // 位置属性
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
     // 纹理坐标属性
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    _device->restoreGLState();
 }
 
-void AYSpriteRenderer::_initAtlasShader()
+void AYSpriteRenderer::_loadSpriteRendererConfigINI()
 {
-    _atlasShaderProgram = _device->createShaderProgram(SPRITE_VERTEX_SHADER_ATLAS, SPRITE_FRAGMENT_SHADER);
+    _config.loadFromFile(_configPath, AYConfigWrapper::ConfigType::INI);
+
+    _baseShader = _config.get<std::string>("shader name.base", std::string("SpriteBaseShader"));
+    _atlasShader = _config.get<std::string>("shader name.atlas", std::string("SpriteAtlasShader"));
+    _baseVertex = _config.get<std::string>("shader path.base_vertex",
+        AYPath::Engine::getPresetShaderPath() + std::string("SpriteRenderer/sprite.vert"));
+    _atlasVertex = _config.get<std::string>("shader path.atlas_vertex",
+        AYPath::Engine::getPresetShaderPath() + std::string("SpriteRenderer/sprite_atlas.vert"));
+    _baseFragment = _config.get<std::string>("shader path.atlas_fragment",
+        AYPath::Engine::getPresetShaderPath() + std::string("SpriteRenderer/sprite.frag"));
+    _atlasFragment = _config.get<std::string>("shader path.atlas_fragment",
+        AYPath::Engine::getPresetShaderPath() + std::string("SpriteRenderer/sprite_atlas.frag"));
+}
+
+void AYSpriteRenderer::_saveSpriteRendererConfigINI()
+{
+    _config.set("shader name.base", _baseShader);
+    _config.set("shader name.atlas", _atlasShader);
+    _config.set("shader path.base_vertex", _baseVertex);
+    _config.set("shader path.atlas_vertex", _atlasVertex);
+    _config.set("shader path.atlas_fragment", _baseFragment);
+    _config.set("shader path.atlas_fragment", _atlasFragment);
+
+    _config.saveConfig(_configPath);
+}
+
+GLuint AYSpriteRenderer::_getBaseShader(bool reload)
+{
+    return _device->getShaderV(_baseShader, reload, _baseVertex, _baseFragment);
+}
+
+GLuint AYSpriteRenderer::_getAtlasShader(bool reload)
+{
+    return _device->getShaderV(_atlasShader, reload, _atlasVertex, _atlasFragment);
 }
 

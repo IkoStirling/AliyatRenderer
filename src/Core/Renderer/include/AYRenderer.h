@@ -15,7 +15,6 @@ public:
 
     void clearScreen(float r, float g, float b, float a);
     void drawFullscreenQuad();
-    void setViewport(int x, int y, int width, int height);
     void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
 
     AYRenderContext& getRenderContext() { return _context; }
