@@ -18,7 +18,30 @@ void AYRendererManager::init()
 		_cameraSystem->setViewportAll(glm::vec4(0, 0, width, height));
 		});
 
-
+	_renderer->getMaterialManager()->createMaterial(
+		{
+			.baseColor = glm::vec4(.2f, 0.5f, 0.1f, 1.0f),
+			.metallic = 1.f,
+			.roughness = 0.3f,
+			.type = STMaterial::Type::Opaque,
+		}
+		);
+	_renderer->getMaterialManager()->createMaterial(
+		{
+			.baseColor = glm::vec4(.6f, 0.2f, 0.5f, 1.0f),
+			.metallic = 0.3f,
+			.roughness = 0.6f,
+			.type = STMaterial::Type::Opaque,
+		}
+		);
+	_renderer->getMaterialManager()->createMaterial(
+		{
+			.baseColor = glm::vec4(.1f, 0.7f, 0.2f, 1.0f),
+			.metallic = 0.8f,
+			.roughness = 0.1f,
+			.type = STMaterial::Type::Opaque,
+		}
+		);
 }
 
 void AYRendererManager::update(float delta_time)
@@ -137,30 +160,34 @@ void AYRendererManager::_displayDebugInfo()
 
 
 	std::string fps = "µ±Ç°fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
-	_renderer->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	auto* dr = _renderer->getCoreRenderer();
-	//dr->drawArrow2D({}, glm::vec3(100.f), glm::vec3(600.f), 20.f, glm::vec4(1.f, 0.f, 0.f, 1.f));
-	//dr->drawLine2D(glm::vec2(0,0),glm::vec2(1920,1080),glm::vec4(1.f));
 
-	dr->drawLine2D({ {glm::vec2(10.f),0}, glm::vec4(0, 1, 0, 1) },
+	/*dr->drawLine2D({ {glm::vec2(10.f),0}, glm::vec4(0, 1, 0, 1) },
 		{ {glm::vec2(500.f),0}, glm::vec4(0, 0, 1, 1) },
 		AYCoreRenderer::Space::World);
-
 	dr->drawLine2D({ {glm::vec3(100.f, 100.f, 0.f)}, glm::vec4(0, 1, 0, 1) },
 		{ {glm::vec3(600.f, 500.f, 0.f)}, glm::vec4(0, 1, 0, 1) },
 		AYCoreRenderer::Space::World);
-
 	dr->drawLine2D({ glm::vec3(300.f, 100.f, 0.f), glm::vec4(0, 1, 0, 1) },
 		{ glm::vec3(-600.f, 500.f, 0.f),
 		glm::vec4(0, 1, 0, 1) },
 		AYCoreRenderer::Space::World);
-
-	dr->drawArrow2D({}, glm::vec3(100.f, 400.f, 0.f), glm::vec3(600.f, -500.f, 0.f), 20.f, glm::vec4(1.f, 0.f, 0.f, 1.f));
-	for (int i = 0; i < 100; i++) {
-		dr->drawRect2D({ glm::vec3(i * 100.f, 0, 0) }, glm::vec2(50.f), glm::vec4(0, 1, 0, 1), false);
-		dr->drawRect2D({ glm::vec3(i * -100.f, 0, 0) }, glm::vec2(30.f), glm::vec4(0, 0, 1, 1), true);
+	dr->drawArrow2D({}, glm::vec3(100.f, 400.f, 0.f), glm::vec3(600.f, 500.f, 0.f), 20.f, glm::vec4(1.f, 0.f, 0.f, 1.f));*/
+	for (int i = 1; i < 100; i++) {
+		dr->drawRect2D({ glm::vec3(i * 100.f, 0, 0) }, glm::vec2(50.f), 1, true);
+		dr->drawRect2D({ glm::vec3(i * -100.f, 0, 0), glm::vec3(0, i * 10.f, 0) }, glm::vec2(30), 2, false);
 	}
+	for (int i = 1; i < 20; i++) {
+		for (int j = 1; j < 20; j++) {
+			dr->drawBox3D({ glm::vec3(i * -100.f + 1000.f, 0, j * -100.f + 1000.f) }, glm::vec3(20.f), 3, false, AYCoreRenderer::Space::World);
+		}
+	}
+
+	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);
+	dr->drawCircle2D({ glm::vec3( 50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
+	
 
 	//_renderer->getSpriteRenderer()->drawSprite(
 	//	tex_ID,

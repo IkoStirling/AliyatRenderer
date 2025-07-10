@@ -83,16 +83,20 @@ public:
 		{
 			static int switcher = 0;
 			glm::vec3 movement(0.0f);
+			movement.x = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX});
+			movement.y = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftY});
+			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_A })) movement.x = -1;
+			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_D })) movement.x += 1;
+			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_W })) movement.z = -1;
+			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_S })) movement.z += 1;
+			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_SPACE })) movement.y = 1;
+			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_LEFT_ALT })) movement.y -= 1;
 			float moveSpeed = 200.f * (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_LEFT_SHIFT }) ? 5.f : 1.f);
-			movement.x = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX, moveSpeed });
-			movement.y = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftY, moveSpeed });
-			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_A })) movement.x = -moveSpeed;
-			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_D })) movement.x += moveSpeed;
-			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_W })) movement.z = -moveSpeed;
-			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_S })) movement.z += moveSpeed;
-			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_SPACE })) movement.y = moveSpeed;
-			if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_LEFT_ALT })) movement.y -= moveSpeed;
 
+			if (glm::length(movement) > 0.0f) {
+				movement = glm::normalize(movement);
+			}
+			
 			if (inputSystem->getUniversalInputState(MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT }) ||
 				inputSystem->isActionActive("default.GamePad_X"))
 			{
@@ -132,20 +136,54 @@ public:
 					duration = 20;
 				}
 			}
-			else if (movement != glm::vec3(0.0f))
-			{
-				auto& trans = getTransform();
-				setPosition(trans.position + glm::vec3(movement * delta_time));
-				// 设置朝向
-				if (movement.x != 0) {
-					_orcSprite->setFlip(movement.x > 0, false); 
-				}
-				_orcSprite->playAnimation("walk01");
-			}
 			else
 			{
-				_orcSprite->playAnimation("idle01");
+				auto* camera = _camera[switcher]->getCamera();
+				auto* cam3D = dynamic_cast<AY3DCamera*>(camera);
+				if (cam3D)
+				{
+					_orcSprite->setVisible(false);
+					glm::vec3 cameraFront = cam3D->getFront();
+					glm::vec3 cameraRight = cam3D->getRight();
+
+					// 计算实际移动方向
+					glm::vec3 moveDirection = (cameraFront * -movement.z) +
+						(cameraRight * movement.x) +
+						(glm::vec3(0.0f, 1.0f, 0.0f) * movement.y);
+
+					if (glm::length(moveDirection) > 0.0f) {
+						moveDirection = glm::normalize(moveDirection);
+					}
+
+					// 应用移动
+					auto& trans = getTransform();
+					setPosition(trans.position + moveDirection * moveSpeed * delta_time);
+
+					// 设置精灵朝向
+					if (movement.x != 0) {
+						_orcSprite->setFlip(movement.x > 0, false);
+					}
+					_orcSprite->playAnimation("walk01");
+				}
+				else
+				{
+					_orcSprite->setVisible(true);
+					// 2D相机的原始移动逻辑
+					if (movement != glm::vec3(0.0f)) {
+						auto& trans = getTransform();
+						setPosition(trans.position + glm::vec3(movement * moveSpeed * delta_time));
+
+						if (movement.x != 0) {
+							_orcSprite->setFlip(movement.x > 0, false);
+						}
+						_orcSprite->playAnimation("walk01");
+					}
+					else {
+						_orcSprite->playAnimation("idle01");
+					}
+				}
 			}
+
 		}
 
     }

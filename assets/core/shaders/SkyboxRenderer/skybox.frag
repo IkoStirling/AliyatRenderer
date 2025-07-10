@@ -16,7 +16,8 @@ vec2 sampleSphericalMap(vec3 v) {
     uv *= vec2(0.1591, 0.3183); // 1/2pi, 1/pi 归一化到 [0,1] 范围
     uv += 0.5; // 中心化到 [0.5,1.5]
 
-    uv.y += 0.15;
+    uv.y -= 0.15;
+    uv.y = 1.0 - uv.y;
 
     return uv;
 }

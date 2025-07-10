@@ -7,6 +7,7 @@ AYRenderer::AYRenderer(AYRenderDevice* device) :
     _initSpriteRenderer();
     _initCoreRenderer();
     _initSkyboxRenderer();
+    _initMaterialManager();
 }
 
 AYRenderer::~AYRenderer()
@@ -46,34 +47,8 @@ void AYRenderer::drawFullscreenQuad()
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
-void AYRenderer::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color)
-{
-    _fontRenderer->renderText(text, x, y, scale, color);
-}
-
-AYSpriteRenderer* AYRenderer::getSpriteRenderer()
-{
-    return _spriteRenderer.get();
-}
-
-AYFontRenderer* AYRenderer::getFontRenderer()
-{
-    return _fontRenderer.get();
-}
-
-AYCoreRenderer* AYRenderer::getCoreRenderer()
-{
-    return _coreRenderer.get();
-}
-
-AYSkyboxRenderer* AYRenderer::getSkyboxRenderer()
-{
-    return _skyboxRenderer.get();
-}
-
 void AYRenderer::_initFontRenderer()
 {
-    
     _fontRenderer = std::make_unique<AYFontRenderer>(_device, this);
     _fontRenderer->loadFont("C:/Windows/Fonts/msyh.ttc", 24);
 }
@@ -91,4 +66,9 @@ void AYRenderer::_initCoreRenderer()
 void AYRenderer::_initSkyboxRenderer()
 {
     _skyboxRenderer = std::make_unique<AYSkyboxRenderer>(_device, this);
+}
+
+void AYRenderer::_initMaterialManager()
+{
+    _materialManager = std::make_unique<AYMaterialManager>();
 }

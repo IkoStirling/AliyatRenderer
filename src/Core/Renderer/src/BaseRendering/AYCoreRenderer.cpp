@@ -3,6 +3,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtc/type_ptr.hpp> ​​
 #include "AYPath.h"
+#include "BaseRendering/Graphic/AYGraphicGenerator.h"
 
 #define AY_CHECK_GL_ERROR(context) \
     do { \
@@ -44,19 +45,15 @@ std::string mat4ToStringPretty(const glm::mat4& matrix) {
     return oss.str();
 }
 
-AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer):
-	_device(device),
-	_renderer(renderer),
+AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer) :
+    _device(device),
+    _renderer(renderer),
     _configPath(AYPath::Engine::getPresetConfigPath() + "Renderer/CoreRenderer/config.ini")
 {
     _loadCoreRendererConfigINI();
     _setupDebugShader();
 
-    for (auto& batch : _batches)
-    {
-        batch.vertices.reserve(_vertexBufferSize);
-        batch.instanceGroups.reserve(_instanceBufferSize);
-    }
+    _renderBatches.reserve(8);
 }
 
 AYCoreRenderer::~AYCoreRenderer()
@@ -82,13 +79,13 @@ void AYCoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices)
 
 void AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances) 
 {
-    if (requiredInstances * sizeof(glm::mat4) > _instanceBufferSize) {
+    if (requiredInstances > _instanceBufferSize) {
         _instanceBufferSize = std::max(_instanceBufferSize * 3 / 2,
-            requiredInstances * sizeof(glm::mat4));
+            requiredInstances);
 
         glBindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
         glBufferData(GL_ARRAY_BUFFER,
-            _instanceBufferSize,
+            _instanceBufferSize * sizeof(glm::mat4),
             nullptr,
             GL_DYNAMIC_DRAW);
 
@@ -98,6 +95,18 @@ void AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
 
 void AYCoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
 {
+    if (requiredIndices > _indexBufferSize) {
+        _indexBufferSize = std::max(_indexBufferSize * 3 / 2,
+            _indexBufferSize);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+        glBufferData(GL_ARRAY_BUFFER,
+            _indexBufferSize * sizeof(uint32_t),
+            nullptr,
+            GL_DYNAMIC_DRAW);
+
+        AY_CHECK_GL_ERROR("Index buffer resize failed");
+    }
 }
 
 void AYCoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices) 
@@ -110,7 +119,7 @@ void AYCoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices)
 
     // 孤儿化缓冲区（抛弃旧数据）
     glBufferData(GL_ARRAY_BUFFER,
-        _vertexBufferSize,
+        _vertexBufferSize * sizeof(VertexInfo),
         nullptr,
         GL_DYNAMIC_DRAW);
 
@@ -132,7 +141,7 @@ void AYCoreRenderer::uploadInstanceData(const std::vector<glm::mat4>& instances)
     glBindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
 
     glBufferData(GL_ARRAY_BUFFER,
-        _instanceBufferSize,
+        _instanceBufferSize * sizeof(glm::mat4),
         nullptr,
         GL_DYNAMIC_DRAW);
 
@@ -146,13 +155,76 @@ void AYCoreRenderer::uploadInstanceData(const std::vector<glm::mat4>& instances)
 
 void AYCoreRenderer::uploadIndexData(const std::vector<uint32_t>& indices)
 {
+    if (indices.empty()) return;
+
+    ensureIndexBufferCapacity(indices.size());
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+
+    // 孤儿化缓冲区（抛弃旧数据）
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+        _indexBufferSize * sizeof(uint32_t),
+        nullptr,
+        GL_DYNAMIC_DRAW);
+
+    // 然后上传新数据
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,
+        0,
+        indices.size() * sizeof(uint32_t),
+        indices.data());
+
+    AY_CHECK_GL_ERROR("Upload Index Data failed");
 }
 
+AYCoreRenderer::InstanceGroup* AYCoreRenderer::findOrCreateInstanceGroup(
+    InstanceType type,
+    int expectedVertexCount,
+    int expectedIndexCount,
+    const glm::mat4& transform)
+{
+    // 模型矩阵在此函数中添加
+    // 查找现有实例组
+    for (auto& group : _currentBatch->instanceGroups) {
+        if (group.type == type &&
+            (expectedVertexCount == -1 || group.vertexCount == expectedVertexCount) &&
+            (expectedIndexCount == -1 || group.indexCount == expectedIndexCount)) 
+        {
+            group.matrices.push_back(transform);
+            return &group;
+        }
+    }
 
+    // 创建并添加新实例组
+    InstanceGroup newGroup;
+    newGroup.type = type;
+    newGroup.baseVertex = _currentBatch->vertices.size();
+    newGroup.matrices.push_back(transform);
+    _currentBatch->instanceGroups.push_back(newGroup);
+
+    return &_currentBatch->instanceGroups.back();
+}
+
+void AYCoreRenderer::addVertexData(const std::vector<VertexInfo>& vertices, InstanceGroup* group)
+{
+    group->vertexCount = vertices.size();
+    _currentBatch->vertices.insert(_currentBatch->vertices.end(), vertices.begin(), vertices.end());
+}
+
+void AYCoreRenderer::addIndexData(std::vector<uint32_t>& indices, InstanceGroup* group)
+{
+    // 调整索引偏移量
+    for (auto& index : indices) {
+        index += group->baseVertex;
+    }
+
+    group->baseIndex = _currentBatch->indices.size();
+    group->indexCount = indices.size();
+    _currentBatch->indices.insert(_currentBatch->indices.end(), indices.begin(), indices.end());
+}
 
 void AYCoreRenderer::drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space)
 {
-    switchBatchDraw(space, PrimitiveType::Lines);
+    switchBatchDraw(space, PrimitiveType::Lines, false, STMaterial::Type::None);
     _currentBatch->vertices.push_back(start);
     _currentBatch->vertices.push_back(end);
 }
@@ -167,7 +239,7 @@ void AYCoreRenderer::drawTriangle(const VertexInfo& p1,
     const VertexInfo& p3,
     Space space)
 {
-    switchBatchDraw(space, PrimitiveType::Triangles);
+    switchBatchDraw(space, PrimitiveType::Triangles, false, STMaterial::Type::None);
     _currentBatch->vertices.push_back(p1);
     _currentBatch->vertices.push_back(p2);
     _currentBatch->vertices.push_back(p3);
@@ -179,7 +251,7 @@ void AYCoreRenderer::drawTriangle(const VertexInfo* vertices,
 {
     if (!vertices)
         return;
-    switchBatchDraw(space, PrimitiveType::Triangles);
+    switchBatchDraw(space, PrimitiveType::Triangles, false, STMaterial::Type::None);
     for (auto& index : indices)
     {
         _currentBatch->vertices.push_back(vertices[index[0]]);
@@ -188,117 +260,18 @@ void AYCoreRenderer::drawTriangle(const VertexInfo* vertices,
     }
 }
 
-void AYCoreRenderer::drawRect2D(const STTransform& transform,
-    const glm::vec2& size,
-    const glm::vec4& color,
-    bool filled,
-    Space space)
-{
-    switchBatchDraw(space, filled ? PrimitiveType::Triangles : PrimitiveType::Lines);
-
-    
-    // 检查是否已有矩形实例组
-    bool foundGroup = false;
-    for (auto& group : _currentBatch->instanceGroups) {
-        if (group.type == InstanceType::Rectangle && group.vertexCount == filled? 6:8) { // 矩形顶点数
-            foundGroup = true;
-            group.matrices.push_back(transform.getTransformMatrix() * glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f)));
-            break;
-        }
-    }
-
-    if (!foundGroup) {
-        InstanceGroup newGroup;
-        newGroup.vertexCount = filled ? 6 : 8; // 2个三角形或4条线
-        newGroup.baseVertex = _currentBatch->vertices.size();
-        newGroup.type = InstanceType::Rectangle;
-
-        // 添加基础顶点
-        if (filled) {
-            // 两个三角形组成矩形
-            VertexInfo baseVertices[6] = {
-                // 第一个三角形 - 顺时针
-                {{-0.5f,-0.5f,0}, color}, // 左下
-                {{0.5f,-0.5f,0}, color},  // 右下
-                {{-0.5f,0.5f,0}, color},  // 左上
-
-                // 第二个三角形 - 顺时针 
-                {{0.5f,-0.5f,0}, color},  // 右下
-                {{0.5f,0.5f,0}, color},   // 右上
-                {{-0.5f,0.5f,0}, color}   // 左上
-            };
-            _currentBatch->vertices.insert(_currentBatch->vertices.end(), baseVertices, baseVertices + 6);
-        }
-        else {
-            // 四条线组成矩形边框
-            VertexInfo baseVertices[8] = {
-                {{-0.5f,-0.5f,0}, color}, {{0.5f,-0.5f,0}, color}, // 底边
-                {{0.5f,-0.5f,0}, color}, {{0.5f,0.5f,0}, color},   // 右边
-                {{0.5f,0.5f,0}, color}, {{-0.5f,0.5f,0}, color},  // 顶边
-                {{-0.5f,0.5f,0}, color}, {{-0.5f,-0.5f,0}, color} // 左边
-            };
-            _currentBatch->vertices.insert(_currentBatch->vertices.end(), baseVertices, baseVertices + 8);
-        }
-        newGroup.matrices.push_back(transform.getTransformMatrix() * glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f)));
-        _currentBatch->instanceGroups.push_back(newGroup);
-    }
-}
-
-void AYCoreRenderer::drawCircle2D(const STTransform& transform,
-    float radius,
-    const glm::vec4& color,
-    int segments,
-    bool filled,
-    Space space)
-{
-    glm::mat4 model = transform.getTransformMatrix();
-
-    std::vector<glm::vec3> localCirclePoints;
-
-    const float angleStep = 2.0f * glm::pi<float>() / segments; //   360 / segments
-    float angle = 0.0f;
-
-    VertexInfo center = { transform.position, color };
-
-    for (int i = 0; i <= segments; ++i) 
-    {
-        float angle = i * angleStep;
-        localCirclePoints.push_back(glm::vec3(cos(angle), sin(angle), 0.0f));
-    }
-
-    for (auto& point : localCirclePoints) 
-    {
-        glm::vec3 worldPoint = model * glm::vec4(point, 1.0f);
-    }
-
-    for (int i = 0; i < localCirclePoints.size() - 1; i++)
-    {
-        drawLine2D({ localCirclePoints[i],color}, { localCirclePoints[i+1],color },space);
-        if (filled)
-        {
-            drawTriangle(
-                center,                                         // 圆心（Z=0，假设 2D）
-                { localCirclePoints[i],color },                 // 顶点1
-                { localCirclePoints[i + 1],color },             // 顶点2
-                space
-            );
-        }
-    }
-        
-}
-
-void AYCoreRenderer::drawArrow2D(const STTransform& transform, 
+void AYCoreRenderer::drawArrow2D(const STTransform& transform,
     const glm::vec3& from,
     const glm::vec3& to,
     float headSize,
     const glm::vec4& color,
-    Space type
+    Space space
 )
 {
     glm::mat4 model = transform.getTransformMatrix();
     glm::vec3 worldFrom = model * glm::vec4(from, 1.0f);
     glm::vec3 worldTo = model * glm::vec4(to, 1.0f);
-    drawLine2D(worldFrom, worldTo, color);
+    drawLine2D(worldFrom, worldTo, color );
 
     // arrow head
     glm::vec3 dir = glm::normalize(to - from);
@@ -310,34 +283,115 @@ void AYCoreRenderer::drawArrow2D(const STTransform& transform,
 }
 
 
+void AYCoreRenderer::drawRect2D(const STTransform& transform,
+    const glm::vec2& size,
+    uint32_t materialID,
+    bool wireframe,
+    Space space)
+{
+    const auto& mat = _renderer->getMaterialManager()->getMaterial(materialID);
 
-//void AYCoreRenderer::drawBox3D(const STTransform& transform, const glm::vec3& half_extents, const glm::vec4& color, bool wireframe)
-//{
-//    const glm::vec3 vertices[8] = {
-//    {-1,-1,-1}, {1,-1,-1}, {1,1,-1}, {-1,1,-1},
-//    {-1,-1, 1}, {1,-1, 1}, {1,1, 1}, {-1,1, 1}
-//    };
-//
-//    const int indices[24] = {
-//        0,1,1,2,2,3,3,0, // 底面
-//        4,5,5,6,6,7,7,4, // 顶面
-//        0,4,1,5,2,6,3,7  // 侧面
-//    };
-//
-//    glm::mat4 matrix = transform.getTransformMatrix() *
-//        glm::scale(glm::mat4(1.0f), half_extents);
-//
-//    for (int i = 0; i < 24; i += 2) {
-//        glm::vec3 start = matrix * glm::vec4(vertices[indices[i]], 1.0f);
-//        glm::vec3 end = matrix * glm::vec4(vertices[indices[i + 1]], 1.0f);
-//        //drawLine3D(start, end, color);
-//    }
-//
-//    if (!wireframe) {
-//        // 填充面实现...
-//    }
-//}
-//
+    switchBatchDraw(space,
+        !wireframe ? PrimitiveType::Triangles : PrimitiveType::Lines,
+        true,
+        !wireframe ? mat.type : STMaterial::Type::Wireframe,
+        materialID);
+
+    auto* group = findOrCreateInstanceGroup(
+        InstanceType::Rectangle,
+        4, 
+        !wireframe ? 6 : 8,
+        transform.getTransformMatrix() * glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f))
+    );
+
+    if (group->vertexCount == -1) 
+    {   
+        std::vector<VertexInfo> vertices;
+        auto rectPoints = AYGraphicGenerator::createRectV();
+        for (const auto& point : rectPoints) {
+            vertices.push_back({ point, mat.baseColor });
+        }
+        addVertexData(vertices, group);
+
+        auto indices = AYGraphicGenerator::createRectI(!wireframe);
+        addIndexData(indices, group);
+    }
+}
+
+void AYCoreRenderer::drawCircle2D(const STTransform& transform,
+    float radius,
+    uint32_t materialID,
+    int segments,
+    bool wireframe,
+    Space space)
+{
+    const auto& mat = _renderer->getMaterialManager()->getMaterial(materialID);
+
+    switchBatchDraw(space,
+        !wireframe ? PrimitiveType::Triangles : PrimitiveType::Lines,
+        true,
+        !wireframe ? mat.type : STMaterial::Type::Wireframe,
+        materialID);
+
+    auto* group = findOrCreateInstanceGroup(
+        InstanceType::Circle,
+        segments + 1, // 顶点数
+        !wireframe ? segments * 3 : segments * 2, // 索引数
+        transform.getTransformMatrix()
+    );
+
+    if (group->vertexCount == -1) 
+    {
+        std::vector<VertexInfo> vertices;
+        vertices.push_back({ glm::vec3(0.0f, 0.0f, 0.0f), mat.baseColor }); // 中心点
+
+        auto circlePoints = AYGraphicGenerator::createCircleV(radius, segments);
+        for (const auto& point : circlePoints) {
+            vertices.push_back({ point, mat.baseColor });
+        }
+        addVertexData(vertices, group);
+
+        auto indices = AYGraphicGenerator::createCircleI(!wireframe, segments);
+        addIndexData(indices, group);
+    }
+}
+
+void AYCoreRenderer::drawBox3D(const STTransform& transform,
+    const glm::vec3& half_extents,
+    uint32_t materialID,
+    bool wireframe,
+    Space space)
+{
+    const auto& mat = _renderer->getMaterialManager()->getMaterial(materialID);
+
+    switchBatchDraw(space,
+        wireframe ? PrimitiveType::Lines : PrimitiveType::Triangles,
+        true,
+        !wireframe ? mat.type : STMaterial::Type::Wireframe,
+        materialID);
+
+    auto* group = findOrCreateInstanceGroup(
+        InstanceType::Circle,
+        8, // 顶点数
+        wireframe ? 24 : 36, // 索引数
+        transform.getTransformMatrix()
+    );
+
+    if (group->vertexCount == -1)
+    {
+        std::vector<VertexInfo> vertices;
+        auto rectPoints = AYGraphicGenerator::createBoxV(half_extents);
+        for (const auto& point : rectPoints) {
+            vertices.push_back({ point, mat.baseColor });
+        }
+
+        addVertexData(vertices, group);
+
+        auto indices = AYGraphicGenerator::createBoxI(wireframe);
+        addIndexData(indices, group);
+    }
+}
+
 //void AYCoreRenderer::drawSphere3D(const STTransform& transform, float radius, const glm::vec4& color, int segments)
 //{
 //}
@@ -357,13 +411,8 @@ void AYCoreRenderer::drawArrow2D(const STTransform& transform,
 void AYCoreRenderer::beginDraw()
 {
     _switchVertexBuffer();
-    for (auto& batch : _batches)
-    {
-        batch.vertices.clear();
-        batch.instanceGroups.clear();
-        batch.projectionMatrix = glm::mat4(1.f);
-        batch.viewMatrix = glm::mat4(1.f);
-    }
+    _renderBatches.clear();
+    _currentBatch = nullptr;
 }
 
 void AYCoreRenderer::endDraw() 
@@ -416,100 +465,168 @@ glm::mat4 AYCoreRenderer::getCurrentView(Space space)
     return view;
 }
 
-void AYCoreRenderer::switchBatchDraw(Space space, PrimitiveType type)
+void AYCoreRenderer::switchBatchDraw(Space space,
+    PrimitiveType p_type,
+    bool useInstanced,
+    STMaterial::Type m_type,
+    uint32_t materialID)
 {
-    int index = static_cast<int>(space) * 2 + static_cast<int>(type);
-    _currentBatch = &_batches[index];
+    BatchKey key;
+    key.space = space;
+    key.primitiveType = (p_type == PrimitiveType::Lines) ? GL_LINES : GL_TRIANGLES;
+    key.projectionMatrix = getCurrentProjection(space);
+    key.viewMatrix = getCurrentView(space);
+    key.depthTestEnabled = true;
+
+    if (space == Space::Screen) {
+        key.depthTestEnabled = false; 
+    }
+
+    key.useInstanced = useInstanced;
+    key.materialType = m_type;
+    key.materialID = materialID;
+
+    auto it = _renderBatches.find(key);
+    if (it != _renderBatches.end()) {
+        _currentBatch = &it->second;
+    }
+    else {
+        // 创建新批次
+        RenderBatch newBatch;
+        auto result = _renderBatches.emplace(key, std::move(newBatch));
+        _currentBatch = &result.first->second;
+    }
 }
 
 void AYCoreRenderer::endBatchDraw()
 {
-    for (int i = 0; i < _batches.size(); i++)
-    {
-        _batches[i].projectionMatrix = getCurrentProjection((Space)(i / 2));
-        _batches[i].viewMatrix = getCurrentView((Space)(i / 2));
-    }
 }
 
-void AYCoreRenderer::flushInstanced(RenderBatch& batch)
+void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batch)
 {
-    if (batch.instanceGroups.empty()) return;
+    if (batch.vertices.empty())
+        return;
 
-    glBindVertexArray(_vao);
-    glUseProgram(_getInstanceShader());
+    const auto& mat = _renderer->getMaterialManager()->getMaterial(key.materialID);
+
+    _device->saveGLState();
+    auto stateManager = _device->getGLStateManager();
+
+    auto shader = _getInstanceShader();
 
     // 状态设置
-    _device->getGLStateManager()->setDepthTest(batch.depthTestEnabled);
-    _device->getGLStateManager()->setLineWidth(_lineWidth);
+
+    stateManager->bindVertexArray(_vao);
+    stateManager->useProgram(shader);
+    stateManager->setDepthTest(true);
+    stateManager->setDepthMask(true);
+    stateManager->setDepthFunc(GL_LESS);
+    stateManager->setLineWidth(_lineWidth);
+    if (mat.type == STMaterial::Type::Transparent) {
+        stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        stateManager->setDepthMask(false);
+    }
 
     // 设置矩阵
-    glUniformMatrix4fv(glGetUniformLocation(_getInstanceShader(), "projection"),
-        1, GL_FALSE, glm::value_ptr(batch.projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(_getInstanceShader(), "view"),
-        1, GL_FALSE, glm::value_ptr(batch.viewMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"),
+        1, GL_FALSE, glm::value_ptr(key.projectionMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "view"),
+        1, GL_FALSE, glm::value_ptr(key.viewMatrix));
+
+    // 设置材质
+    glUniform1f(glGetUniformLocation(shader, "u_Metallic"), mat.metallic);
+    glUniform1f(glGetUniformLocation(shader, "u_Roughness"), mat.roughness);
 
     // 提交顶点数据
     uploadVertexData(batch.vertices);
 
+    // 提交索引数据（如果需要）
+    if (!batch.indices.empty()) {
+        uploadIndexData(batch.indices);
+    }
+
+    int curVertex = 0;
     // 为每个实例组单独绘制
     for (auto& group : batch.instanceGroups) 
     {
+        //提交实例化模型矩阵
         uploadInstanceData(group.matrices);
 
-        // 实例化绘制
-        glDrawArraysInstanced(batch.primitiveType,
-            group.baseVertex,
-            group.vertexCount,
-            group.matrices.size());
+        if (group.baseIndex == -1)
+        {
+            glDrawArraysInstanced(key.primitiveType,  //图元类型
+                group.baseVertex,                       //起始位置
+                group.vertexCount,                      //顶点数量
+                group.matrices.size());                 //绘制数量
+        }
+        else
+        {
+            glDrawElementsInstanced(key.primitiveType,//图元类型
+                group.indexCount,                       //索引数量，以1个三角形为例，需要三个索引
+                GL_UNSIGNED_INT,                        //索引数据类型
+                (void*)(group.baseIndex * sizeof(GL_UNSIGNED_INT)),  // 索引偏移量，如果nullptr直接从当前绑定IBO开始
+                group.matrices.size());                 //绘制数量
+        }
     }
 
-    glBindVertexArray(0);
+    _device->restoreGLState();
 }
 
-void AYCoreRenderer::flushImmediate(RenderBatch& batch)
+void AYCoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batch)
 {
-    glBindVertexArray(_vao);
-    glUseProgram(_getBaseShader());
-    for (auto& batch : _batches) {
-        if (batch.vertices.empty()) continue;
+    if (batch.vertices.empty())
+        return;
 
-        // 状态设置
-        _device->getGLStateManager()->setDepthTest(batch.depthTestEnabled);
-        _device->getGLStateManager()->setLineWidth(_lineWidth);
+    _device->saveGLState();
+    auto stateManager = _device->getGLStateManager();
 
-        // 矩阵计算延迟到GPU
-        glUniformMatrix4fv(
-            glGetUniformLocation(_getBaseShader(), "projection"),
-            1,
-            GL_FALSE,
-            glm::value_ptr(batch.projectionMatrix));
-        glUniformMatrix4fv(
-            glGetUniformLocation(_getBaseShader(), "view"),
-            1,
-            GL_FALSE,
-            glm::value_ptr(batch.viewMatrix));
+    auto shader = _getBaseShader();
+    stateManager->bindVertexArray(_vao);
+    stateManager->useProgram(shader);
+    
+    // 状态设置
+    _device->getGLStateManager()->setDepthTest(key.depthTestEnabled);
+    _device->getGLStateManager()->setLineWidth(_lineWidth);
 
-        // 提交数据
-        uploadVertexData(batch.vertices);
+    // 矩阵计算延迟到GPU
+    glUniformMatrix4fv(
+        glGetUniformLocation(shader, "projection"),
+        1,
+        GL_FALSE,
+        glm::value_ptr(key.projectionMatrix));
+    glUniformMatrix4fv(
+        glGetUniformLocation(shader, "view"),
+        1,
+        GL_FALSE,
+        glm::value_ptr(key.viewMatrix));
 
-        glDrawArrays(batch.primitiveType, 0, batch.vertices.size());
-    }
-    glBindVertexArray(0);
+    // 提交数据
+    uploadVertexData(batch.vertices);
+
+    glDrawArrays(key.primitiveType, 0, batch.vertices.size());
+
+    _device->restoreGLState();
 }
 
 void AYCoreRenderer::flushWithRecover()
 {
-    _device->saveGLState();
-
-    for (auto& batch : _batches)
-    {
-        if (!batch.instanceGroups.empty())
-            flushInstanced(batch);
-        else
-            flushImmediate(batch);
+    // 先渲染不透明物体
+    for (auto& [key, batch] : _renderBatches) {
+        const auto& mat = _renderer->getMaterialManager()->getMaterial(key.materialID);
+        if (mat.type != STMaterial::Type::Transparent) {
+            if (key.useInstanced) flushInstanced(key, batch);
+            else flushImmediate(key, batch);
+        }
     }
 
-    _device->restoreGLState();
+    // 再渲染透明物体
+    for (auto& [key, batch] : _renderBatches) {
+        const auto& mat = _renderer->getMaterialManager()->getMaterial(key.materialID);
+        if (mat.type == STMaterial::Type::Transparent) {
+            if (key.useInstanced) flushInstanced(key, batch);
+            else flushImmediate(key, batch);
+        }
+    }
 }
 
 void AYCoreRenderer::_loadCoreRendererConfigINI()
@@ -554,6 +671,7 @@ void AYCoreRenderer::_setupDebugShader()
 {
     const size_t INITIAL_VERTEX_BUFFER_SIZE = sizeof(VertexInfo) * _vertexBufferSize;
     const size_t INITIAL_INSTANCE_BUFFER_SIZE = sizeof(glm::mat4) * _instanceBufferSize;
+    const size_t INITIAL_INDEX_BUFFER_SIZE = 3 * sizeof(uint8_t) * _indexBufferSize;
 
     for (int i = 0; i < 2; i++)
     {
@@ -565,6 +683,7 @@ void AYCoreRenderer::_setupDebugShader()
     _vbo = _vboDouble[0];
     _instanceVBO = _instanceVboDouble[0];
 
+    _ibo = _device->createIndexBuffer(nullptr, INITIAL_INDEX_BUFFER_SIZE);
     _switchVertexBuffer();
 }
 
@@ -599,4 +718,35 @@ void AYCoreRenderer::_switchVertexBuffer()
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+
+size_t AYCoreRenderer::_computeBatchKeyHash(const BatchKey& key)
+{
+    size_t seed = 0;
+
+    // 哈希枚举值
+    seed ^= std::hash<int>()(static_cast<int>(key.space)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= std::hash<int>()(static_cast<int>(key.primitiveType)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+    // 哈希布尔值
+    seed ^= std::hash<bool>()(key.useInstanced) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= std::hash<bool>()(key.depthTestEnabled) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+    // 哈希矩阵（使用 FloatHash）
+    auto hashMatrix = [](const glm::mat4& mat) {
+        size_t matrixSeed = 0;
+        for (int i = 0; i < 4; ++i) {
+            for (int j = 0; j < 4; ++j) {
+                uint32_t bits;
+                std::memcpy(&bits, &mat[i][j], sizeof(float));
+                matrixSeed ^= std::hash<uint32_t>()(bits) + 0x9e3779b9 + (matrixSeed << 6) + (matrixSeed >> 2);
+            }
+        }
+        return matrixSeed;
+        };
+
+    seed ^= hashMatrix(key.projectionMatrix) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= hashMatrix(key.viewMatrix) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+
+    return seed;
 }

@@ -171,7 +171,7 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
     if (context.currentCamera->getType() == IAYCamera::Type::ORTHOGRAPHIC_2D) {
         auto viewport = context.currentCamera->getViewport();
         float aspect = viewport.z / viewport.w;
-        projection = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 1000.0f);
     }
     else
     {

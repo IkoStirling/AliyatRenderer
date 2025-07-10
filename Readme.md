@@ -59,8 +59,8 @@ Run the following commands:
         | ![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)
 		| The system now supports 3D camera functionality and equirectangular skyboxes, but there's a rendering issue with 2D sprites - they only appear at z=0 depth and remain fixed in screen space, causing them to stay in place even when the 3D camera moves.
 		| ![pic](assets/core/.projectProgress/2D_orc&3D_Skybox.png)
-		|
-		|
+		| The current architecture results in drawing 30000 instantiated graphics in one frame, causing the program to have a frame rate of only about 5fps. It is still unclear whether it is a CPU or GPU limitation, and it is difficult to fix such issues until the module is completed and disconnected from the main thread.
+		| ![pic](assets/core/.projectProgress/A_problem_that_needs_to_be_solved.png)
 		|
 		|
 

@@ -29,8 +29,17 @@ public:
     void setDepthMask(bool enable) 
     { 
         if (state.depthMaskEnabled != enable) {
-            enable ? glDepthMask(GL_FALSE) : glDepthMask(GL_TRUE);
+            enable ? glDepthMask(GL_TRUE) : glDepthMask(GL_FALSE);
             state.depthMaskEnabled = enable;
+        }
+    }
+
+    void setDepthFunc(GLenum method)
+    {
+        if (state.currentDepthFunc != method)
+        {
+            glDepthFunc(method);
+            state.currentDepthFunc == method;
         }
     }
 

@@ -74,7 +74,7 @@ void AY3DCamera::rotate(float yaw, float pitch)
 {
     // 更新相机的朝向
     _yaw += yaw;
-    _pitch = glm::clamp(_pitch + pitch, -89.0f, 89.0f);
+    _pitch = glm::clamp(_pitch + (_flipY ?-pitch:pitch), -89.0f, 89.0f);
 
     glm::vec3 front;
     front.x = cos(glm::radians(_yaw)) * cos(glm::radians(_pitch));

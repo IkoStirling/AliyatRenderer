@@ -51,13 +51,14 @@ private:
     // 旋转角度
     float _yaw = -90.0f;   // 偏航角
     float _pitch = 0.0f;   // 俯仰角
+    bool _flipY = true;
 
     // 投影参数
     bool _orthographic = false;
     float _fov = 80.0f;
     float _orthoSize = 5.0f;
     float _nearPlane = 0.1f;
-    float _farPlane = 5000.0f;
+    float _farPlane = 1000.f;
 
     // 跟随参数
     bool _smoothFollow = false;

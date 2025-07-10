@@ -27,7 +27,7 @@ void AYInputSystem::init()
 	if (!window) return;
 
 	// 设置用户指针以便在静态回调中访问实例
-	glfwSetWindowUserPointer(window, this);
+	//glfwSetWindowUserPointer(window, this); 跟随窗口实例全局唯一，可能在多处使用造成管理混乱
 
 	// 设置GLFW回调
 	glfwSetKeyCallback(window, &AYInputSystem::keyCallbackWrapper);
@@ -509,24 +509,24 @@ void AYInputSystem::handleScroll(double xoffset, double yoffset)
 
 void AYInputSystem::keyCallbackWrapper(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	auto* self = static_cast<AYInputSystem*>(glfwGetWindowUserPointer(window));
-	if (self) self->handleKey(key, scancode, action, mods);
+	auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+	if (inputSystem) inputSystem->handleKey(key, scancode, action, mods);
 }
 
 void AYInputSystem::mouseButtonCallbackWrapper(GLFWwindow* window, int button, int action, int mods) 
 {
-	auto* self = static_cast<AYInputSystem*>(glfwGetWindowUserPointer(window));
-	if (self) self->handleMouseButton(button, action, mods);
+	auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+	if (inputSystem) inputSystem->handleMouseButton(button, action, mods);
 }
 
 void AYInputSystem::cursorPosCallbackWrapper(GLFWwindow* window, double xpos, double ypos) 
 {
-	auto* self = static_cast<AYInputSystem*>(glfwGetWindowUserPointer(window));
-	if (self) self->handleMousePosition(xpos, ypos);
+	auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+	if (inputSystem) inputSystem->handleMousePosition(xpos, ypos);
 }
 
 void AYInputSystem::scrollCallbackWrapper(GLFWwindow* window, double xoffset, double yoffset) 
 {
-	auto* self = static_cast<AYInputSystem*>(glfwGetWindowUserPointer(window));
-	if (self) self->handleScroll(xoffset, yoffset);
+	auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+	if (inputSystem) inputSystem->handleScroll(xoffset, yoffset);
 }

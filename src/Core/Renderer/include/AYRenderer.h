@@ -4,6 +4,7 @@
 #include "2DRendering/AYFontRenderer.h"
 #include "2DRendering/AYSpriteRenderer.h"
 #include "BaseRendering/AYCoreRenderer.h"
+#include "BaseRendering/Material/AYMaterialManager.h"
 #include "3DRendering/AYSkyboxRenderer.h"
 #include <memory>
 
@@ -15,19 +16,20 @@ public:
 
     void clearScreen(float r, float g, float b, float a);
     void drawFullscreenQuad();
-    void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
 
     AYRenderContext& getRenderContext() { return _context; }
-    AYSpriteRenderer* getSpriteRenderer();
-    AYFontRenderer* getFontRenderer();
-    AYCoreRenderer* getCoreRenderer();
-    AYSkyboxRenderer* getSkyboxRenderer();
+    AYSpriteRenderer* getSpriteRenderer() { return _spriteRenderer.get(); }
+    AYFontRenderer* getFontRenderer() { return _fontRenderer.get(); }
+    AYCoreRenderer* getCoreRenderer() { return _coreRenderer.get(); }
+    AYSkyboxRenderer* getSkyboxRenderer() { return _skyboxRenderer.get(); }
+    AYMaterialManager* getMaterialManager() { return _materialManager.get(); }
 
 private:
     void _initFontRenderer();
     void _initSpriteRenderer();
     void _initCoreRenderer();
     void _initSkyboxRenderer();
+    void _initMaterialManager();
 
     AYRenderDevice* _device;
     AYRenderContext _context;
@@ -36,6 +38,8 @@ private:
     std::unique_ptr<AYSpriteRenderer> _spriteRenderer;
     std::unique_ptr<AYCoreRenderer> _coreRenderer;
     std::unique_ptr<AYSkyboxRenderer> _skyboxRenderer;
+
+    std::unique_ptr<AYMaterialManager> _materialManager;
 
     GLuint _screenVAO = 0;
 };

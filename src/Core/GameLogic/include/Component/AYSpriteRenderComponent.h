@@ -30,14 +30,21 @@ public:
 		if (!ent)
 			return;
 		auto& trans = ent->getTransform();
-		_sprite->render(
-			trans,
-			_spriteSize,
-			_color,
-			_flipX,
-			_flipY,
-			_pivot
-		);
+
+		if(_isVisible)
+			_sprite->render(
+				trans,
+				_spriteSize,
+				_color,
+				_flipX,
+				_flipY,
+				_pivot
+			);
+	}
+
+	void setVisible(bool visible)
+	{
+		_isVisible = visible;
 	}
 
 	void setup_sprite(
@@ -98,4 +105,5 @@ public:
 	bool _flipX = false;
 	bool _flipY = false;
 	glm::vec3 _pivot = glm::vec3(0.5f);
+	bool _isVisible = true;
 };
