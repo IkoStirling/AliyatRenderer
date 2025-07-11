@@ -1,7 +1,7 @@
 #include "AYRendererManager.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
-
+#include "AYPath.h"
 
 void AYRendererManager::init()
 {
@@ -13,9 +13,13 @@ void AYRendererManager::init()
 
 	_animeMana = std::make_unique<AYAnimationManager>(getRenderDevice());
 
-	_cameraSystem = std::make_unique<AYCameraSystem>();
 	_device->setViewportCallback([this](int width, int height) {
-		_cameraSystem->setViewportAll(glm::vec4(0, 0, width, height));
+		getCameraSystem()->setViewportAll(glm::vec4(0, 0, width, height));
+		});
+
+	AYResourceManager::getInstance().loadAsync<AYTexture>(AYPath::Engine::getPresetTexturePath()+"Arrow.png",
+		[](std::shared_ptr<AYTexture> texture) {
+			std::cout << "Texture loaded: " << texture->getWidth() << "x" << texture->getHeight() << std::endl;
 		});
 
 	_renderer->getMaterialManager()->createMaterial(
@@ -42,6 +46,28 @@ void AYRendererManager::init()
 			.type = STMaterial::Type::Opaque,
 		}
 		);
+
+	auto lightManager = _renderer->getLightManager();
+	lightManager->addDirectionalLight({
+		.color = glm::vec3(1.0f, 0.95f, 0.9f),      // 暖白色
+		.intensity = 1.2f,
+		.direction = glm::vec3(-0.5f, -1.0f, -0.3f) // 左上后方照射
+		});
+	lightManager->addPointLight({
+		.color = glm::vec3(0.8f, 0.9f, 1.0f),       // 冷色调
+		.intensity = 0.8f,
+		.position = glm::vec3(3.0f, 2.0f, 1.0f),
+		.radius = 10.0f,
+		.linear = 0.07f
+		});
+	lightManager->addSpotLight({
+		.color = glm::vec3(1.0f, 0.9f, 0.7f),       // 暖黄色
+		.intensity = 1.5f,
+		.position = glm::vec3(0.0f, 3.0f, 2.0f),
+		.direction = glm::vec3(0.0f, -0.7f, -0.5f), // 向下前方照射
+		.cutOff = glm::cos(glm::radians(15.0f)),
+		.outerCutOff = glm::cos(glm::radians(25.0f))
+		});
 }
 
 void AYRendererManager::update(float delta_time)
@@ -86,7 +112,7 @@ void AYRendererManager::_renderAll(float delta_time)
 
 void AYRendererManager::_updateCameraActive(float delta_time)
 {
-	auto* camera = _cameraSystem->getActiveCamera();
+	auto* camera = getCameraSystem()->getActiveCamera();
 	auto& context = _renderer->getRenderContext();
 	context.currentCamera = camera;
 	context.validate();

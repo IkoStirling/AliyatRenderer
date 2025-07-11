@@ -3,6 +3,7 @@
 #include "AYConfigWrapper.h"
 #include "STTransform.h"
 #include "BaseRendering/Material/STMaterial.h"
+#include "BaseRendering/Graphic/AYGraphicGenerator.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <array>
@@ -26,12 +27,7 @@ public:
     };
 
 private:
-    struct VertexInfo
-    {
-        glm::vec3 position;
-        glm::vec4 color;
-        glm::vec2 uv;
-    };
+
 
     enum class InstanceType 
     {

@@ -4,7 +4,7 @@
 void AY2DCamera::update(float delta_time)
 {
     // 1. 计算目标点在屏幕空间的位置
-    glm::vec2 screenPos = _targetPos - _currentPos + getScreenCenter();
+    glm::vec2 screenPos = glm::vec2(_targetPosition - _transform.position) + getScreenCenter();
     // 2. 计算死区边界（像素坐标）
     glm::vec2 deadzoneMin(_viewport.z * _deadzone.x, _viewport.w * _deadzone.z);
     glm::vec2 deadzoneMax(_viewport.z * _deadzone.y, _viewport.w * _deadzone.w);
@@ -18,7 +18,7 @@ void AY2DCamera::update(float delta_time)
     else if (screenPos.y > deadzoneMax.y) moveOffset.y = screenPos.y - deadzoneMax.y;
 
     // 应用移动
-    glm::vec2 newPos = _currentPos + moveOffset * delta_time * _moveSpeed;
+    glm::vec2 newPos = glm::vec2(_transform.position) + moveOffset * delta_time * _moveSpeed;
 
     // 地图边界约束
     newPos.x = glm::clamp(newPos.x,
@@ -30,7 +30,7 @@ void AY2DCamera::update(float delta_time)
         _mapBounds.w - _viewport.w * (1 - _deadzone.w));
     //std::cout << "screenPos: (" << screenPos.x << ", " << screenPos.y << ")\n";
 
-    _currentPos = newPos;
+    _transform.position = glm::vec3(newPos,1.f);
 }
 
 glm::mat4 AY2DCamera::getViewMatrix() const
@@ -38,7 +38,7 @@ glm::mat4 AY2DCamera::getViewMatrix() const
     // 将屏幕中心定义为(0,0), 正常是在左上角
     return glm::translate(glm::mat4(1.0f),
         -glm::vec3(
-            _currentPos + _additionalOffset,
+            glm::vec2(_transform.position) + _additionalOffset,
             0.0f));
 }
 

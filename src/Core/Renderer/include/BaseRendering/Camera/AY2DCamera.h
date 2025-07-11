@@ -20,12 +20,10 @@ public:
 
 	void setViewBox(float near, float far);
 	void setDeadzone(const glm::vec4& zone) { _deadzone = zone; } // left, right, bottom, top
-	void setTargetPosition(const glm::vec2& targetPos) { _targetPos = targetPos; }
-	void setCurrentPosition(const glm::vec2& currentPos) { _currentPos = currentPos; }
+	void setTargetPosition(const glm::vec2& targetPos) { _targetPosition = glm::vec3(targetPos, 1.f); }
+	void setCurrentPosition(const glm::vec2& currentPos) { _transform.position = glm::vec3(currentPos,1.f); }
 	glm::vec2 getScreenCenter() const { return  glm::vec2(_viewport.z, _viewport.w) * 0.5f; }
 private:
-	glm::vec2 _targetPos{ 0.0f };
-	glm::vec2 _currentPos{ 0.0f };
 	glm::vec4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // 屏幕比例死区(摄像机不会跟随的四边形区域）
 	glm::vec4 _mapBounds{ -5000.f, 5000.f, -5000.f, 5000.f };
 

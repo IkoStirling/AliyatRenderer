@@ -3,7 +3,6 @@
 #include "AYRenderDevice.h"
 #include "AYRenderer.h"
 #include "BaseRendering/IAYRenderable.h"
-#include "BaseRendering/Camera/AYCameraSystem.h"
 #include "2DRendering/AYAnimatedSprite.h"
 #include "2DRendering/AYAnimationManager.h"
 #include <vector>
@@ -26,7 +25,7 @@ public:
 	AYRenderContext& getRenderContext();
 	AYRenderDevice* getRenderDevice() { return _device.get(); };
 	AYAnimationManager* get2DAnimationManager() { return _animeMana.get(); }
-	AYCameraSystem* getCameraSystem() { return _cameraSystem.get(); }
+	AYCameraSystem* getCameraSystem() { return _renderer->getCameraSystem(); }
 	GLuint loadTexture(const std::string& path);
 
 	AYAnimatedSprite* create2DSprite(std::shared_ptr<AYSpriteAtlas> atlas);
@@ -38,7 +37,6 @@ private:
 	std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGL上下文管理
 	std::unique_ptr<AYRenderer> _renderer = nullptr;        // 具体绘制逻辑
 	std::unique_ptr<AYAnimationManager> _animeMana = nullptr;
-	std::unique_ptr<AYCameraSystem> _cameraSystem = nullptr;
 
 	WindowCloseCallback _onWindowClosed;
 	std::vector<IAYRenderable*> _renderables; //不管理可渲染对象

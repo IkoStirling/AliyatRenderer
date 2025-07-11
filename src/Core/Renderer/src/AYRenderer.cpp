@@ -8,6 +8,8 @@ AYRenderer::AYRenderer(AYRenderDevice* device) :
     _initCoreRenderer();
     _initSkyboxRenderer();
     _initMaterialManager();
+    _initLightManager();
+    _initCameraSystem();
 }
 
 AYRenderer::~AYRenderer()
@@ -71,4 +73,14 @@ void AYRenderer::_initSkyboxRenderer()
 void AYRenderer::_initMaterialManager()
 {
     _materialManager = std::make_unique<AYMaterialManager>();
+}
+
+void AYRenderer::_initLightManager()
+{
+    _lightManager = std::make_unique<AYLightManager>(_device, this);
+}
+
+void AYRenderer::_initCameraSystem()
+{
+    _cameraSystem = std::make_unique<AYCameraSystem>();
 }

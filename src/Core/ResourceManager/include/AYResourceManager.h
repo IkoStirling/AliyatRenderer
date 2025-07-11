@@ -60,10 +60,12 @@ public:
             d）事件加载完成时执行回调
             e）异步任务追踪 （目前看起来没什么用？可以添加函数查看异步任务追踪器中的任务以完善）
     */
-    template<typename T>
+    template<typename T, typename ...Args>
     std::shared_future<std::shared_ptr<T>> loadAsync(
         const std::string& filepath,
-        std::function<void(std::shared_ptr<T>)> callback = nullptr);
+        Args&&... args,
+        std::function<void(std::shared_ptr<T>)> callback = {}
+        );
 
 
     /*
@@ -139,9 +141,13 @@ public:
      void init();
 
      /*
-        手动注册要纳入管理的资源类型（继承自IAYResource）
+        手动注册要纳入管理的资源类型（继承自IAYResource，与资源类型的自动注册是两码事）
+        该函数实现功能：（在异步加载事件完成时执行以下操作）
+            a) 完成异步承诺，异步加载得到的future会得到结果
+            b）执行回调通知，如果异步加载设置有回调会执行
+            c）异常处理，由承诺传递
      */
-    template<typename T>
+    template<typename T, typename ...Args>
     void registerResourceType();
 
 
@@ -235,7 +241,13 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
     }
 
     try {
-        auto resource = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+        // 使用资源注册表创建资源实例
+        auto resource = AYResourceRegistry::getInstance().create<T>(T::staticGetType(), std::forward<Args>(args)...);
+        if (!resource) {
+            // 如果注册表中没有找到，回退到直接创建
+            resource = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+        }
+
         if (!resource->load(filepath)) 
             throw std::runtime_error("Failed to load resource: " + filepath);
         
@@ -253,10 +265,10 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
 }
 
 
-
-template<typename T>
+template<typename T, typename ...Args>
 inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
     const std::string& filepath,
+    Args&&... args,
     std::function<void(std::shared_ptr<T>)> callback
 )
 {
@@ -271,7 +283,13 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
         if (callback) callback(result);
         };
 
-    STResourceLoadRequest<T> request{ filepath, promise, castCallback };
+    auto request = std::make_shared<STResourceLoadRequest<T, Args...>>(
+        filepath,
+        promise,
+        castCallback,
+        std::make_tuple(std::forward<Args>(args)...)
+    );
+
     AYAsyncTracker::getInstance().addTask(
         filepath,
         castFuture,
@@ -279,9 +297,10 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
         std::chrono::seconds(10)
     );
     // 发布事件
-    AYEventRegistry::publish(Event_ResourceLoadAsync<T>::staticGetType(), [&request](IAYEvent* event) {
-        auto eI = static_cast<Event_ResourceLoadAsync<T>*>(event);
-        eI->mRequest = request;
+    AYEventRegistry::publish(Event_ResourceLoadAsync<T, Args...>::staticGetType(),
+        [request = std::move(request)](IAYEvent* event)  mutable {
+        auto eI = static_cast<Event_ResourceLoadAsync<T, Args...>*>(event);
+        eI->mRequest = std::move(request);
         });
     return future;
 }
@@ -296,28 +315,31 @@ inline std::shared_ptr<AYResourceHandle<T>> AYResourceManager::createHandle(cons
 
 
 
-template<typename T>
+template<typename T, typename ...Args>
 inline void AYResourceManager::registerResourceType()
 {
     auto loader = [this](const IAYEvent& in_event) 
     {
         auto& event = static_cast<const Event_ResourceLoadAsync<T>&>(in_event);
-        auto request = event.mRequest;
+        const auto& request = event.mRequest;
 
         try {
-            auto result = this->load<T>(request.mPath);
+            auto result = std::apply([this, &request](auto&&... args) {
+                return this->load<T>(request->mPath, std::forward<decltype(args)>(args)...);
+                }, request->mArgs);
+
             if(!result)
-                throw std::runtime_error("Async load failed: " + request.mPath);
+                throw std::runtime_error("Async load failed: " + request->mPath);
 
-            request.mPromise->set_value(result);
+            request->mPromise->set_value(result);
 
-            if (request.mCallback)
-                request.mCallback(result);
+            if (request->mCallback)
+                request->mCallback(result);
         }
         catch (...)
         {
             try {
-                request.mPromise->set_exception(std::current_exception());
+                request->mPromise->set_exception(std::current_exception());
             }
             catch (...) 
             { }

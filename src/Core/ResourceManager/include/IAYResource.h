@@ -21,15 +21,15 @@ public: \
 		return typeid(CLASS_NAME); \
 	}\
 
-#define REGISTER_RESOURCE_CLASS(CLASS_NAME, ...) \
-struct CLASS_NAME##_Register{ \
-	CLASS_NAME##_Register(){ \
-		::AYResourceRegistry::getInstance().registerType(CLASS_NAME::staticGetType(), [](){ \
-            return std::shared_ptr<CLASS_NAME>(new CLASS_NAME()); \
-        }); \
+#define REGISTER_RESOURCE_CLASS(CLASS_NAME, SIGN, ...) \
+struct CLASS_NAME##SIGN##_Register{ \
+	CLASS_NAME##SIGN##_Register(){ \
+		::AYResourceRegistry::getInstance().registerType<CLASS_NAME, ##__VA_ARGS__>(\
+            CLASS_NAME::staticGetType()\
+        ); \
 	}\
 }; \
-static CLASS_NAME##_Register CLASS_NAME##_register; \
+static CLASS_NAME##SIGN##_Register CLASS_NAME##SIGN##_register; \
 
 class IAYResource
 {

@@ -2,7 +2,6 @@
 #include "IAYCamera.h"
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
-#include "STTransform.h"
 
 
 class AY3DCamera : public IAYCamera
@@ -34,19 +33,16 @@ public:
     void move(const glm::vec3& offset);
 
     // 获取相机属性
-    glm::vec3 getPosition() const { return _position; }
-    glm::vec3 getFront() const { return _front; }
-    glm::vec3 getUp() const { return _up; }
-    glm::vec3 getRight() const { return _right; }
+    const glm::vec3& getFront() const;
+    const glm::vec3& getUp() const;
+    const glm::vec3& getRight() const;
 
 private:
+    void _updateCachedVectors();
     // 相机参数
-    glm::mat4 _viewMatrix;
-    glm::vec3 _position{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 _targetPosition{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 _front{ 0.0f, 0.0f, -1.0f };
-    glm::vec3 _up{ 0.0f, 1.0f, 0.0f };
-    glm::vec3 _right{ 1.0f, 0.0f, 0.0f };
+    glm::vec3 _cachedFront;
+    glm::vec3 _cachedRight;
+    glm::vec3 _cachedUp;
 
     // 旋转角度
     float _yaw = -90.0f;   // 偏航角
@@ -58,7 +54,7 @@ private:
     float _fov = 80.0f;
     float _orthoSize = 5.0f;
     float _nearPlane = 0.1f;
-    float _farPlane = 1000.f;
+    float _farPlane = 5000.f;
 
     // 跟随参数
     bool _smoothFollow = false;

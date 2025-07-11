@@ -5,6 +5,8 @@
 #include "2DRendering/AYSpriteRenderer.h"
 #include "BaseRendering/AYCoreRenderer.h"
 #include "BaseRendering/Material/AYMaterialManager.h"
+#include "BaseRendering/Light/AYLightManager.h"
+#include "BaseRendering/Camera/AYCameraSystem.h"
 #include "3DRendering/AYSkyboxRenderer.h"
 #include <memory>
 
@@ -22,7 +24,10 @@ public:
     AYFontRenderer* getFontRenderer() { return _fontRenderer.get(); }
     AYCoreRenderer* getCoreRenderer() { return _coreRenderer.get(); }
     AYSkyboxRenderer* getSkyboxRenderer() { return _skyboxRenderer.get(); }
+
     AYMaterialManager* getMaterialManager() { return _materialManager.get(); }
+    AYLightManager* getLightManager() { return _lightManager.get(); }
+    AYCameraSystem* getCameraSystem() { return _cameraSystem.get(); }
 
 private:
     void _initFontRenderer();
@@ -30,6 +35,8 @@ private:
     void _initCoreRenderer();
     void _initSkyboxRenderer();
     void _initMaterialManager();
+    void _initLightManager();
+    void _initCameraSystem();
 
     AYRenderDevice* _device;
     AYRenderContext _context;
@@ -40,6 +47,8 @@ private:
     std::unique_ptr<AYSkyboxRenderer> _skyboxRenderer;
 
     std::unique_ptr<AYMaterialManager> _materialManager;
+    std::unique_ptr<AYLightManager> _lightManager;
+    std::unique_ptr<AYCameraSystem> _cameraSystem;
 
     GLuint _screenVAO = 0;
 };

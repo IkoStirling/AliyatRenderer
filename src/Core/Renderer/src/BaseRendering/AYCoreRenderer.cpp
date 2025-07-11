@@ -3,30 +3,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtc/type_ptr.hpp> ​​
 #include "AYPath.h"
-#include "BaseRendering/Graphic/AYGraphicGenerator.h"
-
-#define AY_CHECK_GL_ERROR(context) \
-    do { \
-        GLenum err; \
-        const char* errContext = (context); \
-        while ((err = glGetError()) != GL_NO_ERROR) { \
-            const char* errStr = ""; \
-            switch(err) { \
-                case GL_INVALID_ENUM:      errStr = "GL_INVALID_ENUM"; break; \
-                case GL_INVALID_VALUE:     errStr = "GL_INVALID_VALUE"; break; \
-                case GL_INVALID_OPERATION: errStr = "GL_INVALID_OPERATION"; break; \
-                case GL_OUT_OF_MEMORY:    errStr = "GL_OUT_OF_MEMORY"; break; \
-                case GL_INVALID_FRAMEBUFFER_OPERATION: errStr = "GL_INVALID_FRAMEBUFFER_OPERATION"; break; \
-                default:                   errStr = "UNKNOWN_ERROR"; break; \
-            } \
-            std::cerr << "[OpenGL Error] " << errStr << " (0x" << std::hex << err << ") " \
-                      << "in " << errContext << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
-            if (err == GL_OUT_OF_MEMORY) { \
-                std::cerr << "Fatal OpenGL error: Out of memory" << std::endl; \
-                std::terminate(); \
-            } \
-        } \
-    } while (0)
 
 std::string mat4ToStringPretty(const glm::mat4& matrix) {
     std::ostringstream oss;
@@ -224,7 +200,7 @@ void AYCoreRenderer::addIndexData(std::vector<uint32_t>& indices, InstanceGroup*
 
 void AYCoreRenderer::drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space)
 {
-    switchBatchDraw(space, PrimitiveType::Lines, false, STMaterial::Type::None);
+    switchBatchDraw(space, PrimitiveType::Lines, false);
     _currentBatch->vertices.push_back(start);
     _currentBatch->vertices.push_back(end);
 }
@@ -239,7 +215,7 @@ void AYCoreRenderer::drawTriangle(const VertexInfo& p1,
     const VertexInfo& p3,
     Space space)
 {
-    switchBatchDraw(space, PrimitiveType::Triangles, false, STMaterial::Type::None);
+    switchBatchDraw(space, PrimitiveType::Triangles, false);
     _currentBatch->vertices.push_back(p1);
     _currentBatch->vertices.push_back(p2);
     _currentBatch->vertices.push_back(p3);
@@ -251,7 +227,7 @@ void AYCoreRenderer::drawTriangle(const VertexInfo* vertices,
 {
     if (!vertices)
         return;
-    switchBatchDraw(space, PrimitiveType::Triangles, false, STMaterial::Type::None);
+    switchBatchDraw(space, PrimitiveType::Triangles, false);
     for (auto& index : indices)
     {
         _currentBatch->vertices.push_back(vertices[index[0]]);
@@ -308,8 +284,9 @@ void AYCoreRenderer::drawRect2D(const STTransform& transform,
     {   
         std::vector<VertexInfo> vertices;
         auto rectPoints = AYGraphicGenerator::createRectV();
+        auto normal = AYGraphicGenerator::create2DN();
         for (const auto& point : rectPoints) {
-            vertices.push_back({ point, mat.baseColor });
+            vertices.push_back({ point, normal });
         }
         addVertexData(vertices, group);
 
@@ -342,12 +319,12 @@ void AYCoreRenderer::drawCircle2D(const STTransform& transform,
 
     if (group->vertexCount == -1) 
     {
+        auto normal = AYGraphicGenerator::create2DN();
         std::vector<VertexInfo> vertices;
-        vertices.push_back({ glm::vec3(0.0f, 0.0f, 0.0f), mat.baseColor }); // 中心点
-
+        vertices.push_back({ glm::vec3(0.0f, 0.0f, 0.0f), normal }); // 中心点
         auto circlePoints = AYGraphicGenerator::createCircleV(radius, segments);
         for (const auto& point : circlePoints) {
-            vertices.push_back({ point, mat.baseColor });
+            vertices.push_back({ point, normal });
         }
         addVertexData(vertices, group);
 
@@ -372,19 +349,14 @@ void AYCoreRenderer::drawBox3D(const STTransform& transform,
 
     auto* group = findOrCreateInstanceGroup(
         InstanceType::Circle,
-        8, // 顶点数
+        wireframe ? 8 : 24, // 顶点数
         wireframe ? 24 : 36, // 索引数
         transform.getTransformMatrix()
     );
 
     if (group->vertexCount == -1)
     {
-        std::vector<VertexInfo> vertices;
-        auto rectPoints = AYGraphicGenerator::createBoxV(half_extents);
-        for (const auto& point : rectPoints) {
-            vertices.push_back({ point, mat.baseColor });
-        }
-
+        auto vertices = AYGraphicGenerator::createBox(half_extents, wireframe);
         addVertexData(vertices, group);
 
         auto indices = AYGraphicGenerator::createBoxI(wireframe);
@@ -526,14 +498,23 @@ void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batc
         stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         stateManager->setDepthMask(false);
     }
-
     // 设置矩阵
-    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"),
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"),
         1, GL_FALSE, glm::value_ptr(key.projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "view"),
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"),
         1, GL_FALSE, glm::value_ptr(key.viewMatrix));
+    // 提交光照
+    auto& pos = _renderer->getCameraSystem()->getActiveCamera()->getPosition();
+    glUniform3fv(glGetUniformLocation(shader, "u_ViewPos"),
+        1, glm::value_ptr(pos));
+
+    auto lightManager = _renderer->getLightManager();
+    lightManager->updateLightData();
+    lightManager->bindLightData(0); // 绑定到binding point 0
 
     // 设置材质
+    glUniform4fv(glGetUniformLocation(shader, "u_BaseColor"),
+        1, glm::value_ptr(mat.baseColor));
     glUniform1f(glGetUniformLocation(shader, "u_Metallic"), mat.metallic);
     glUniform1f(glGetUniformLocation(shader, "u_Roughness"), mat.roughness);
 
@@ -671,7 +652,7 @@ void AYCoreRenderer::_setupDebugShader()
 {
     const size_t INITIAL_VERTEX_BUFFER_SIZE = sizeof(VertexInfo) * _vertexBufferSize;
     const size_t INITIAL_INSTANCE_BUFFER_SIZE = sizeof(glm::mat4) * _instanceBufferSize;
-    const size_t INITIAL_INDEX_BUFFER_SIZE = 3 * sizeof(uint8_t) * _indexBufferSize;
+    const size_t INITIAL_INDEX_BUFFER_SIZE = 3 * sizeof(uint32_t) * _indexBufferSize;
 
     for (int i = 0; i < 2; i++)
     {
@@ -703,7 +684,7 @@ void AYCoreRenderer::_switchVertexBuffer()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexInfo), (void*)offsetof(VertexInfo, position));
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexInfo), (void*)offsetof(VertexInfo, color));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexInfo), (void*)offsetof(VertexInfo, normal));
 
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexInfo), (void*)offsetof(VertexInfo, uv));

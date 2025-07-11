@@ -167,61 +167,60 @@ void AYResourceManager::printTaggedStats(const Tag& tag)
 
 void AYResourceManager::savePersistentCache(const std::string& savePath)
 {
-    json j;
+    // 暂时弃用，未支持序列化参数
 
-    for (const auto& [path, entry] : _strongCache) {
-        j[path] = {
-            {"size", entry.size},
-            {"lastUsed", std::chrono::duration_cast<std::chrono::seconds>(
-                entry.lastUsed.time_since_epoch()).count()},
-            {"type", entry.resource->getType()}
-        };
-    }
-
-    std::ofstream out(savePath);
-    out << j.dump(4);
+    //json j;
+    //for (const auto& [path, entry] : _strongCache) {
+    //    j[path] = {
+    //        {"size", entry.size},
+    //        {"lastUsed", std::chrono::duration_cast<std::chrono::seconds>(
+    //            entry.lastUsed.time_since_epoch()).count()},
+    //        {"type", entry.resource->getType()}
+    //    };
+    //}
+    //std::ofstream out(savePath);
+    //out << j.dump(4);
 }
 
 void AYResourceManager::loadPersistentCache(const std::string& loadPath)
 {
-    std::ifstream in(loadPath);
-    if (!in) return;
+    // 暂时弃用，未支持序列化参数
 
-    json j;
-    in >> j;
-
-
-    for (auto& [path, val] : j.items()) {
-        std::string typeName = val.at("type").get<std::string>();
-        auto resource = AYResourceRegistry::getInstance().create(typeName);
-        if (resource && resource->load(path)) {
-            size_t size = resource->sizeInBytes();
-            _strongCache[path] = STCacheEntry{
-                resource,
-                size,
-                std::chrono::steady_clock::now()
-            };
-            _currentMemoryUsage += size;
-            _weakCache[path] = resource;
-        }
-    }
+    //std::ifstream in(loadPath);
+    //if (!in) return;
+    //json j;
+    //in >> j;
+    //for (auto& [path, val] : j.items()) {
+    //    std::string typeName = val.at("type").get<std::string>();
+    //    auto resource = AYResourceRegistry::getInstance().create<IAYResource>(typeName);
+    //    if (resource && resource->load(path)) {
+    //        size_t size = resource->sizeInBytes();
+    //        _strongCache[path] = STCacheEntry{
+    //            resource,
+    //            size,
+    //            std::chrono::steady_clock::now()
+    //        };
+    //        _currentMemoryUsage += size;
+    //        _weakCache[path] = resource;
+    //    }
+    //}
 }
 
 void AYResourceManager::_preloadFromConfig(const std::string& configPath)
 {
-    std::ifstream in(configPath);
-    if (!in) return;
+    // 暂时弃用，未支持序列化参数
 
-    json j;
-    in >> j;
-
-    if (j.contains(AYTexture::staticGetType()))
-    {
-        for (const auto& tex : j[AYTexture::staticGetType()])
-        {
-            loadAsync<AYTexture>(tex.get<std::string>());
-        }
-    }
+    //std::ifstream in(configPath);
+    //if (!in) return;
+    //json j;
+    //in >> j;
+    //if (j.contains(AYTexture::staticGetType()))
+    //{
+    //    for (const auto& tex : j[AYTexture::staticGetType()])
+    //    {
+    //        loadAsync<AYTexture>(tex.get<std::string>());
+    //    }
+    //}
 
     //for (const auto& tex : j["textures"]) {
     //    loadAsync<AYTexture>(tex); // 或 load<> 同步加载

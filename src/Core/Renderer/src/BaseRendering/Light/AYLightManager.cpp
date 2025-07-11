@@ -1,33 +1,143 @@
-#pragma once
-#include "Light.h"
-#include <vector>
+ï»¿#include "BaseRendering/Light/AYLightManager.h"
+#include "AYRenderer.h"
+#include <glm/gtc/type_ptr.hpp> â€‹â€‹
+#include <string>
 
-class LightManager {
-public:
-    static LightManager& Get() {
-        static LightManager instance;
-        return instance;
+AYLightManager::AYLightManager(AYRenderDevice* device, AYRenderer* renderer):
+    _device(device),
+    _renderer(renderer)
+{
+    _setupLightSSBO();
+}
+
+AYLightManager::~AYLightManager()
+{
+    glDeleteBuffers(1, &_ssbo);
+}
+
+void AYLightManager::addDirectionalLight(const STDirectionalLight& light)
+{
+    if (_directionalLights.size() < MAX_DIRECTIONAL_LIGHTS) {
+        _directionalLights.push_back(light);
+    }
+}
+
+void AYLightManager::addPointLight(const STPointLight& light)
+{
+    if (_pointLights.size() < MAX_POINT_LIGHTS) {
+        _pointLights.push_back(light);
+    }
+}
+
+void AYLightManager::addSpotLight(const STSpotLight& light)
+{
+    if (_spotLights.size() < MAX_SPOT_LIGHTS) {
+        _spotLights.push_back(light);
+    }
+}
+
+void AYLightManager::clearAllLights()
+{
+    _directionalLights.clear();
+    _pointLights.clear();
+    _spotLights.clear();
+}
+
+void AYLightManager::updateLightData()
+{
+    if (_ssbo == 0) {
+        _setupLightSSBO();
+        return;
+    }
+    _packLightData();
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, _ssbo);
+
+    void* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY);
+    if (ptr) {
+        memcpy(ptr, &_lightData, sizeof(LightSSBOData));
+        if (!glUnmapBuffer(GL_SHADER_STORAGE_BUFFER)) {
+            std::cerr << "Buffer corruption detected!" << std::endl;
+        }
+    }
+    else {
+        // å›é€€åˆ°glBufferSubData
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(LightSSBOData), &_lightData);
+    }
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    
+    AY_CHECK_GL_ERROR("Update lights data failed.");
+}
+
+void AYLightManager::bindLightData(GLuint bindingPoint)
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, _ssbo);
+    AY_CHECK_GL_ERROR("Bind lights data failed.");
+}
+
+void AYLightManager::_setupLightSSBO()
+{
+    if (_ssbo != 0) {
+        glDeleteBuffers(1, &_ssbo); // ç¡®ä¿æ¸…ç†æ—§ç¼“å†²åŒº
     }
 
-    // ¹âÔ´¹ÜÀí½Ó¿Ú
-    void AddDirectionalLight(const DirectionalLight& light);
-    void AddPointLight(const PointLight& light);
-    void AddSpotLight(const SpotLight& light);
+    glGenBuffers(1, &_ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, _ssbo);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(LightSSBOData), nullptr, GL_DYNAMIC_DRAW);
 
-    void ClearAllLights();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    AY_CHECK_GL_ERROR("Setup lights ssbo failed.");
+}
 
-    // ¸üĞÂShaderÖĞµÄ¹âÕÕÊı¾İ
-    void UploadLightData(GLuint shaderProgram);
+void AYLightManager::_packLightData()
+{
+    memset(&_lightData, 0, sizeof(LightSSBOData));
 
-private:
-    LightManager() = default;
+    // æ‰“åŒ…å®šå‘å…‰æ•°æ®
+    for (size_t i = 0; i < _directionalLights.size() && i < MAX_DIRECTIONAL_LIGHTS; ++i) {
+        const auto& light = _directionalLights[i];
+        _lightData.directionalDirections[i] = glm::vec4(light.direction, 0.0f);
+        _lightData.directionalColors[i] = glm::vec4(light.color, light.intensity);
+    }
 
-    std::vector<DirectionalLight> m_DirectionalLights;
-    std::vector<PointLight> m_PointLights;
-    std::vector<SpotLight> m_SpotLights;
+    // æ‰“åŒ…ç‚¹å…‰æºæ•°æ®
+    for (size_t i = 0; i < _pointLights.size() && i < MAX_POINT_LIGHTS; ++i) {
+        const auto& light = _pointLights[i];
+        _lightData.pointPositions[i] = glm::vec4(light.position, 1.0f);
+        _lightData.pointColors[i] = glm::vec4(light.color, light.quadratic);
+        _lightData.pointParams[i] = glm::vec4(
+            light.intensity,
+            light.radius,
+            light.constant,
+            light.linear
+        );
+    }
 
-    // ×î´ó¹âÔ´ÊıÁ¿ÏŞÖÆ
-    static const int MAX_DIRECTIONAL_LIGHTS = 4;
-    static const int MAX_POINT_LIGHTS = 16;
-    static const int MAX_SPOT_LIGHTS = 8;
-};
+    // æ‰“åŒ…èšå…‰ç¯æ•°æ®
+    for (size_t i = 0; i < _spotLights.size() && i < MAX_SPOT_LIGHTS; ++i) {
+        const auto& light = _spotLights[i];
+        _lightData.spotPositions[i] = glm::vec4(light.position, 1.0f);
+        _lightData.spotDirections[i] = glm::vec4(light.direction, 0.0f);
+        _lightData.spotColors[i] = glm::vec4(light.color, 0.0f);
+        _lightData.spotParams[i] = glm::vec4(
+            light.intensity,
+            light.cutOff,
+            light.outerCutOff,
+            0.0f
+        );
+        _lightData.spotAttenuation[i] = glm::vec4(
+            light.constant,
+            light.linear,
+            light.quadratic,
+            0.0f
+        );
+    }
+
+    // è®¾ç½®å…‰æºè®¡æ•°
+    _lightData.lightCounts = glm::ivec4(
+        _directionalLights.size(),
+        _pointLights.size(),
+        _spotLights.size(),
+        0
+    );
+}

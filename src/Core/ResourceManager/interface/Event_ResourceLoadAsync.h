@@ -4,7 +4,7 @@
 #include "STResourceLoadRequest.h"
 #include "AYTexture.h"
 
-template <typename T>
+template <typename T, typename... Args>
 class Event_ResourceLoadAsync : public IAYEvent
 {
     SUPPORT_MEMORY_POOL(Event_ResourceLoadAsync)
@@ -17,8 +17,17 @@ public:
     {
     }
 
+    Event_ResourceLoadAsync(STResourceLoadRequest<T, Args...>&& request)
+        : mRequest(std::make_shared<STResourceLoadRequest<T, Args...>>(std::move(request)))
+    {
+    }
+
+    explicit Event_ResourceLoadAsync(std::shared_ptr<STResourceLoadRequest<T, Args...>> request)
+        : mRequest(std::move(request)) {
+    }
+
 public:
-    STResourceLoadRequest<T> mRequest;
+    std::shared_ptr<STResourceLoadRequest<T, Args...>> mRequest;
 };
 
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYTexture)

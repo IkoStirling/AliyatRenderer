@@ -1,19 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
-
+#include "STTransform.h"
 
 class IAYCamera {
 public:
-    struct OrthoInfo
-    {
-        float left = 0.f;
-        float right = 1920.f;
-        float bottom = 0.f;
-        float top = 1080.f;
-        float near = -100.f;
-        float far = 100.f;
-    };
-
     virtual ~IAYCamera() = default;
 
     // ªÒ»° ”Õºæÿ’Û£®View Matrix£©
@@ -35,7 +25,10 @@ public:
 
     virtual void setAdditionalOffset(const glm::vec2& offset) { _additionalOffset = offset; }
 
+    virtual const glm::vec3 getPosition() const { return _transform.position; }
 protected:
+    STTransform _transform;
+    glm::vec3 _targetPosition = glm::vec3(0.f);
     glm::vec4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
     glm::vec2 _additionalOffset{ 0.0f };
 };
