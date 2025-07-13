@@ -10,3 +10,4 @@
 #include "AYRendererManager.h"
 #include "AYInputSystem.h"
 #include "AYSceneManager.h"
+#include "AYPhysicsSystem.h"

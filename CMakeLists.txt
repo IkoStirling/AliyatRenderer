@@ -5,7 +5,7 @@ project(AliyatRenderer)
 
 set(CMAKE_CXX_STANDARD 23)	#vs2022支持，vs2019只支持c++标准20及以下
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 if (MSVC)
 	# 如不添加编译命令，会默认采用本地gbk解码硬编码字符串，程序将在字体渲染时崩溃
@@ -38,8 +38,10 @@ add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/Renderer)
 add_subdirectory(src/Core/InputSystem)
 add_subdirectory(src/Core/Network)
-add_subdirectory(src/Core/GameLogic)
 add_subdirectory(src/Core/SceneManager)
+add_subdirectory(src/Core/PhysicsSystem)
+
+add_subdirectory(src/Core/GameLogic)
 add_subdirectory(src/Core/EngineCore)
 
 
@@ -52,8 +54,8 @@ file(GLOB ASSETS
 file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 
 
-add_executable(TESTLIBS test.cpp )
-target_link_libraries(TESTLIBS PRIVATE engine_core )
+add_executable(TESTLIBS test.cpp)
+target_link_libraries(TESTLIBS PRIVATE engine_core)
 
 #--------------Project0001-------------#
 #add_subdirectory(src/Project0001)

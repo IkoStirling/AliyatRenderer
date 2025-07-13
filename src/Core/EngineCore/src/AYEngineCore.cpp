@@ -29,6 +29,7 @@ void AYEngineCore::init()
     GET_MODULE("Renderer")->init();
     GET_MODULE("InputSystem")->init();
     GET_MODULE("SceneManager")->init();
+    GET_MODULE("PhysicsSystem")->init();
 
     GET_CAST_MODULE(Mod_Renderer, "Renderer")->setWindowCloseCallback([this]() { 
         close(); 
@@ -92,9 +93,11 @@ void AYEngineCore::_updateFPSStats(int& frameCount, std::chrono::steady_clock::t
 
 void AYEngineCore::update()
 {
-    _accumulatedTime += _unscaledDeltaTime * _timeScale;
+
+    GET_MODULE("InputSystem")->update(_invTargetFPS);
 
     // 只有当累积时间达到一帧时才更新
+    _accumulatedTime += _unscaledDeltaTime * _timeScale;
     if (_accumulatedTime >= _invTargetFPS) {
         float delta = _invTargetFPS; // 使用固定帧间隔确保稳定性
         _accumulatedTime -= delta;
@@ -104,10 +107,10 @@ void AYEngineCore::update()
             GET_MODULE("ResourceManager")->update(delta);
             //GET_MODULE("Network")->update(delta);
             GET_MODULE("SceneManager")->update(delta);
-            //GET_MODULE("Physics")->update(delta);
+            GET_MODULE("PhysicsSystem")->update(delta);
         }
     }
-    GET_MODULE("InputSystem")->update(_invTargetFPS);
+
     GET_MODULE("Renderer")->update(_invTargetFPS);
 
 }

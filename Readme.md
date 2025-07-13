@@ -1,4 +1,4 @@
-# AliyatRenderer
+## AliyatRenderer
 ---
 ### Project Architecture
 This project use the "cmake + vcpkg"
@@ -11,9 +11,9 @@ This project use the "cmake + vcpkg"
 		--ResourceManager
 		--Renderer
 		--Network
-		--Physics (Not yet supported)
+		--Physics
 		--InputSystem
-		--SceneManager (Not yet supported)
+		--SceneManager
 		--Logger (Not yet supported, should use spdlog?)
 		//some system header files
 ### Project Constraints
@@ -48,10 +48,14 @@ Before execute this program, preparing these packages:
 		Network
 	7. Boost::property_tree
 		all(may replace nlohmann)
+	8. Box2d && PhysX
+		Physics
+	9. libarchive
+		may be Network ( use zstd when compress network msg)
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree opencv4 nlohmann-json
+	vcpkg install boost-asio boost-system boost-property-tree opencv4 nlohmann-json box2d physx libarchive
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|

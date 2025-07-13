@@ -17,4 +17,5 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	input_system
 	game_logic
 	scene_manager
+	physics_system
 )
