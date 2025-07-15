@@ -9,9 +9,9 @@ public:
     ShapeType getShapeType() const override { return ShapeType::Circle2D; }
 
     // 特有方法
-    float getRadius() const { return _radius; }
-    void setRadius(float radius) { _radius = radius; }
+    virtual float getRadius() const { return _radius; }
+    virtual void setRadius(float radius) { _radius = radius; }
 
-private:
+protected:
     float _radius;
 };

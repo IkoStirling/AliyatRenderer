@@ -33,3 +33,20 @@ void AYPolygon2DCollider::_updateConvexity() {
     }
     _isConvex = true;  // 所有边方向一致，是凸多边形
 }
+
+void AYPolygon2DCollider::addVertex(const glm::vec2& vertex) {
+    _vertices.push_back(vertex);
+    _updateConvexity();
+}
+
+void AYPolygon2DCollider::removeVertex(size_t index) {
+    if (index < _vertices.size()) {
+        _vertices.erase(_vertices.begin() + index);
+        _updateConvexity();
+    }
+}
+
+void AYPolygon2DCollider::clearVertices() {
+    _vertices.clear();
+    _isConvex = true;
+}

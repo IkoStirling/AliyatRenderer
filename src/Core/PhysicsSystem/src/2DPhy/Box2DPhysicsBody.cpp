@@ -1,8 +1,9 @@
 #include "2DPhy/Box2DPhysicsBody.h"
-#include "2DPhy/Collision/Base/AYBox2DCollider.h"
-#include "2DPhy/Collision/Base/AYCircle2DCollider.h"
-#include "2DPhy/Collision/Base/AYPolygon2DCollider.h"
-#include "2DPhy/Collision/Base/AYEdge2DCollider.h"
+#include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
+#include "2DPhy/Collision/Box2D/Box2DCircleCollider.h"
+#include "2DPhy/Collision/Box2D/Box2DPolygonCollider.h"
+#include "2DPhy/Collision/Box2D/Box2DEdgeCollider.h"
+
 
 Box2DPhysicsBody::Box2DPhysicsBody(b2World& world, const glm::vec2& position,
     float rotation, BodyType type) {
@@ -19,22 +20,22 @@ Box2DPhysicsBody::~Box2DPhysicsBody() {
     }
 }
 
-// 类型转换
-b2BodyType Box2DPhysicsBody::convertBodyType(BodyType type) {
-    switch (type) {
-    case BodyType::Static:    return b2_staticBody;
-    case BodyType::Dynamic:   return b2_dynamicBody;
-    case BodyType::Kinematic: return b2_kinematicBody;
-    default:                return b2_dynamicBody;
-    }
+void Box2DPhysicsBody::setType(BodyType type)
+{
+    IAYPhysicsBody::setType(type);
+    _body->SetType(convertBodyType(type));
 }
 
-// 位置/旋转
 void Box2DPhysicsBody::setTransform(const glm::vec2& position, float rotation) {
     _body->SetTransform(glmToBox2D(position), rotation);
 }
 
-// 速度控制
+glm::vec2 Box2DPhysicsBody::getPosition()
+{
+    auto& trans = _body->GetTransform();
+    return box2DToGlm(trans.p);
+}
+
 void Box2DPhysicsBody::setLinearVelocity(const glm::vec2& velocity) {
     _body->SetLinearVelocity(glmToBox2D(velocity));
 }
@@ -51,7 +52,6 @@ float Box2DPhysicsBody::getAngularVelocity() const {
     return _body->GetAngularVelocity();
 }
 
-// 力和运动
 void Box2DPhysicsBody::applyForce(const glm::vec2& force) {
     _body->ApplyForceToCenter(glmToBox2D(force), true);
 }
@@ -64,7 +64,6 @@ void Box2DPhysicsBody::applyTorque(float torque) {
     _body->ApplyTorque(torque, true);
 }
 
-// 碰撞管理
 void Box2DPhysicsBody::addCollider(IAYCollider* collider) {
     if (!collider || _colliderFixtures.count(collider)) return;
 
@@ -82,8 +81,20 @@ void Box2DPhysicsBody::removeCollider(IAYCollider* collider) {
     }
 }
 
-void Box2DPhysicsBody::setTrigger(bool is_trigger) {
-    // 遍历所有fixture设置isSensor标志
+void Box2DPhysicsBody::removeAllColliders()
+{
+    std::unordered_map<IAYCollider*, b2Fixture*> emptyMap;
+
+    _colliderFixtures.swap(emptyMap);
+
+    for (auto& pair : emptyMap) {
+        _body->DestroyFixture(pair.second);
+    }
+}
+
+bool Box2DPhysicsBody::hasCollider(IAYCollider* collider) const
+{
+    return _colliderFixtures.find(collider) != _colliderFixtures.end();
 }
 
 // 碰撞查询
@@ -118,7 +129,7 @@ void Box2DPhysicsBody::setTrigger(bool is_trigger) {
 }
 
 b2Fixture* Box2DPhysicsBody::_createFixture(IAYCollider* collider) {
-    b2FixtureDef fixtureDef;
+    b2FixtureDef fixtureDef;    //配置模板，通过_body->CreateFixture(&fixtureDef)创建fixture
 
     // 设置通用属性
     fixtureDef.density = collider->getDensity();
@@ -128,33 +139,32 @@ b2Fixture* Box2DPhysicsBody::_createFixture(IAYCollider* collider) {
 
     // 碰撞过滤
     b2Filter filter;
-    filter.categoryBits = collider->getCategoryBits();
-    filter.maskBits = collider->getMaskBits();
+    filter.categoryBits = collider->getCategoryBits();  //当前碰撞类别
+    filter.maskBits = collider->getMaskBits();          //可碰撞的类别
     fixtureDef.filter = filter;
 
     // 根据碰撞体类型创建形状
     switch (collider->getShapeType()) {
     case IAYCollider::ShapeType::Box2D: {
-        auto boxCollider = static_cast<AYBox2DCollider*>(collider);
-        b2PolygonShape shape;
-        shape.SetAsBox(
-            boxCollider->getSize().x * 0.5f,
-            boxCollider->getSize().y * 0.5f,
-            glmToBox2D(boxCollider->getOffset()),
-            0.0f
-        );
-        fixtureDef.shape = &shape;
+        auto boxCollider = static_cast<Box2DBoxCollider*>(collider);
+        fixtureDef.shape = boxCollider->createBox2DShape();
         break;
     }
     case IAYCollider::ShapeType::Circle2D: {
-        auto circleCollider = static_cast<AYCircle2DCollider*>(collider);
-        b2CircleShape shape;
-        shape.m_radius = circleCollider->getRadius();
-        shape.m_p = glmToBox2D(circleCollider->getOffset());
-        fixtureDef.shape = &shape;
+        auto circleCollider = static_cast<Box2DCircleCollider*>(collider);
+        fixtureDef.shape = circleCollider->createBox2DShape();
         break;
     }
-                                         // 其他形状类型...
+    case IAYCollider::ShapeType::Polygon2D: {
+        auto polygonCollider = static_cast<Box2DPolygonCollider*>(collider);
+        fixtureDef.shape = polygonCollider->createBox2DShape();
+        break;
+    }
+    case IAYCollider::ShapeType::Edge2D: {
+        auto edgeCollider = static_cast<Box2DEdgeCollider*>(collider);
+        fixtureDef.shape = edgeCollider->createBox2DShape();
+        break;
+    }
     default:
         return nullptr;
     }
@@ -176,4 +186,14 @@ void Box2DPhysicsBody::_updateFixtureProperties(b2Fixture* fixture, IAYCollider*
     filter.categoryBits = collider->getCategoryBits();
     filter.maskBits = collider->getMaskBits();
     fixture->Refilter();
+}
+
+// 类型转换
+b2BodyType Box2DPhysicsBody::convertBodyType(BodyType type) {
+    switch (type) {
+    case BodyType::Static:    return b2_staticBody;
+    case BodyType::Dynamic:   return b2_dynamicBody;
+    case BodyType::Kinematic: return b2_kinematicBody;
+    default:                return b2_dynamicBody;
+    }
 }

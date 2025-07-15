@@ -15,17 +15,28 @@ public:
     // 特有方法
     const glm::vec2& getVertex1() const { return _vertex1; }
     const glm::vec2& getVertex2() const { return _vertex2; }
-    void setVertices(const glm::vec2& v1, const glm::vec2& v2) { _vertex1 = v1; _vertex2 = v2; }
+    virtual void setVertices(const glm::vec2& v1, const glm::vec2& v2) { _vertex1 = v1; _vertex2 = v2; }
 
     bool isOneSided() const { return _isOneSided; }
-    void setOneSided(bool oneSided) { _isOneSided = oneSided; }
+    virtual void setOneSided(bool oneSided) { _isOneSided = oneSided; }
+
+    virtual void setAdjacentVertices(const glm::vec2& prevVertex, const glm::vec2& nextVertex) {
+        _prevVertex = prevVertex;
+        _nextVertex = nextVertex;
+        _isOneSided = true;
+    }
 
     // 实用方法
     float getLength() const;
     glm::vec2 getDirection() const;
 
-private:
+protected:
     glm::vec2 _vertex1;
     glm::vec2 _vertex2;
     bool _isOneSided = false;
+
+    glm::vec2 _prevVertex;
+    glm::vec2 _nextVertex;
+    bool _prevVertexSet = false;
+    bool _nextVertexSet = false;
 };

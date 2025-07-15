@@ -7,11 +7,12 @@ class IAYPhysicsBody
 public:
     enum class BodyType { Static, Dynamic, Kinematic };
     virtual ~IAYPhysicsBody() = default;
-    virtual void setType(BodyType type) = 0;
+    virtual void setType(BodyType type) { _type = type; }
+    virtual BodyType getType() { return _type; }
 
     //---------------位置旋转----------------
     virtual void setTransform(const glm::vec2& position, float rotation) = 0;
-    
+    virtual glm::vec2 getPosition() = 0;
 
     //-----------------速度------------------
     virtual void setLinearVelocity(const glm::vec2& velocity) = 0;
@@ -49,4 +50,6 @@ public:
     //---------------调试方法----------------
     //....
 
+protected:
+    BodyType _type;
 };

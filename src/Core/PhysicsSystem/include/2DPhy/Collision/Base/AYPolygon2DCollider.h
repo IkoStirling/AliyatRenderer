@@ -10,17 +10,17 @@ public:
 
     // 特有方法
     const std::vector<glm::vec2>& getVertices() const { return _vertices; }
-    void setVertices(const std::vector<glm::vec2>& vertices);
+    virtual void setVertices(const std::vector<glm::vec2>& vertices);
 
     bool isConvex() const { return _isConvex; }
     void setConvex(bool convex) { _isConvex = convex; }
 
     // 实用方法
-    void addVertex(const glm::vec2& vertex);
-    void removeVertex(size_t index);
-    void clearVertices();
+    virtual void addVertex(const glm::vec2& vertex);
+    virtual void removeVertex(size_t index);
+    virtual void clearVertices();
 
-private:
+protected:
     std::vector<glm::vec2> _vertices;
     bool _isConvex = true; // 默认为凸多边形
 

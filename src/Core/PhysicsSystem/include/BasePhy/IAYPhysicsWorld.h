@@ -11,6 +11,9 @@ public:
 
     virtual void setGravity(const glm::vec2& gravity) = 0;
 
+    virtual void raycast(const glm::vec2& start, const glm::vec2& end,
+        std::function<bool(IAYPhysicsBody*, const glm::vec2&)> callback) = 0;
+
     virtual IAYPhysicsBody* createBody(const glm::vec2& position,
         float rotation,
         IAYPhysicsBody::BodyType type) = 0;
