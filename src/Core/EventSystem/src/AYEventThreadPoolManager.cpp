@@ -1,4 +1,4 @@
-#include "AYEventThreadPoolManager.h"
+ï»¿#include "AYEventThreadPoolManager.h"
 #include "AYThreadPoolBase.h"
 #include "IAYEvent.h"
 #include "AYEventToken.h"
@@ -35,9 +35,12 @@ AYEventThreadPoolManager::~AYEventThreadPoolManager()
 	}
 }
 
-void AYEventThreadPoolManager::publish(std::unique_ptr<IAYEvent> in_event) 
+void AYEventThreadPoolManager::publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event)
 {
 	std::lock_guard<std::mutex> lock(_processedMutex);
+	if (_processedEvents.size() > MAX_CACHED_EVENTS) {
+		_processedEvents.erase(_processedEvents.begin());  // ä¸¢å¼ƒæœ€æ—§äº‹ä»¶
+	}
 	for (auto&& it : _processedEvents)
 	{
 		if (in_event->getType() == it->getType())
@@ -60,7 +63,7 @@ void AYEventThreadPoolManager::update()
 	{
 		while (!_layerQueues[layer].empty())
 		{
-			auto oneEvent = std::move(const_cast<std::unique_ptr<IAYEvent>&>(_layerQueues[layer].top()));
+			auto oneEvent = std::move(const_cast<std::unique_ptr<IAYEvent, PoolDeleter>&>(_layerQueues[layer].top()));
 			execute(std::move(oneEvent));
 			_layerQueues[layer].pop();
 		}
@@ -84,8 +87,6 @@ void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
 	{
 		_layerPools[layer]->enqueue([in_event, handler_ = std::move(handler)](){
 			try {
-				//ÕâÀïÎªÊ²Ã´Òª½«ÊÂ¼þ¸´ÖÆ ÕâÃ´¶à·Ý³öÈ¥£¿
-				//auto eventCopy = in_event->clone();
 				handler_(*in_event);
 			}
 			catch (const std::exception& e)
@@ -97,7 +98,7 @@ void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
 
 }
 
-void AYEventThreadPoolManager::executeJoin(std::unique_ptr<IAYEvent> in_event)
+void AYEventThreadPoolManager::executeJoin(std::unique_ptr<IAYEvent, PoolDeleter> in_event)
 {
 	const std::string eventType = in_event->getType();
 	std::list<EventHandler> handlersCopy;
@@ -111,9 +112,6 @@ void AYEventThreadPoolManager::executeJoin(std::unique_ptr<IAYEvent> in_event)
 	for (const auto& handler : handlersCopy)
 	{
 		try {
-			//ÕâÀïÎªÊ²Ã´Òª½«ÊÂ¼þ¸´ÖÆ ÕâÃ´¶à·Ý³öÈ¥£¿
-			//auto eventCopy = in_event->clone();
-			//handler(*eventCopy);
 			handler(*in_event);
 		}
 		catch (const std::exception& e)
@@ -154,7 +152,7 @@ void AYEventThreadPoolManager::unsubscribe(const std::string& event_name, EventH
 
 void AYEventThreadPoolManager::_enquene()
 {
-	std::set<std::unique_ptr<IAYEvent>> processedEventsCopy;
+	std::set<std::unique_ptr<IAYEvent, PoolDeleter>> processedEventsCopy;
 	{
 		std::lock_guard<std::mutex> lock(_processedMutex);
 		processedEventsCopy = std::move(_processedEvents);
@@ -163,12 +161,14 @@ void AYEventThreadPoolManager::_enquene()
 	for (auto it = processedEventsCopy.begin(); it != processedEventsCopy.end();)
 	{
 		size_t layer = static_cast<size_t>(it->get()->layer);
-		_layerQueues[layer].push(std::move(const_cast<std::unique_ptr<IAYEvent>&>(*it)));
+		_layerQueues[layer].push(std::move(const_cast<std::unique_ptr<IAYEvent, PoolDeleter>&>(*it)));
 		it = processedEventsCopy.erase(it);
 	}
 }
 
-bool AYEventThreadPoolManager::IAYEventGreator::operator()(const std::unique_ptr<IAYEvent>& a, const std::unique_ptr<IAYEvent>& b)
+bool AYEventThreadPoolManager::IAYEventGreator::operator()(
+	const std::unique_ptr<IAYEvent, PoolDeleter>& a,
+	const std::unique_ptr<IAYEvent, PoolDeleter>& b)
 {
-	return a->priority > b->priority;
+	return a->priority < b->priority;
 }

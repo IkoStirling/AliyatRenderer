@@ -1,23 +1,25 @@
-#pragma once
-
+ï»¿#pragma once
+#include "ECEventDependence.h"
 #include <set>
 #include <mutex>
 #include <queue>
 #include <functional>
 #include <unordered_map>
 #include <list>
-#include "ECEventDependence.h"
+
+#define MAX_CACHED_EVENTS 8192
 
 class IAYEvent;
 class AYEventToken;
 class AYThreadPoolBase;
+struct PoolDeleter;
 
 /*
-	ÊÂ¼şÏß³Ì³ØÊµ¼ÊÒµÎñÀà
-	ÒÔÏÂÊ¹ÓÃÇé¿öÇëÇø·Ö£º
-		1£©µ¥Ö¡ÊÂ¼şÖ»´¥·¢Ò»´Î £¨Ğ´ËÀ±£ÁôµÚÒ»´Î´¥·¢£©
-		2£©µ¥Ö¡ÊÂ¼şºÏ²¢       £¨»ùÓÚÊÂ¼şÌá¹©µÄmerge·½·¨£©
-		3£©ÎŞÊÓÖ¡Ñ­»·´¥·¢     £¨Ö±½Ó±¾µØÏß³Ì¼ÆËã/Ìá½»µ½µ¥ÀıÏß³Ì¼ÆËã£©
+	äº‹ä»¶çº¿ç¨‹æ± å®é™…ä¸šåŠ¡ç±»
+	ä»¥ä¸‹ä½¿ç”¨æƒ…å†µè¯·åŒºåˆ†ï¼š
+		1ï¼‰å•å¸§äº‹ä»¶åªè§¦å‘ä¸€æ¬¡ ï¼ˆå†™æ­»ä¿ç•™ç¬¬ä¸€æ¬¡è§¦å‘ï¼‰
+		2ï¼‰å•å¸§äº‹ä»¶åˆå¹¶       ï¼ˆåŸºäºäº‹ä»¶æä¾›çš„mergeæ–¹æ³•ï¼‰
+		3ï¼‰æ— è§†å¸§å¾ªç¯è§¦å‘     ï¼ˆç›´æ¥æœ¬åœ°çº¿ç¨‹è®¡ç®—/æäº¤åˆ°å•ä¾‹çº¿ç¨‹è®¡ç®—ï¼‰
 */
 class AYEventThreadPoolManager
 {
@@ -27,29 +29,29 @@ public:
 	AYEventThreadPoolManager();
 	~AYEventThreadPoolManager();
 
-	//½«ÊÂ¼şÌí¼Ó½ø´ı´¦Àí¼¯ºÏÖĞ£¬µÈ´ıÍ³Ò»Ö´ĞĞ
-	void publish(std::unique_ptr<IAYEvent> in_event);
+	//å°†äº‹ä»¶æ·»åŠ è¿›å¾…å¤„ç†é›†åˆä¸­ï¼Œç­‰å¾…ç»Ÿä¸€æ‰§è¡Œ
+	void publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 
-	//Í³Ò»Ö´ĞĞËùÓĞÊÂ¼ş
+	//ç»Ÿä¸€æ‰§è¡Œæ‰€æœ‰äº‹ä»¶
 	void update();
 
 	//void executeAsync();
 	void execute(std::shared_ptr<const IAYEvent> in_event);
-	void executeJoin(std::unique_ptr<IAYEvent> in_event);
+	void executeJoin(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 
 
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback);
 	void unsubscribe(const std::string& event_name, EventHandler event_callback);
 
 protected:
-	//¶Ô´ı´¦ÀíÊÂ¼ş¼¯ºÏ½øĞĞÓÅÏÈ¼¶¶ÓÁĞ´¦Àí
+	//å¯¹å¾…å¤„ç†äº‹ä»¶é›†åˆè¿›è¡Œä¼˜å…ˆçº§é˜Ÿåˆ—å¤„ç†
 	void _enquene();
 
 private:
-	//ÊÂ¼ş·Âº¯Êı
+	//äº‹ä»¶ä»¿å‡½æ•°
 	struct IAYEventGreator
 	{
-		bool operator()(const std::unique_ptr<IAYEvent>& a, const std::unique_ptr<IAYEvent>& b);
+		bool operator()(const std::unique_ptr<IAYEvent, PoolDeleter>& a, const std::unique_ptr<IAYEvent, PoolDeleter>& b);
 	};
 
 protected:
@@ -59,11 +61,11 @@ protected:
 	std::vector<std::unique_ptr<AYThreadPoolBase>> _layerPools;
 
 	std::vector<std::priority_queue<
-		std::unique_ptr<IAYEvent>,
-		std::vector<std::unique_ptr<IAYEvent>>,
+		std::unique_ptr<IAYEvent, PoolDeleter>,
+		std::vector<std::unique_ptr<IAYEvent, PoolDeleter>>,
 		IAYEventGreator
 		>> _layerQueues;
 
 	std::mutex _processedMutex;
-	std::set<std::unique_ptr<IAYEvent>> _processedEvents;
+	std::set<std::unique_ptr<IAYEvent, PoolDeleter>> _processedEvents;
 };

@@ -1,7 +1,6 @@
-#include "IAYEvent.h"
+﻿#include "IAYEvent.h"
 #include "AYEventRegistry.h"
 #include "AYEventSystem.h"
-#include "Mod_EventSystem.h"
 
 AYEventRegistry& AYEventRegistry::getInstance()
 {
@@ -9,7 +8,7 @@ AYEventRegistry& AYEventRegistry::getInstance()
     return registry;
 }
 
-IAYEvent* AYEventRegistry::create(const std::type_index& typeIdx)
+std::unique_ptr<IAYEvent, PoolDeleter> AYEventRegistry::create(const std::type_index& typeIdx)
 {
     auto it = _creators.find(typeIdx);
     if (it != _creators.end()) {
@@ -18,7 +17,7 @@ IAYEvent* AYEventRegistry::create(const std::type_index& typeIdx)
     return nullptr;
 }
 
-IAYEvent* AYEventRegistry::create(const std::string& typeName)
+std::unique_ptr<IAYEvent, PoolDeleter> AYEventRegistry::create(const std::string& typeName)
 {
     auto it = _nameToType.find(typeName);
     if (it != _nameToType.end()) {
@@ -36,14 +35,15 @@ bool AYEventRegistry::isRegistered(const std::string& typeName) const
 {
     return _nameToType.find(typeName) != _nameToType.end();
 }
+
 #include <assert.h>
 void AYEventRegistry::publish(const std::string& typeName, std::function<void(IAYEvent*)> wrapped)
 {
     assert(getInstance().isRegistered(typeName));
 
     auto event = getInstance().create(typeName);
-    wrapped(event);
-    auto system = GET_CAST_MODULE(Mod_EventSystem, "EventSystem");
+    wrapped(event.get());
+    auto system = GET_CAST_MODULE(AYEventSystem, "EventSystem");
     if(system)
-        system->publish(std::unique_ptr<IAYEvent>(event));
+        system->publish(std::move(event));
 }

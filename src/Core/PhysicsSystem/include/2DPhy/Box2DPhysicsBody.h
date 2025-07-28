@@ -1,16 +1,17 @@
-#pragma once
+ï»¿#pragma once
 #include "BasePhy/IAYPhysicsBody.h"
 #include <box2d/box2d.h>
 
+// æ­¤ç±»ä¸­åæ ‡ç³»å‡ä¸ºBox2Dä¸–ç•Œåæ ‡ç³»
 class Box2DPhysicsBody : public IAYPhysicsBody
 {
 public:
     Box2DPhysicsBody(b2World& world, const glm::vec2& position, float rotation, BodyType type);
     ~Box2DPhysicsBody() override;
 
-    // ÊµÏÖIAYPhysicsBody½Ó¿Ú
+    // å®ç°IAYPhysicsBodyæ¥å£
     void setType(BodyType type) override;
-    void setTransform(const glm::vec2& position, float rotation) override;
+    void setTransform(STTransform& transform) override;
     glm::vec2 getPosition() override;
     void setLinearVelocity(const glm::vec2& velocity) override;
     glm::vec2 getLinearVelocity() const override;
@@ -28,16 +29,16 @@ public:
     void setFriction(float friction) override;
     void setBounciness(float bounciness) override;
     void setDensity(float density) override;
-
     
-    // ÎïÀí²ÄÖÊÅúÁ¿ÉèÖÃ
+    // ç‰©ç†æè´¨æ‰¹é‡è®¾ç½®
     void updateAllFixtureMaterials();
-    // »ñÈ¡µ×²ãBox2D body£¨¹©¸ß¼¶²Ù×÷Ê¹ÓÃ£©
+    // è·å–åº•å±‚Box2D bodyï¼ˆä¾›é«˜çº§æ“ä½œä½¿ç”¨ï¼‰
     b2Body* getB2Body() const { return _body; }
 private:
     b2Body* _body;
+    b2Transform _lastTransform;
     std::unordered_map<IAYCollider*, b2Fixture*> _colliderFixtures;
-    // ÄÚ²¿¸¨Öú·½·¨
+    // å†…éƒ¨è¾…åŠ©æ–¹æ³•
     b2Fixture* _createFixture(IAYCollider* collider);
     void _updateFixtureProperties(b2Fixture* fixture, IAYCollider* collider);
 

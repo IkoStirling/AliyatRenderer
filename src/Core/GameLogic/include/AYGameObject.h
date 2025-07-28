@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Component/IAYComponent.h"
 #include "Component/IAYRenderComponent.h"
 #include "AYRendererManager.h"
@@ -7,8 +7,10 @@
 #include <string>
 #include <unordered_map>
 #include <typeindex>
+#include "BasePhy/IAYPhysical.h"
 
-class AYGameObject 
+
+class AYGameObject : public IAYPhysical
 {
 public:
     AYGameObject(const std::string& name = "GameObject");
@@ -44,15 +46,17 @@ public:
     void setActive(bool active);
     bool isActive() const { return _active; }
 
+
+protected:
+    std::string _name;
+    std::unordered_multimap<std::type_index, std::unique_ptr<IAYComponent>> _components;
+    bool _active = true;
+
 private:
     AYGameObject(const AYGameObject&) = delete;
     AYGameObject& operator=(const AYGameObject&) = delete;
 
     void _handleRenderComponents(bool shouldRegister);
-protected:
-    std::string _name;
-    std::unordered_multimap<std::type_index, std::unique_ptr<IAYComponent>> _components;
-    bool _active = true;
 };
 
 template<typename T, typename ...Args>

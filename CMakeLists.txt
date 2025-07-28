@@ -1,32 +1,32 @@
-message(STATUS "ToolChainFile: ${CMAKE_TOOLCHAIN_FILE}")
+ï»¿message(STATUS "ToolChainFile: ${CMAKE_TOOLCHAIN_FILE}")
 
 cmake_minimum_required(VERSION 3.12)
 project(AliyatRenderer)
 
-set(CMAKE_CXX_STANDARD 23)	#vs2022Ö§³Ö£¬vs2019Ö»Ö§³Öc++±ê×¼20¼°ÒÔÏÂ
+set(CMAKE_CXX_STANDARD 23)	#vs2022æ”¯æŒï¼Œvs2019åªæ”¯æŒc++æ ‡å‡†20åŠä»¥ä¸‹
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 if (MSVC)
-	# Èç²»Ìí¼Ó±àÒëÃüÁî£¬»áÄ¬ÈÏ²ÉÓÃ±¾µØgbk½âÂëÓ²±àÂë×Ö·û´®£¬³ÌĞò½«ÔÚ×ÖÌåäÖÈ¾Ê±±ÀÀ£
-	# spdlogÒÑ¾­Ìí¼ÓÁËutf-8Ñ¡Ïî
+	# å¦‚ä¸æ·»åŠ ç¼–è¯‘å‘½ä»¤ï¼Œä¼šé»˜è®¤é‡‡ç”¨æœ¬åœ°gbkè§£ç ç¡¬ç¼–ç å­—ç¬¦ä¸²ï¼Œç¨‹åºå°†åœ¨å­—ä½“æ¸²æŸ“æ—¶å´©æºƒ
+	# spdlogå·²ç»æ·»åŠ äº†utf-8é€‰é¡¹
     add_compile_options("$<$<C_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
     add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
 endif()
 
-#--------------µÚÈı·½´óĞÍ¿â-------------#
+#--------------ç¬¬ä¸‰æ–¹å¤§å‹åº“-------------#
 find_package(Boost CONFIG REQUIRED COMPONENTS asio)
 find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})	#È«¾Ö°üº¬Â·¾¶£¬½«À´»òĞí¿ÉÒÔÓÅ»¯
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})	#å…¨å±€åŒ…å«è·¯å¾„ï¼Œå°†æ¥æˆ–è®¸å¯ä»¥ä¼˜åŒ–
 include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
 
 
-#-------------µÚÈı·½Ğ¡ĞÍ¿â--------------#
+#-------------ç¬¬ä¸‰æ–¹å°å‹åº“--------------#
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/include)
 link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 
-#-------------ÏîÄ¿×Ô¶¨Òå¿â--------------#
+#-------------é¡¹ç›®è‡ªå®šä¹‰åº“--------------#
 
 add_subdirectory(src/Core/ConfigWrapper)
 add_subdirectory(src/Core/ModuleManager)
@@ -57,6 +57,8 @@ file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 add_executable(TESTLIBS test.cpp)
 target_link_libraries(TESTLIBS PRIVATE engine_core)
 
+
+
 #--------------Project0001-------------#
 #add_subdirectory(src/Project0001)
 #add_executable(Project0001 src/Project0001/main.cpp )
@@ -76,9 +78,9 @@ target_link_libraries(TESTLIBS PRIVATE engine_core)
 #target_link_libraries(Server utils ${TPLIB} ${OpenCV_LIBS} Boost::asio Boost::json Boost::uuid)
 #target_link_libraries(Client utils ${TPLIB} ${OpenCV_LIBS} Boost::asio Boost::json Boost::uuid)
 
-#--------------µ¥Ôª²âÊÔ-------------#
-#add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp)
-#target_link_libraries(UnitTest_EventSystem utils ${TPLIB})
+#--------------å•å…ƒæµ‹è¯•-------------#
+add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp)
+target_link_libraries(UnitTest_EventSystem utils event_system)
 
 #add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp)
 #target_link_libraries(UnitTest_ResourceManager PRIVATE engine_core)
@@ -86,4 +88,5 @@ target_link_libraries(TESTLIBS PRIVATE engine_core)
 #add_executable(UnitTest_Network unitest/Network/UnitTest.cpp)
 #target_link_libraries(UnitTest_Network PRIVATE engine_core)
 
-
+add_executable(UnitTest_MemoryPool unitest/MemoryPool/Unitest.cpp)
+target_link_libraries(UnitTest_MemoryPool PRIVATE memory_pool)

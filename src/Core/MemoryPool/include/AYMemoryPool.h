@@ -1,7 +1,8 @@
-#pragma once
+ï»¿#pragma once
+#include "Mod_MemoryPool.h"
+#include <iostream>
 #include <atomic>
 #include <mutex>
-#include "Mod_MemoryPool.h"
 
 #define MAX_SLOT_SIZE 512
 #define SLOT_BASE_SIZE 8
@@ -31,8 +32,12 @@ struct Slot
 };
 
 /*
-	Ã¿¸öÄÚ´æ¿éÊ×²¿°üº¬slotÖ¸Õë£¬ÓÃÓÚË÷ÒıÏÂÒ»¸öÄÚ´æ¿é
-	³ı´ËÖ®Íâ£¬Êµ¼Ê´æ´¢¶ÔÏóµÄ²å²Û£¬²¢²»°üº¬slotÖ¸Õë£¬½öÓÉÄÚ´æ³ØÖ÷¶¯¹ÜÀí£¨¼ÆËãÆ«ÒÆ£©
+	æ¯ä¸ªå†…å­˜å—é¦–éƒ¨åŒ…å«slotæŒ‡é’ˆï¼Œç”¨äºç´¢å¼•ä¸‹ä¸€ä¸ªå†…å­˜å—
+	é™¤æ­¤ä¹‹å¤–ï¼Œå®é™…å­˜å‚¨å¯¹è±¡çš„æ’æ§½ï¼Œå¹¶ä¸åŒ…å«slotæŒ‡é’ˆï¼Œä»…ç”±å†…å­˜æ± ä¸»åŠ¨ç®¡ç†ï¼ˆè®¡ç®—åç§»ï¼‰
+
+	æ³¨æ„ï¼šï¼ï¼ï¼
+	ä½¿ç”¨åŸç‰ˆæ™ºèƒ½æŒ‡é’ˆå°†ä¼šæ— è§†ä¸Šè¿°é‡è½½çš„newå’Œdeleteï¼Œæ™ºèƒ½æŒ‡é’ˆä½¿ç”¨çš„æ˜¯å…¨å±€çš„newå’Œdelete
+	ç›®å‰å†…å­˜æ± å®ç°å‡ ä¹å®Œå¤‡ï¼Œç»æµ‹è¯•å¯ä»¥ä½¿ç”¨
 */
 class AYMemoryPool
 {
@@ -51,14 +56,16 @@ private:
 	bool pushFreeSlot(Slot* slot);
 	Slot* popFreeSlot();
 private:
-	int _blockSize; //ÄÚ´æ¿é´óĞ¡
-	int _slotSize; //Êµ¼Ê²å²Û´óĞ¡
-	Slot* _firstBlock; //Ö¸Ïò×îĞÂµÄÄÚ´æ¿é£¬Á´±í
-	Slot* _curSlot; //µ±Ç°ÄÚ´æ¿é±ê¼ÇÎ»ÖÃ£¬´´½¨ÄÚ´æ¿é»á±»¸üĞÂ
-	std::atomic<Slot*> _freeSlots; //ËùÓĞÏß³Ì¼°ÄÚ´æ¿é¹²Ïí£¬¿ÕÏĞ²å²ÛÁ´±í
-	Slot* _lastSlot; //µ±Ç°ÄÚ´æ¿é×îºó±ß½ç±ê¼ÇÎ»ÖÃ
+	int _blockSize; //å†…å­˜å—å¤§å°
+	int _slotSize; //å®é™…æ’æ§½å¤§å°
+	Slot* _firstBlock; //æŒ‡å‘æœ€æ–°çš„å†…å­˜å—ï¼Œé“¾è¡¨
+	Slot* _curSlot; //å½“å‰å†…å­˜å—æ ‡è®°ä½ç½®ï¼Œåˆ›å»ºå†…å­˜å—ä¼šè¢«æ›´æ–°
+	std::atomic<Slot*> _freeSlots; //æ‰€æœ‰çº¿ç¨‹åŠå†…å­˜å—å…±äº«ï¼Œç©ºé—²æ’æ§½é“¾è¡¨
+	Slot* _lastSlot; //å½“å‰å†…å­˜å—æœ€åè¾¹ç•Œæ ‡è®°ä½ç½®
 	std::mutex _blockMutex;
 };
+
+struct PoolDeleter;
 
 class AYMemoryPoolProxy : public Mod_MemoryPool
 {
@@ -72,41 +79,91 @@ public:
 	static void freeMomory(void* ptr, size_t size);
 
 public:
-	
+	template<typename T, typename... Args>
+	static T* createObject(Args&&... args);
+
+	template<typename T>
+	static void destroyObject(T* ptr);
+
 public:
 	template<typename T, typename... Args>
 	friend T* NewObject(Args... args);
 
 	template<typename T>
 	friend void DeleteObject(T* ptr);
+
+	// æ™ºèƒ½æŒ‡é’ˆå’Œå†…å­˜æ± æ˜¯ä¸¤ä¸ªä½“ç³»ï¼Œå°½é‡ä¸è¦æ··ç”¨
+	template<typename T, typename... Args>
+	friend std::shared_ptr<T> MakeMShared(Args... args);
+
+	template<typename T, typename... Args>
+	friend std::unique_ptr<T, PoolDeleter> MakeMUnique(Args... args);
 };
 
 REGISTER_MODULE_CLASS("MemoryPool", AYMemoryPoolProxy);
+
+struct PoolDeleter {
+	template<typename T>
+	void operator()(T* ptr) const {
+		if (ptr) {
+			static int i = 0;
+			std::string text = std::string("PoolDeleter released ") 
+				+ typeid(T).name() 
+				+ " :(" + std::to_string(i++) + ")\n";
+			std::cout << text;  // æ—¥å¿—
+			AYMemoryPoolProxy::destroyObject(ptr);  // è°ƒç”¨å†…å­˜æ± çš„é”€æ¯é€»è¾‘
+		}
+	}
+};
+
+template<typename T, typename... Args>
+T* AYMemoryPoolProxy::createObject(Args&&... args)
+{
+	T* p = nullptr;
+	// æ ¹æ®å…ƒç´ å¤§å°é€‰å–åˆé€‚çš„å†…å­˜æ± åˆ†é…å†…å­˜
+	if ((p = reinterpret_cast<T*>(AYMemoryPoolProxy::useMemoryPool(sizeof(T)))) != nullptr)
+		// åœ¨åˆ†é…çš„å†…å­˜ä¸Šæ„é€ å¯¹è±¡
+		new(p) T(std::forward<Args>(args)...);
+	return p;
+}
+
+template<typename T>
+void AYMemoryPoolProxy::destroyObject(T* ptr)
+{
+	if (ptr)
+	{
+		// è°ƒç”¨å¯¹è±¡çš„ææ„å‡½æ•°
+		ptr->~T();
+		// é‡Šæ”¾å†…å­˜
+		freeMomory(reinterpret_cast<void*>(ptr), sizeof(T));
+	}
+}
 
 
 template<typename T, typename... Args>
 T* NewObject(Args&&... args)
 {
-	T* p = nullptr;
-	// ¸ù¾İÔªËØ´óĞ¡Ñ¡È¡ºÏÊÊµÄÄÚ´æ³Ø·ÖÅäÄÚ´æ
-	if ((p = reinterpret_cast<T*>(AYMemoryPoolProxy::useMemoryPool(sizeof(T)))) != nullptr)
-		// ÔÚ·ÖÅäµÄÄÚ´æÉÏ¹¹Ôì¶ÔÏó
-		new(p) T(std::forward<Args>(args)...);
-
-	return p;
-	T* ptr = reinterpret_cast<T*>(AYMemoryPoolProxy::useMemoryPool(sizeof(T)));
-	if (ptr)
-		new(ptr) T(std::forward<Args>(args)...);
-	return ptr;
+	return AYMemoryPoolProxy::createObject<T>(std::forward<Args>(args)...);
 }
 
 template<typename T>
 void DeleteObject(T* ptr)
 {
-	if (ptr)
-	{
-		ptr->~T();
-		AYMemoryPoolProxy::freeMomory(reinterpret_cast<void*>(ptr), sizeof(T));
-	}
+	AYMemoryPoolProxy::destroyObject<T>(ptr);
+}
+
+
+template<typename T, typename ...Args>
+std::shared_ptr<T> MakeMShared(Args ...args)
+{
+	T* p = AYMemoryPoolProxy::createObject<T>(std::forward<Args>(args)...);
+	return std::shared_ptr<T>(p, PoolDeleter{});	//åˆ é™¤å™¨æ˜¯shard ptrå¯¹è±¡çš„ä¸€éƒ¨åˆ†
+}
+
+template<typename T, typename ...Args>
+std::unique_ptr<T, PoolDeleter> MakeMUnique(Args ...args)
+{
+	T* p = AYMemoryPoolProxy::createObject<T>(std::forward<Args>(args)...);
+	return std::unique_ptr<T, PoolDeleter>(p);		//åˆ é™¤å™¨æ˜¯unique ptrç±»å‹çš„ä¸€éƒ¨åˆ†
 }
 

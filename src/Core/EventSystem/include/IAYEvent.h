@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "ECEventDependence.h"
 #include "AYMemoryPool.h"
 #include <memory>
@@ -120,7 +120,7 @@ static CLASS_NAME##_Register CLASS_NAME##_register; \
 
 
 /*
-	²»Ê¹ÓÃ¹¤³§·½·¨£¬Çë±ÜÃâÊ¹ÓÃmake_sharedÈÆ¿ªÄÚ´æ³Ø
+	ä¸ä½¿ç”¨å·¥å‚æ–¹æ³•ï¼Œè¯·é¿å…ä½¿ç”¨make_sharedç»•å¼€å†…å­˜æ± 
 */
 class IAYEvent
 {
@@ -130,8 +130,7 @@ public:
 public:
 	explicit IAYEvent(const Builder& builder);
 
-	virtual void merge(const IAYEvent& other) = 0;
-	virtual std::unique_ptr<IAYEvent> clone()const = 0;
+	virtual void merge(const IAYEvent& other) {};
 public:
 	const int priority;
 	const bool shouldMerge;
@@ -147,7 +146,7 @@ public:
 		Builder& setMerge(bool in_tickOnce);
 		Builder& setLayer(AYEventLayer in_layer);
 
-		int priority;
+		int priority;	//æ•°å€¼è¶Šå°ä¼˜å…ˆçº§è¶Šé«˜ï¼Œå–å€¼[0,100]
 		bool shouldMerge;
 		AYEventLayer layer;
 	};

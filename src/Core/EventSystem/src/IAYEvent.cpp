@@ -1,5 +1,5 @@
-#include "IAYEvent.h"
-
+﻿#include "IAYEvent.h"
+#include <algorithm>
 
 IAYEvent::Builder::Builder() :
 	priority(99),
@@ -11,7 +11,7 @@ IAYEvent::Builder::Builder() :
 
 IAYEvent::Builder& IAYEvent::Builder::setPriority(int in_priority)
 {
-	this->priority = in_priority;
+	this->priority = std::clamp(in_priority, 0, 100);
 	return *this;
 }
 

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "BasePhy/IAYPhysicsWorld.h"
 #include "Box2DPhysicsBody.h"
 
@@ -7,9 +7,8 @@ class Box2DPhysicsWorld : public IAYPhysicsWorld
 public:
     Box2DPhysicsWorld() : _world(b2Vec2(0, -9.8f)) {}
 
-    void step(float deltaTime) override {
-        std::cout << "Step delta time: " << deltaTime << "\n";
-        _world.Step(deltaTime, 8, 3);
+    void step(float deltaTime, int velocity_iterations = 8, int position_iterations = 3) override {
+        _world.Step(deltaTime, velocity_iterations, position_iterations);
     }
 
     void setGravity(const glm::vec2& gravity) override {
@@ -22,10 +21,36 @@ public:
 
     }
 
-    IAYPhysicsBody* createBody(const glm::vec2& position, float rotation, IAYPhysicsBody::BodyType type) override {
-        return new Box2DPhysicsBody(_world, position, rotation, type);
+    IAYPhysicsBody* createBody(IAYPhysical* game_object,
+        const glm::vec2& position,
+        float rotation,
+        IAYPhysicsBody::BodyType type) override 
+    {
+        std::lock_guard<std::mutex> lock(_bbodyMutex);
+        _bbodys.push_back(std::make_unique<Box2DPhysicsBody>(_world, position, rotation, type));
+        auto body = _bbodys.back().get();
+        body->setPhysicalObject(game_object);
+        body->setType(type);
+        return body;
+    }
+
+    void syncPhysicsToLogic() override
+    {
+        for (auto& body : _bbodys)
+        {
+            if (body->isDynamic())
+            {
+                glm::vec2 position = glmToEngine(body->getPosition());
+                float rotation = body->getB2Body()->GetTransform().q.GetAngle();
+                body->getPhysicalObject()->setPosition(position);
+                body->getPhysicalObject()->setRotation(rotation);
+                //std::cout << "position: \t(" << body->getPosition().x << ", " << body->getPosition().y << ")\n";
+            }
+        }
     }
 
 private:
     b2World _world;
+    std::vector<std::unique_ptr<Box2DPhysicsBody>> _bbodys;
+    std::mutex _bbodyMutex;
 };

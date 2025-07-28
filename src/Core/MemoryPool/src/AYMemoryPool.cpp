@@ -1,4 +1,4 @@
-#include "AYMemoryPool.h"
+ï»¿#include "AYMemoryPool.h"
 #include <assert.h>
 
 AYMemoryPool::AYMemoryPool(size_t in_blockSize) :
@@ -17,7 +17,7 @@ AYMemoryPool::~AYMemoryPool()
 	while (it)
 	{
 		Slot* next = it->next;
-		operator delete(reinterpret_cast<void*>(it)); //²»µ÷ÓÃÎö¹¹
+		operator delete(reinterpret_cast<void*>(it)); //ä¸è°ƒç”¨ææ„
 		it = next;
 	}
 }
@@ -39,7 +39,7 @@ void* AYMemoryPool::allocate()
 		if (_curSlot >= _lastSlot)
 			newBlock();
 		cur = _curSlot;
-		_curSlot += _slotSize / sizeof(Slot); // T* ptr+2 = ptr + 2 * sizeof(T); Ö»¼ÓÖ¸¶¨×Ö½ÚĞèÒª´Ó³ıµôTµÄ´óĞ¡
+		_curSlot += _slotSize / sizeof(Slot); // T* ptr+2 = ptr + 2 * sizeof(T); åªåŠ æŒ‡å®šå­—èŠ‚éœ€è¦ä»é™¤æ‰Tçš„å¤§å°
 	}
 
 	return cur;
@@ -55,11 +55,13 @@ void AYMemoryPool::deallocate(void* ptr)
 
 void AYMemoryPool::newBlock()
 {
+	static int i = 0;
+	std::cout << "[MemoryPool] Allocating new block:" <<i++ << std::endl;
 	void* newBlock = operator new(_blockSize);
 	reinterpret_cast<Slot*>(newBlock)->next = _firstBlock;
 	_firstBlock = reinterpret_cast<Slot*>(newBlock);
 
-	//Ã¿¸öÄÚ´æ¿éÇ°¶Ë¶¼ÓĞÒ»¶ÎÄÚ´æÓÃÔÚ´æ´¢Ë÷ÒıĞÅÏ¢£¬Òò´ËÊµ¼ÊÄÚ´æÎ»ÖÃĞèÒªÆ«ÒÆ
+	//æ¯ä¸ªå†…å­˜å—å‰ç«¯éƒ½æœ‰ä¸€æ®µå†…å­˜ç”¨åœ¨å­˜å‚¨ç´¢å¼•ä¿¡æ¯ï¼Œå› æ­¤å®é™…å†…å­˜ä½ç½®éœ€è¦åç§»
 	char* content = reinterpret_cast<char*>(newBlock) + sizeof(Slot);
 	size_t padding = paddingBlock(content, _slotSize);
 
@@ -70,7 +72,7 @@ void AYMemoryPool::newBlock()
 
 size_t AYMemoryPool::paddingBlock(char* ptr, size_t align)
 {
-	//¼ÆËãÄÚ´æ¶ÔÆë£¬castµÈÍ¬ÓÚ»ñÈ¡Ö¸ÕëµÄÊıÖµµØÖ·
+	//è®¡ç®—å†…å­˜å¯¹é½ï¼Œcastç­‰åŒäºè·å–æŒ‡é’ˆçš„æ•°å€¼åœ°å€
 	return (align - reinterpret_cast<size_t>(ptr)) % align;
 }
 
@@ -78,19 +80,19 @@ bool AYMemoryPool::pushFreeSlot(Slot* slot)
 {
 	while (true)
 	{
-		// »ñÈ¡µ±Ç°Í·½Úµã
+		// è·å–å½“å‰å¤´èŠ‚ç‚¹
 		Slot* oldHead = _freeSlots.load(std::memory_order_relaxed);
-		// ½«ĞÂ½ÚµãµÄ next Ö¸Ïòµ±Ç°Í·½Úµã
+		// å°†æ–°èŠ‚ç‚¹çš„ next æŒ‡å‘å½“å‰å¤´èŠ‚ç‚¹
 		slot->next.store(oldHead, std::memory_order_relaxed);
 
-		// ³¢ÊÔ½«ĞÂ½ÚµãÉèÖÃÎªÍ·½Úµã
+		// å°è¯•å°†æ–°èŠ‚ç‚¹è®¾ç½®ä¸ºå¤´èŠ‚ç‚¹
 		if (_freeSlots.compare_exchange_weak(oldHead, slot,
 			std::memory_order_release, std::memory_order_relaxed))
 		{
 			return true;
 		}
-		// Ê§°Ü£ºËµÃ÷ÁíÒ»¸öÏß³Ì¿ÉÄÜÒÑ¾­ĞŞ¸ÄÁË freeList_
-		// CAS Ê§°ÜÔòÖØÊÔ
+		// å¤±è´¥ï¼šè¯´æ˜å¦ä¸€ä¸ªçº¿ç¨‹å¯èƒ½å·²ç»ä¿®æ”¹äº† freeList_
+		// CAS å¤±è´¥åˆ™é‡è¯•
 	}
 }
 
@@ -121,8 +123,8 @@ Slot* AYMemoryPool::popFreeSlot()
 		{
 			return oldHead;
 		}
-		// Ê§°Ü£ºËµÃ÷ÁíÒ»¸öÏß³Ì¿ÉÄÜÒÑ¾­ĞŞ¸ÄÁË freeList_
-		// CAS Ê§°ÜÔòÖØÊÔ
+		// å¤±è´¥ï¼šè¯´æ˜å¦ä¸€ä¸ªçº¿ç¨‹å¯èƒ½å·²ç»ä¿®æ”¹äº† freeList_
+		// CAS å¤±è´¥åˆ™é‡è¯•
 	}
 }
 
@@ -149,7 +151,7 @@ void* AYMemoryPoolProxy::useMemoryPool(size_t size)
 	if (size <= 0)
 		return nullptr;
 	if (size >= MAX_SLOT_SIZE)
-		return operator new(size); //Ê¹ÓÃÔ­°ænew
+		return operator new(size); //ä½¿ç”¨åŸç‰ˆnew
 
 	return getMemoryPool(((size + 7)/ SLOT_BASE_SIZE) -1).allocate();
 }

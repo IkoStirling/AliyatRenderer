@@ -1,9 +1,11 @@
-#pragma once
+Ôªø#pragma once
 #include "AYEntrant.h"
 #include "Component/AYSpriteRenderComponent.h"
 #include "Component/AYCameraComponent.h"
 #include "AYPath.h"
 #include "BaseRendering/Camera/AY3DCamera.h"
+#include "Component/AYPlayerController.h"
+#include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 
 class Orc : public AYEntrant
 {
@@ -12,6 +14,11 @@ public:
         AYEntrant(name)
     {
 		_orcSprite = addComponent<AYSpriteRenderComponent>("_orcSprite");
+		_physics->addCollider(std::make_shared<Box2DBoxCollider>());
+		_physics->setBodyType(IAYPhysicsBody::BodyType::Dynamic);
+		_controller = addComponent<AYPlayerController>("_controller");
+		_controller->setMoveSpeed(5.0f);
+		_controller->setJumpForce(7.0f);
 		_camera.push_back(addComponent<AYCameraComponent>("_orc2DCamera"));
 		_camera.push_back(addComponent<AYCameraComponent>("_orc3DCamera"));
 		_camera[0]->setupCamera(IAYCamera::Type::ORTHOGRAPHIC_2D);
@@ -39,6 +46,7 @@ public:
 
     virtual void beginPlay()override
     {
+		AYEntrant::beginPlay();
 		auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
 		auto device = renderManager->getRenderDevice();
 		glfwSetInputMode(device->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -146,7 +154,7 @@ public:
 					glm::vec3 cameraFront = cam3D->getFront();
 					glm::vec3 cameraRight = cam3D->getRight();
 
-					// º∆À„ µº “∆∂Ø∑ΩœÚ
+					// ËÆ°ÁÆóÂÆûÈôÖÁßªÂä®ÊñπÂêë
 					glm::vec3 moveDirection = (cameraFront * -movement.z) +
 						(cameraRight * movement.x) +
 						(glm::vec3(0.0f, 1.0f, 0.0f) * movement.y);
@@ -155,11 +163,11 @@ public:
 						moveDirection = glm::normalize(moveDirection);
 					}
 
-					// ”¶”√“∆∂Ø
+					// Â∫îÁî®ÁßªÂä®
 					auto& trans = getTransform();
 					setPosition(trans.position + moveDirection * moveSpeed * delta_time);
 
-					// …Ë÷√æ´¡È≥ØœÚ
+					// ËÆæÁΩÆÁ≤æÁÅµÊúùÂêë
 					if (movement.x != 0) {
 						_orcSprite->setFlip(movement.x > 0, false);
 					}
@@ -168,10 +176,10 @@ public:
 				else
 				{
 					_orcSprite->setVisible(true);
-					// 2Dœ‡ª˙µƒ‘≠ º“∆∂Ø¬ﬂº≠
+					// 2DÁõ∏Êú∫ÁöÑÂéüÂßãÁßªÂä®ÈÄªËæë
 					if (movement != glm::vec3(0.0f)) {
 						auto& trans = getTransform();
-						setPosition(trans.position + glm::vec3(movement * moveSpeed * delta_time));
+						//setPosition(trans.position + glm::vec3(movement * moveSpeed * delta_time));
 
 						if (movement.x != 0) {
 							_orcSprite->setFlip(movement.x > 0, false);
@@ -195,7 +203,8 @@ public:
 
 private:
     AYSpriteRenderComponent* _orcSprite;
+	AYPlayerController* _controller;
 	std::vector<AYCameraComponent*> _camera;
 
-	float _mouseSensitivity = 0.1f; //  Û±Í¡È√Ù∂»
+	float _mouseSensitivity = 0.1f; // Èº†Ê†áÁÅµÊïèÂ∫¶
 };

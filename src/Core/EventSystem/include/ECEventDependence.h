@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 enum class AYEventLayer : size_t
 {
 	GAME_LOGIC = 0,

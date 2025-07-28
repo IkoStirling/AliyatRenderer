@@ -1,6 +1,7 @@
-#pragma once
+ï»¿#pragma once
 #include "ECPhysicsDependence.h"
 #include "IAYCollider.h"
+#include "BasePhy/IAYPhysical.h"
 
 class IAYPhysicsBody
 {
@@ -9,47 +10,56 @@ public:
     virtual ~IAYPhysicsBody() = default;
     virtual void setType(BodyType type) { _type = type; }
     virtual BodyType getType() { return _type; }
+    virtual bool isDynamic() { return _type == BodyType::Dynamic; }
+    virtual bool isStatic() { return _type == BodyType::Static; }
+    virtual bool isKinematic() { return _type == BodyType::Kinematic; }
+    virtual void setPhysicalObject(IAYPhysical* obj) { _gameObject = obj; }
+    virtual IAYPhysical* getPhysicalObject() { return _gameObject; }
 
-    //---------------Î»ÖÃĞı×ª----------------
-    virtual void setTransform(const glm::vec2& position, float rotation) = 0;
+    virtual bool isTransformDirty() { return _isDirty; };
+
+    //---------------ä½ç½®æ—‹è½¬----------------
+    virtual void setTransform(STTransform& transform) = 0;
     virtual glm::vec2 getPosition() = 0;
 
-    //-----------------ËÙ¶È------------------
+    //-----------------é€Ÿåº¦------------------
     virtual void setLinearVelocity(const glm::vec2& velocity) = 0;
     virtual glm::vec2 getLinearVelocity() const = 0;
     virtual void setAngularVelocity(float velocity) = 0;
     virtual float  getAngularVelocity() const = 0;
 
 
-    //---------------Á¦ºÍÔË¶¯----------------
+    //---------------åŠ›å’Œè¿åŠ¨----------------
     virtual void applyForce(const glm::vec2& force) = 0;
-    virtual void applyImpulse(const glm::vec2& impulse) = 0;  //³åÁ¿
-    virtual void applyTorque(float torque) = 0;    //Å¤¾Ø
+    virtual void applyImpulse(const glm::vec2& impulse) = 0;  //å†²é‡
+    virtual void applyTorque(float torque) = 0;    //æ‰­çŸ©
 
 
-    //---------------Åö×²¹ÜÀí----------------
-    //Åö×²Ìå
+    //---------------ç¢°æ’ç®¡ç†----------------
+    //ç¢°æ’ä½“
     virtual void addCollider(IAYCollider* collider) = 0;  
     virtual void removeCollider(IAYCollider* collider) = 0;    
     virtual void setTrigger(bool is_trigger) = 0;   
 
-    //Åö×²²éÑ¯
+    //ç¢°æ’æŸ¥è¯¢
     virtual void queryOverlapArea(const glm::vec4& area) = 0;
 
 
-    //---------------ÎïÀí²ÄÖÊ----------------
+    //---------------ç‰©ç†æè´¨----------------
     virtual void setFriction(float friction) = 0;
     virtual void setBounciness(float bounciness) = 0;
     virtual void setDensity(float density) = 0;
 
 
-    //---------------¹Ø½ÚÔ¼Êø----------------
+    //---------------å…³èŠ‚çº¦æŸ----------------
     //....
 
 
-    //---------------µ÷ÊÔ·½·¨----------------
+    //---------------è°ƒè¯•æ–¹æ³•----------------
     //....
 
 protected:
-    BodyType _type;
+    BodyType _type = BodyType::Dynamic;
+    IAYPhysical* _gameObject = nullptr;
+    bool _isDirty = false;
 };

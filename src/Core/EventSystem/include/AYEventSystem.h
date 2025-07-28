@@ -1,7 +1,8 @@
-#pragma once
+ï»¿#pragma once
 #include "Mod_EventSystem.h"
 #include "AYEventThreadPoolManager.h"
 
+#ifdef NDEBUG
 // CALLBACK_WITH_CLASS_NAME : like MyClass::func
 #define SUBSCRIBE_EVENT(EVENT_SYSTEM,EVENT_NAME,CALLBACK_WITH_CLASS_NAME) \
 	EVENT_SYSTEM->subscribe(EVENT_NAME,std::bind(&CALLBACK_WITH_CLASS_NAME,this,std::placeholders::_1))
@@ -9,14 +10,20 @@
 #define SUBSCRIBE_EVENT_LAMBDA(EVENT_SYSTEM,EVENT_NAME,CALLBACK_WITH_CLASS_NAME) \
 	EVENT_SYSTEM->subscribe(EVENT_NAME,CALLBACK_WITH_CLASS_NAME)
 
+#endif // NDEBUG
+
+
 class IAYEvent;
 class AYEventToken;
 
 /*
-	¸ÃÀà×÷ÓÃ£º
-		ÊÂ¼şÏµÍ³
-		·¢²¼ÊÂ¼ş
-		¶ÔÓÚ·¢²¼µÄÊÂ¼ş½øĞĞ¶©ÔÄ
+	è¯¥ç±»ä½œç”¨ï¼š
+		äº‹ä»¶ç³»ç»Ÿ
+		å‘å¸ƒäº‹ä»¶
+		å¯¹äºå‘å¸ƒçš„äº‹ä»¶è¿›è¡Œè®¢é˜…
+
+	æ³¨æ„ï¼š
+		äº‹ä»¶å€¾å‘äºä½¿ç”¨AYEventRegistryç±»è¿›è¡Œpublishè°ƒç”¨ï¼
 */
 class AYEventSystem : public Mod_EventSystem
 {
@@ -31,11 +38,11 @@ public:
 
 	void init() override;
 	void update(float delta_time) override;
-	void publish(std::unique_ptr<IAYEvent> in_event) override;
-	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback) override;
-	void unsubscribe(const std::string& event_name, EventHandler event_callback) override;
-	void execute(std::shared_ptr<const IAYEvent> in_event) override;
-	void executeJoin(std::unique_ptr<IAYEvent> in_event) override;
+	void publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
+	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback);
+	void unsubscribe(const std::string& event_name, EventHandler event_callback);
+	void execute(std::shared_ptr<const IAYEvent> in_event);
+	void executeJoin(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 
 private:
 	std::unique_ptr<AYEventThreadPoolManager> _eventManager;

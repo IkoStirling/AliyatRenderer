@@ -1,4 +1,4 @@
-#include "2DPhy/Box2DPhysicsBody.h"
+ï»¿#include "2DPhy/Box2DPhysicsBody.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 #include "2DPhy/Collision/Box2D/Box2DCircleCollider.h"
 #include "2DPhy/Collision/Box2D/Box2DPolygonCollider.h"
@@ -26,8 +26,8 @@ void Box2DPhysicsBody::setType(BodyType type)
     _body->SetType(convertBodyType(type));
 }
 
-void Box2DPhysicsBody::setTransform(const glm::vec2& position, float rotation) {
-    _body->SetTransform(glmToBox2D(position), rotation);
+void Box2DPhysicsBody::setTransform(STTransform& transform) {
+    _body->SetTransform(glmToBox2D(transform.position), transform.rotation.z);
 }
 
 glm::vec2 Box2DPhysicsBody::getPosition()
@@ -69,7 +69,7 @@ void Box2DPhysicsBody::addCollider(IAYCollider* collider) {
 
     if (b2Fixture* fixture = _createFixture(collider)) {
         _colliderFixtures[collider] = fixture;
-        //collider->setUserData(this); // ¿ÉÑ¡£º´æ´¢·´ÏòÒıÓÃ
+        //collider->setUserData(this); // å¯é€‰ï¼šå­˜å‚¨åå‘å¼•ç”¨
     }
 }
 
@@ -97,12 +97,12 @@ bool Box2DPhysicsBody::hasCollider(IAYCollider* collider) const
     return _colliderFixtures.find(collider) != _colliderFixtures.end();
 }
 
-// Åö×²²éÑ¯
+// ç¢°æ’æŸ¥è¯¢
 void Box2DPhysicsBody::queryOverlapArea(const glm::vec4& area) {
-    // ÊµÏÖAABB²éÑ¯Âß¼­
+    // å®ç°AABBæŸ¥è¯¢é€»è¾‘
 }
 
-// ÎïÀí²ÄÖÊ
+// ç‰©ç†æè´¨
 void Box2DPhysicsBody::setFriction(float friction) {
     for (auto& [collider, fixture] : _colliderFixtures) {
         fixture->SetFriction(friction);
@@ -119,7 +119,7 @@ void Box2DPhysicsBody::setDensity(float density) {
     for (auto& [collider, fixture] : _colliderFixtures) {
         fixture->SetDensity(density);
     }
-    _body->ResetMassData(); // ÃÜ¶ÈĞŞ¸ÄºóĞèÒªÖØÖÃÖÊÁ¿
+    _body->ResetMassData(); // å¯†åº¦ä¿®æ”¹åéœ€è¦é‡ç½®è´¨é‡
 }
 
 void Box2DPhysicsBody::setTrigger(bool is_trigger) {
@@ -128,22 +128,23 @@ void Box2DPhysicsBody::setTrigger(bool is_trigger) {
     }
 }
 
-b2Fixture* Box2DPhysicsBody::_createFixture(IAYCollider* collider) {
-    b2FixtureDef fixtureDef;    //ÅäÖÃÄ£°å£¬Í¨¹ı_body->CreateFixture(&fixtureDef)´´½¨fixture
 
-    // ÉèÖÃÍ¨ÓÃÊôĞÔ
+b2Fixture* Box2DPhysicsBody::_createFixture(IAYCollider* collider) {
+    b2FixtureDef fixtureDef;    //é…ç½®æ¨¡æ¿ï¼Œé€šè¿‡_body->CreateFixture(&fixtureDef)åˆ›å»ºfixture
+
+    // è®¾ç½®é€šç”¨å±æ€§
     fixtureDef.density = collider->getDensity();
     fixtureDef.friction = collider->getFriction();
     fixtureDef.restitution = collider->getRestitution();
     fixtureDef.isSensor = collider->isTrigger();
 
-    // Åö×²¹ıÂË
+    // ç¢°æ’è¿‡æ»¤
     b2Filter filter;
-    filter.categoryBits = collider->getCategoryBits();  //µ±Ç°Åö×²Àà±ğ
-    filter.maskBits = collider->getMaskBits();          //¿ÉÅö×²µÄÀà±ğ
+    filter.categoryBits = collider->getCategoryBits();  //å½“å‰ç¢°æ’ç±»åˆ«
+    filter.maskBits = collider->getMaskBits();          //å¯ç¢°æ’çš„ç±»åˆ«
     fixtureDef.filter = filter;
 
-    // ¸ù¾İÅö×²ÌåÀàĞÍ´´½¨ĞÎ×´
+    // æ ¹æ®ç¢°æ’ä½“ç±»å‹åˆ›å»ºå½¢çŠ¶
     switch (collider->getShapeType()) {
     case IAYCollider::ShapeType::Box2D: {
         auto boxCollider = static_cast<Box2DBoxCollider*>(collider);
@@ -175,20 +176,20 @@ b2Fixture* Box2DPhysicsBody::_createFixture(IAYCollider* collider) {
 void Box2DPhysicsBody::_updateFixtureProperties(b2Fixture* fixture, IAYCollider* collider) {
     if (!fixture || !collider) return;
 
-    // ¸üĞÂÎïÀí²ÄÖÊ
+    // æ›´æ–°ç‰©ç†æè´¨
     fixture->SetFriction(collider->getFriction());
     fixture->SetRestitution(collider->getRestitution());
     fixture->SetDensity(collider->getDensity());
     fixture->SetSensor(collider->isTrigger());
 
-    // ¸üĞÂÅö×²¹ıÂË
+    // æ›´æ–°ç¢°æ’è¿‡æ»¤
     b2Filter filter = fixture->GetFilterData();
     filter.categoryBits = collider->getCategoryBits();
     filter.maskBits = collider->getMaskBits();
     fixture->Refilter();
 }
 
-// ÀàĞÍ×ª»»
+// ç±»å‹è½¬æ¢
 b2BodyType Box2DPhysicsBody::convertBodyType(BodyType type) {
     switch (type) {
     case BodyType::Static:    return b2_staticBody;

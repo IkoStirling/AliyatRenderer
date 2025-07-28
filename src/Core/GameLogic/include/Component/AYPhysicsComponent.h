@@ -1,31 +1,45 @@
-#pragma once
+﻿#pragma once
 #include "IAYComponent.h"
 #include "AYPhysicsSystem.h"
 
-class AYPhysicsComponent : public IAYComponent, public AYPhysicsSystem
+
+class AYPhysicsComponent : public IAYComponent
 {
 public:
 
     virtual void beginPlay() override
     {
-        _physicsBody = GET_CAST_MODULE(AYPhysicsSystem, "PhysicsSystem")->
-            getPhysicsWorld(AYPhysicsSystem::WorldType::AY2D)->createBody(glm::vec2(), 0.f, IAYPhysicsBody::BodyType::Dynamic);
+        auto physicsSystem = GET_CAST_MODULE(AYPhysicsSystem, "PhysicsSystem");
+
+        _physicsBody = physicsSystem->getPhysicsWorld(AYPhysicsSystem::WorldType::AY2D)
+            ->createBody(
+                getOwner(),
+                glm::vec2(),
+                0.f,
+                _bodyType);
+
+        for (auto& collider : _colliders) {
+            _physicsBody->addCollider(collider.get());
+        }
     }
 
-    virtual void update(float delta_time) override
-    {
+    virtual void update(float delta_time) override {}
 
-    }
+    virtual void endPlay() override {}
 
-    virtual void endPlay() override
-    {
+    // 基础物理控制
+    IAYPhysicsBody* getPhysicsBody() { return _physicsBody; }
 
+    // 状态获取
+    bool isGrounded() const {
+        return _groundContactCount == 0;
     }
 
     void setBodyType(IAYPhysicsBody::BodyType type)
     {
+        _bodyType = type;
         if (_physicsBody)
-            _physicsBody->setType(type);
+            _physicsBody->setType(_bodyType);
     }
 
     void addCollider(std::shared_ptr<IAYCollider> collider)
@@ -35,16 +49,23 @@ public:
 
     void removeCollider(std::shared_ptr<IAYCollider> collider)
     {
-        _colliders.erase(collider);
+        auto it = std::find(_colliders.begin(), _colliders.end(), collider);
+
+        if (it != _colliders.end())
+        {
+            _colliders.erase(it);
+        }
     }
 
-    void applyForce(const glm::vec2& force)
-    {
-        _physicsBody->applyForce(force);
-    }
 
-
-private:
-    std::unique_ptr<IAYPhysicsBody> _physicsBody;
+protected:
+    IAYPhysicsBody* _physicsBody = nullptr;
+    IAYPhysicsBody::BodyType _bodyType;
     std::vector<std::shared_ptr<IAYCollider>> _colliders;
+    float _moveSpeed = 5.0f;
+    float _jumpForce = 10.0f;
+    bool _isGrounded = false;
+    int _groundContactCount = 0;
+
+    
 };
