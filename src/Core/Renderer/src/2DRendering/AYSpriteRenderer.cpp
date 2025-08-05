@@ -2,7 +2,6 @@
 #include "AYRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> ​​
-#include "AYPath.h"
 
 const char* SPRITE_VERTEX_SHADER = R"(
     #version 460 core

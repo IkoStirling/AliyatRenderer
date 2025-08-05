@@ -13,8 +13,10 @@ public:
 
 	virtual void init() override;
 	virtual void update(float delta_time) override;
+	virtual void shutdown() override{}
 
-	enum class WorldType { AY2D, AY3D};
+	void addToWorld(EntityID entity, WorldType type); 
+
 	void createWorld(WorldType type);
 	void destroyWorld(WorldType type);
 	IAYPhysicsWorld* getPhysicsWorld(WorldType type);
@@ -26,7 +28,13 @@ public:
 	void setDebugDrawFlags(uint32_t flags);
 
 private:
-	std::unordered_map<WorldType, std::unique_ptr<IAYPhysicsWorld>> _worlds;
+	void _syncPhysicsToLogic();
+	void _syncLogicToPhysics();
+	struct PhysicsWorld {
+		std::unique_ptr<IAYPhysicsWorld> impl;
+		std::unordered_set<EntityID> entities;
+	};
+	std::unordered_map<WorldType, PhysicsWorld> _worlds;
 
 	bool _paused = false;
 

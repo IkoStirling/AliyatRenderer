@@ -11,9 +11,9 @@ public:
     {
         auto physicsSystem = GET_CAST_MODULE(AYPhysicsSystem, "PhysicsSystem");
 
-        _physicsBody = physicsSystem->getPhysicsWorld(AYPhysicsSystem::WorldType::AY2D)
+        _physicsBody = physicsSystem->getPhysicsWorld(WorldType::AY2D)
             ->createBody(
-                getOwner(),
+                0,
                 glm::vec2(),
                 0.f,
                 _bodyType);

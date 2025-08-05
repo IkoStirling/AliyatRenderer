@@ -14,10 +14,11 @@ public:
     virtual void raycast(const glm::vec2& start, const glm::vec2& end,
         std::function<bool(IAYPhysicsBody*, const glm::vec2&)> callback) = 0;
 
-    virtual IAYPhysicsBody* createBody(IAYPhysical* game_object,
-        const glm::vec2& position,
-        float rotation,
-        IAYPhysicsBody::BodyType type) = 0;
+    virtual IAYPhysicsBody* createBody(EntityID entity,
+        const glm::vec2& position = glm::vec2(0),
+        float rotation = 0,
+        IAYPhysicsBody::BodyType type = IAYPhysicsBody::BodyType::Dynamic) = 0;
     
-    virtual void syncPhysicsToLogic() = 0;
+    virtual void setTransform(EntityID entity, const STTransform& transform) = 0;
+    virtual const STTransform& getTransform(EntityID entity) = 0;
 };

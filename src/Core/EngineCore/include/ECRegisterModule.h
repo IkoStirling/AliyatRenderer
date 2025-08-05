@@ -1,13 +1,15 @@
-#pragma once
+ï»¿#pragma once
 
 #include "AYModuleRegistry.h"
 
-//Ã¿µ±Ìí¼ÓÒ»¸öĞÂÄ£¿éÊ±£¬ĞèÒªÔÚ´Ë´¦ÒıÓÃÍ·ÎÄ¼şÒÔ×¢²á
+//æ¯å½“æ·»åŠ ä¸€ä¸ªæ–°æ¨¡å—æ—¶ï¼Œéœ€è¦åœ¨æ­¤å¤„å¼•ç”¨å¤´æ–‡ä»¶ä»¥æ³¨å†Œ
 
 #include "AYMemoryPool.h"
 #include "AYEventSystem.h"
 #include "AYResourceManager.h"
+#include "AYSoundEngine.h"
 #include "AYRendererManager.h"
 #include "AYInputSystem.h"
 #include "AYSceneManager.h"
 #include "AYPhysicsSystem.h"
+#include "AYECSEngine.h"

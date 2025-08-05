@@ -60,9 +60,9 @@ protected:
         ));
 
         // 5. 调试输出（临时）
-        std::cout << "Input: (" << input.x << ", " << input.y
-            << ")  Velocity: (" << newVelX
-            << ", " << _physics->getPhysicsBody()->getLinearVelocity().y << ")\n";
+        //std::cout << "[AYPlayerController] Input: (" << input.x << ", " << input.y
+        //    << ")  Velocity: (" << newVelX
+        //    << ", " << _physics->getPhysicsBody()->getLinearVelocity().y << ")\n";
     }
 
     bool _shouldJump() {

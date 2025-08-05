@@ -55,8 +55,6 @@ void AYMemoryPool::deallocate(void* ptr)
 
 void AYMemoryPool::newBlock()
 {
-	static int i = 0;
-	std::cout << "[MemoryPool] Allocating new block:" <<i++ << std::endl;
 	void* newBlock = operator new(_blockSize);
 	reinterpret_cast<Slot*>(newBlock)->next = _firstBlock;
 	_firstBlock = reinterpret_cast<Slot*>(newBlock);

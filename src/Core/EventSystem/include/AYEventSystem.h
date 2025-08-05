@@ -38,6 +38,7 @@ public:
 
 	void init() override;
 	void update(float delta_time) override;
+	void shutdown() override;
 	void publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback);
 	void unsubscribe(const std::string& event_name, EventHandler event_callback);

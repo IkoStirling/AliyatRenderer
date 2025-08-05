@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <memory>
 #include <chrono>
 #include "ECRegisterModule.h"
@@ -7,10 +7,10 @@
 class AYEventSystem;
 
 /*
-	Õâ¸öÀà¹ÜÀíÊ²Ã´£¿
-	¹ÜÀí´°¿ÚºÍÊäÈë£¿
+	è¿™ä¸ªç±»ç®¡ç†ä»€ä¹ˆï¼Ÿ
+	ç®¡ç†çª—å£å’Œè¾“å…¥ï¼Ÿ
 			X
-	´°¿ÚÓÉäÖÈ¾Ä£¿é½øĞĞ´¦Àí£¬ÊäÈëÓÉÊäÈëÏµÍ³½øĞĞ´¦Àí
+	çª—å£ç”±æ¸²æŸ“æ¨¡å—è¿›è¡Œå¤„ç†ï¼Œè¾“å…¥ç”±è¾“å…¥ç³»ç»Ÿè¿›è¡Œå¤„ç†
 
 */
 class AYEngineCore
@@ -45,9 +45,6 @@ private:
 	AYEngineCore(AYEngineCore&&) = delete;
 
 private:
-	/*
-		Ö¡ÂÊ¿ØÖÆ
-	*/
 	void _regulateFrameRate(std::chrono::high_resolution_clock::time_point frameStartTime);
 
 	void _updateFPSStats(int& frameCount, std::chrono::steady_clock::time_point& lastFpsUpdate);
@@ -56,13 +53,13 @@ private:
 	bool _shouldClosed = false;
 
 	bool _noLimitFPS = false;
-	float _targetFPS = 60.f;          // Ä¿±êÖ¡ÂÊ
-	float _invTargetFPS = 1.f / _targetFPS;			//Ö¡ÂÊµ¹Êı£¬ÓÃ×÷ĞÔÄÜÓÅ»¯
-	float _currentFPS = 0.0f;          // ÊµÊ±Ö¡ÂÊÍ³¼Æ
-	float _timeScale = 1.f;  // Ê±¼äËõ·ÅÒò×Ó£¨0=ÔİÍ££¬0.5=Âı·Å£¬2.0=¼ÓËÙ£©
-	float _unscaledDeltaTime = 0.0f;  // Î´Ëõ·ÅµÄÕæÊµÖ¡Ê±¼ä
+	float _targetFPS = 60.f;          // ç›®æ ‡å¸§ç‡
+	float _invTargetFPS = 1.f / _targetFPS;			//å¸§ç‡å€’æ•°ï¼Œç”¨ä½œæ€§èƒ½ä¼˜åŒ–
+	float _currentFPS = 0.0f;          // å®æ—¶å¸§ç‡ç»Ÿè®¡
+	float _timeScale = 1.f;  // æ—¶é—´ç¼©æ”¾å› å­ï¼ˆ0=æš‚åœï¼Œ0.5=æ…¢æ”¾ï¼Œ2.0=åŠ é€Ÿï¼‰
+	float _unscaledDeltaTime = 0.0f;  // æœªç¼©æ”¾çš„çœŸå®å¸§æ—¶é—´
 
-	std::atomic<float> _accumulatedTime{ 0.0f };  // ÓÃÓÚÊ±¼äËõ·ÅÀÛ»ı
+	std::atomic<float> _accumulatedTime{ 0.0f };  // ç”¨äºæ—¶é—´ç¼©æ”¾ç´¯ç§¯
 	std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
 };
 
@@ -72,6 +69,8 @@ public:
 	void init() override {};
 
 	void update(float delta_time) override {};
+
+	void shutdown() override {};
 
 	void setTargetFPS(float fps) override { AYEngineCore::getInstance().setTargetFPS(fps); }
 

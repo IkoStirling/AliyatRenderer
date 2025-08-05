@@ -13,13 +13,14 @@ public:
     virtual bool isDynamic() { return _type == BodyType::Dynamic; }
     virtual bool isStatic() { return _type == BodyType::Static; }
     virtual bool isKinematic() { return _type == BodyType::Kinematic; }
-    virtual void setPhysicalObject(IAYPhysical* obj) { _gameObject = obj; }
-    virtual IAYPhysical* getPhysicalObject() { return _gameObject; }
+    virtual void setOwningEntity(EntityID entity) { _owningObject = entity; }
+    virtual EntityID getOwningEntity() { return _owningObject; }
 
     virtual bool isTransformDirty() { return _isDirty; };
 
     //---------------位置旋转----------------
-    virtual void setTransform(STTransform& transform) = 0;
+    virtual void setTransform(const STTransform& transform) = 0;
+    virtual STTransform getTransform() = 0;
     virtual glm::vec2 getPosition() = 0;
 
     //-----------------速度------------------
@@ -60,6 +61,6 @@ public:
 
 protected:
     BodyType _type = BodyType::Dynamic;
-    IAYPhysical* _gameObject = nullptr;
+    EntityID _owningObject = -1;
     bool _isDirty = false;
 };

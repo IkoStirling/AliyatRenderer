@@ -29,6 +29,11 @@ void AYEventSystem::update(float delta_time)
 	_eventManager->update();
 }
 
+void AYEventSystem::shutdown()
+{
+	_eventManager->shutdown();
+}
+
 void AYEventSystem::publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event)
 {
 	_eventManager->publish(std::move(in_event));

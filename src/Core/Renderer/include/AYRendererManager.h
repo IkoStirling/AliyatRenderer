@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "Mod_Renderer.h"
 #include "AYRenderDevice.h"
 #include "AYRenderer.h"
@@ -15,6 +15,7 @@ public:
 public:
 	AYRendererManager() = default;
 	void init() override;
+	void shutdown() override;
 	void update(float delta_time) override;
 	void registerRenderable(IAYRenderable* renderable) override;
 	void removeRenderable(IAYRenderable* renderable) override;
@@ -34,14 +35,15 @@ private:
 	void _updateCameraActive(float delta_time);
 
 private:
-	std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGLÉÏÏÂÎÄ¹ÜÀí
-	std::unique_ptr<AYRenderer> _renderer = nullptr;        // ¾ßÌå»æÖÆÂß¼­
+	std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGLä¸Šä¸‹æ–‡ç®¡ç†
+	std::unique_ptr<AYRenderer> _renderer = nullptr;        // å…·ä½“ç»˜åˆ¶é€»è¾‘
 	std::unique_ptr<AYAnimationManager> _animeMana = nullptr;
 
 	WindowCloseCallback _onWindowClosed;
-	std::vector<IAYRenderable*> _renderables; //²»¹ÜÀí¿ÉäÖÈ¾¶ÔÏó
+	std::vector<IAYRenderable*> _renderables; //ä¸ç®¡ç†å¯æ¸²æŸ“å¯¹è±¡
 
-	glm::vec3 _color = { 0.2f,0.3f,0.3f };
+	//glm::vec3 _color = { 0.2f,0.3f,0.3f };
+	glm::vec3 _color = { 0.f,0.f,0.f };
 private:
 	//******************debug**********************
 	void _displayDebugInfo();

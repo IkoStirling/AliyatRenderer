@@ -50,9 +50,6 @@ public: \
 	virtual std::type_index getTypeIndex()const override { \
 		return typeid(CLASS_NAME<TEMPLATE_TYPE_NAME>); \
 	}\
-	virtual std::unique_ptr<IAYEvent> clone()const override{ \
-		return std::make_unique<CLASS_NAME<TEMPLATE_TYPE_NAME>>(*this);\
-	}\
 	static const char* staticGetType(){ \
 		static std::string str = EVENT_TYPE_NAME+ std::string(typeid(TEMPLATE_TYPE_NAME).name()); \
 		return str.c_str(); \
@@ -109,12 +106,12 @@ static CLASS_NAME##_Register CLASS_NAME##_register; \
 
 
 #define REGISTER_TEMPLATE_EVENT_CLASS(CLASS_NAME, TYPE_NAME) \
-struct CLASS_NAME##_Register{ \
-	CLASS_NAME##_Register(){ \
+struct CLASS_NAME##_Register##TYPE_NAME{ \
+	CLASS_NAME##_Register##TYPE_NAME(){ \
 		::AYEventRegistry::getInstance().registerEvent<CLASS_NAME<TYPE_NAME>>(CLASS_NAME<TYPE_NAME>::staticGetType()); \
 	}\
 }; \
-static CLASS_NAME##_Register CLASS_NAME##_register; \
+static CLASS_NAME##_Register##TYPE_NAME CLASS_NAME##_register##TYPE_NAME; \
 
 
 

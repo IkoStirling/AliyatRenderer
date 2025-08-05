@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "Mod_SceneManager.h"
 #include "IAYScene.h"
 #include <unordered_map>
@@ -9,8 +9,8 @@ class AYSceneManager : public Mod_SceneManager
 {
 public:
     enum class LoadMode {
-        Single,      // µ¥³¡¾°Ä£Ê½(Ğ¶ÔØµ±Ç°)
-        Additive     // µş¼ÓÄ£Ê½(±£Áôµ±Ç°)
+        Single,      // å•åœºæ™¯æ¨¡å¼(å¸è½½å½“å‰)
+        Additive     // å åŠ æ¨¡å¼(ä¿ç•™å½“å‰)
     };
     AYSceneManager() = default;
     void loadScene(const std::string& name, LoadMode mode = LoadMode::Single);
@@ -18,7 +18,7 @@ public:
 
     void init() override;
     void update(float delta_time) override;
-    void shutdown();
+    void shutdown() override;
 
     template<typename T, typename... Args>
     T* addScene(const std::string& name, Args&&... args);
@@ -32,8 +32,8 @@ public:
 
 private:
     std::unordered_map<std::string, std::unique_ptr<IAYScene>> _sceneRegistry;
-    std::vector<IAYScene*> _activeScenes; // °´äÖÈ¾Ë³ĞòÅÅĞò
-    std::unique_ptr<IAYScene> _pendingScene; // ´ı¼ÓÔØ³¡¾°
+    std::vector<IAYScene*> _activeScenes; // æŒ‰æ¸²æŸ“é¡ºåºæ’åº
+    std::unique_ptr<IAYScene> _pendingScene; // å¾…åŠ è½½åœºæ™¯
 };
 
 REGISTER_MODULE_CLASS("SceneManager", AYSceneManager)
@@ -43,7 +43,7 @@ inline T* AYSceneManager::addScene(const std::string& name, Args&&... args)
 {
     static_assert(std::is_base_of_v<IAYScene, T>, "T must inherit from IScene");
     if (hasScene(name)) {
-        return nullptr; // ³¡¾°ÒÑ´æÔÚ
+        return nullptr; // åœºæ™¯å·²å­˜åœ¨
     }
 
     auto scene = std::make_unique<T>(std::forward<Args>(args)...);

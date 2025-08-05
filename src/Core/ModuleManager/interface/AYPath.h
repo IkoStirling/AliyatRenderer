@@ -1,42 +1,53 @@
-#pragma once
+ï»¿#pragma once
 #define NOMINMAX
-#include <Windows.h>	//¾«Á¦ÓĞÏŞ£¬ÎŞ·¨¼æÈİlinux£¬ºóĞø¿É¿¼ÂÇ
-
-#include <ShlObj.h> 
+#include <Windows.h>
+#include <ShlObj.h>
 #include <string>
-
 
 class AYPath
 {
 public:
-	AYPath();
-
-private:
-
+    AYPath();
 
 public:
-	class Engine
-	{
-	public:
-		static const std::string& getAssetsPath();
-		static const std::string& getPresetTexturePath();
-		static const std::string& getPresetShaderPath();
-		static const std::string& getPresetConfigPath();
-	};
+    class Engine
+    {
+    public:
+        static std::string getAssetsPath();
+        static std::string getPresetPath();
+        static std::string getPresetTexturePath();
+        static std::string getPresetShaderPath();
+        static std::string getPresetConfigPath();
+        static std::string getPresetCachePath();
+        static std::string getPresetAudioPath();
+        static std::string getPresetVideoPath();
 
-	class Windows
-	{
-	public:
-		static const std::string& getAppCachePath();
-		static const std::string& getRomingPath();
-		static const std::string& getTempPath();
-		static const std::string& getDesktopPath();
-		static const std::string& getDocumentsPath();
-		static const std::string& getPicturesPath();
-		static const std::string& getMusicPath();
-		static const std::string& getVideosPath();
-		static const std::string& getFontsPath();
+    private:
+        // é™æ€è·¯å¾„æˆå‘˜å˜é‡
+        static const std::string AssetsPath;
+        static const std::string PresetPath;
+        static const std::string PresetTexturePath;
+        static const std::string PresetCachePath;
+        static const std::string PresetShaderPath;
+        static const std::string PresetConfigPath;
+        static const std::string PresetAudioPath;
+        static const std::string PresetVideoPath;
+    };
 
-	};
+    class Windows
+    {
+    public:
+        static std::string getAppCachePath();
+        static std::string getRomingPath();
+        static std::string getTempPath();
+        static std::string getDesktopPath();
+        static std::string getDocumentsPath();
+        static std::string getPicturesPath();
+        static std::string getMusicPath();
+        static std::string getVideosPath();
+        static std::string getFontsPath();
 
+    private:
+        static const std::string AppName;
+    };
 };

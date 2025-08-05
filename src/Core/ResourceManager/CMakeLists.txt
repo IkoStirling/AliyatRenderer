@@ -1,4 +1,4 @@
-set(MODULE_NAME resource_manager)
+﻿set(MODULE_NAME resource_manager)
 set(INTERFACE_NAME system_event_type_rosource)
 
 
@@ -17,10 +17,17 @@ add_library(${MODULE_NAME} STATIC
 )
 
 find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
+find_package(OpenAL REQUIRED)
+find_package(FFMPEG REQUIRED)
 
 
-target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+	PRIVATE 
+	${FFMPEG_INCLUDE_DIRS}
+)
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME} module_manager event_system
 	PRIVATE
 	${OpenCV_LIBS}
+	${FFMPEG_LIBRARIES}
+	OpenAL::OpenAL
 )

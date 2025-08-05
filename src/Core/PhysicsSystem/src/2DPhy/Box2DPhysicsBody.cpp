@@ -26,8 +26,14 @@ void Box2DPhysicsBody::setType(BodyType type)
     _body->SetType(convertBodyType(type));
 }
 
-void Box2DPhysicsBody::setTransform(STTransform& transform) {
+void Box2DPhysicsBody::setTransform(const STTransform& transform) {
     _body->SetTransform(glmToBox2D(transform.position), transform.rotation.z);
+}
+
+STTransform Box2DPhysicsBody::getTransform()
+{
+    auto& trans = _body->GetTransform();
+    return STTransform{ glm::vec3(box2DToGlm(trans.p),0), glm::vec3(0,0,trans.q.GetAngle()) };
 }
 
 glm::vec2 Box2DPhysicsBody::getPosition()

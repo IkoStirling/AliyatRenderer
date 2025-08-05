@@ -1,4 +1,4 @@
-#include "AYEngineCore.h"
+ï»¿#include "AYEngineCore.h"
 #define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h> 
@@ -13,6 +13,7 @@
 #include "Preset/Orc.h"
 #include "Preset/Orc_scene.h"
 
+
 AYEngineCore& AYEngineCore::getInstance()
 {
 	static AYEngineCore mInstance;
@@ -26,6 +27,7 @@ void AYEngineCore::init()
     GET_MODULE("MemoryPool")->init();
     GET_MODULE("EventSystem")->init();
     GET_MODULE("ResourceManager")->init();
+    GET_MODULE("SoundEngine")->init();
     GET_MODULE("Renderer")->init();
     GET_MODULE("InputSystem")->init();
     GET_MODULE("SceneManager")->init();
@@ -54,9 +56,9 @@ AYEngineCore::~AYEngineCore()
 
 void AYEngineCore::setTargetFPS(float fps)
 {
-    _targetFPS = std::clamp(fps, 1.0f, 10000.0f); // ÉèÖÃºÏÀíÉÏÏŞ
-    _invTargetFPS = 1.0f / _targetFPS; // Ô¤¼ÆËãµ¹Êı
-    _accumulatedTime = 0.0f; // ÖØÖÃÀÛ»ıÊ±¼ä
+    _targetFPS = std::clamp(fps, 1.0f, 10000.0f); // è®¾ç½®åˆç†ä¸Šé™
+    _invTargetFPS = 1.0f / _targetFPS; // é¢„è®¡ç®—å€’æ•°
+    _accumulatedTime = 0.0f; // é‡ç½®ç´¯ç§¯æ—¶é—´
 }
 
 void AYEngineCore::setTimeScale(float scale)
@@ -96,10 +98,10 @@ void AYEngineCore::update()
 
     GET_MODULE("InputSystem")->update(_invTargetFPS);
 
-    // Ö»ÓĞµ±ÀÛ»ıÊ±¼ä´ïµ½Ò»Ö¡Ê±²Å¸üĞÂ
+    // åªæœ‰å½“ç´¯ç§¯æ—¶é—´è¾¾åˆ°ä¸€å¸§æ—¶æ‰æ›´æ–°
     _accumulatedTime += _unscaledDeltaTime * _timeScale;
     if (_accumulatedTime >= _invTargetFPS) {
-        float delta = _invTargetFPS; // Ê¹ÓÃ¹Ì¶¨Ö¡¼ä¸ôÈ·±£ÎÈ¶¨ĞÔ
+        float delta = _invTargetFPS; // ä½¿ç”¨å›ºå®šå¸§é—´éš”ç¡®ä¿ç¨³å®šæ€§
         _accumulatedTime -= delta;
 
         {
@@ -108,6 +110,7 @@ void AYEngineCore::update()
             //GET_MODULE("Network")->update(delta);
             GET_MODULE("SceneManager")->update(delta);
             GET_MODULE("PhysicsSystem")->update(delta);
+            GET_MODULE("SoundEngine")->update(delta);
         }
     }
 
@@ -122,7 +125,7 @@ void AYEngineCore::start()
     timeBeginPeriod(1);
 #endif
 
-    using clock = std::chrono::steady_clock; // ¸ÄÓÃsteady_clock
+    using clock = std::chrono::steady_clock; // æ”¹ç”¨steady_clock
     using sec = std::chrono::duration<float>;
     using ms = std::chrono::milliseconds;
 
@@ -130,7 +133,7 @@ void AYEngineCore::start()
     auto lastFpsUpdate = _lastFrameTime;
     int frameCount = 0;
 
-    // ¾«È·¼ÆËãÄ¿±ê¼ä¸ôÊ±¼ä
+    // ç²¾ç¡®è®¡ç®—ç›®æ ‡é—´éš”æ—¶é—´
     const auto targetFrameDuration = ms(static_cast<int>(1000.0f / _targetFPS));
 
 #ifdef _WIN32
@@ -141,16 +144,16 @@ void AYEngineCore::start()
     {
         const auto frameStartTime = clock::now();
 
-        // ¸üĞÂÖ¡Ê±¼äÍ³¼Æ
+        // æ›´æ–°å¸§æ—¶é—´ç»Ÿè®¡
         _unscaledDeltaTime = std::chrono::duration_cast<sec>(frameStartTime - _lastFrameTime).count();
         _lastFrameTime = frameStartTime;
 
         update();
 
-        // Ö¡ÂÊ¿ØÖÆ - ¾«È·Ë¯Ãß
+        // å¸§ç‡æ§åˆ¶ - ç²¾ç¡®ç¡çœ 
         _regulateFrameRate(frameStartTime);
 
-        // FPS¼ÆËã
+        // FPSè®¡ç®—
         frameCount++;
         _updateFPSStats(frameCount, lastFpsUpdate);
     }
@@ -163,6 +166,7 @@ void AYEngineCore::start()
 void AYEngineCore::close()
 {
     _shouldClosed = true;
+    AYModuleManager::getInstance().allModuleShutdown();
 }
 
 void AYEngineCore::_regulateFrameRate(std::chrono::high_resolution_clock::time_point frameStartTime)
@@ -178,10 +182,10 @@ void AYEngineCore::_regulateFrameRate(std::chrono::high_resolution_clock::time_p
     if (elapsed < targetDuration) {
         auto remaining = targetDuration - elapsed;
 
-        // Èı½×¶ÎµÈ´ı²ßÂÔ
+        // ä¸‰é˜¶æ®µç­‰å¾…ç­–ç•¥
         if (remaining > 2ms) {
             std::this_thread::sleep_for(remaining - 1ms);
-            // Ã¦µÈ´ıÊ£ÓàÊ±¼ä
+            // å¿™ç­‰å¾…å‰©ä½™æ—¶é—´
             while (steady_clock::now() < frameStartTime + targetDuration) {
                 _mm_pause();
             }
@@ -193,7 +197,7 @@ void AYEngineCore::_regulateFrameRate(std::chrono::high_resolution_clock::time_p
             }
         }
         else {
-            // ¶ÌÊ±¼äÖ±½ÓÃ¦µÈ´ı
+            // çŸ­æ—¶é—´ç›´æ¥å¿™ç­‰å¾…
             while (steady_clock::now() < frameStartTime + targetDuration) {
                 _mm_pause();
             }

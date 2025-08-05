@@ -1,5 +1,19 @@
-#include "AYRenderDevice.h"
+ï»¿#include "AYRenderDevice.h"
 #include "AYRendererManager.h"
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
+AYRenderDevice::AYRenderDevice() :
+    _configPath(AYPath::Engine::getPresetConfigPath() + std::string("Renderer/RenderDevice/config.ini"))
+{
+    _loadDeviceWindowConfigINI();
+}
+
+AYRenderDevice::~AYRenderDevice()
+{
+    _saveDeviceWindowConfigINI();
+}
 
 bool AYRenderDevice::init(int width, int height)
 {
@@ -9,12 +23,18 @@ bool AYRenderDevice::init(int width, int height)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    if (!_isShowBorder)
+        glfwWindowHint(GLFW_DECORATED, GLFW_FALSE); 
+
     _window = glfwCreateWindow(width, height, "AliyatRenderer", NULL, NULL);
     if (!_window) return false;
     glfwSetFramebufferSizeCallback(_window, &AYRenderDevice::_viewportCallbackWrapper); 
 
     glfwMakeContextCurrent(_window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
+
+    setWindowAlwaysOnTop(_isAlwaysOnTop);
+    setWindowDesktopEffect(_wOpacity, _isMousePenetrate, RGB(_colorKeyR, _colorKeyG, _colorKeyB));
 
     glfwSwapInterval(1);
 
@@ -37,6 +57,75 @@ GLFWwindow* AYRenderDevice::getWindow()
     GLFWwindow* win = _window.load();
     if (!win) throw std::runtime_error("Window not available");
     return win;
+}
+
+void AYRenderDevice::setWindowDesktopEffect(float opacity, bool clickThrough, COLORREF colorkey)
+{
+    HWND hwnd = glfwGetWin32Window(_window.load());
+    if (!hwnd) {
+        std::cerr << "Failed to get Win32 window handle!" << std::endl;
+        return;
+    }
+
+    if (opacity != _wOpacity) _wOpacity = opacity;
+    if (clickThrough != _isMousePenetrate) _isMousePenetrate = clickThrough;
+    if (colorkey != RGB(_colorKeyR, _colorKeyG, _colorKeyB))
+    {
+        _colorKeyR = GetRValue(colorkey);
+        _colorKeyG = GetGValue(colorkey);
+        _colorKeyB = GetBValue(colorkey);
+    }
+
+    // è®¾ç½®åˆ†å±‚çª—å£
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+
+    
+    if (opacity >= 0.99f)
+    {
+        //è®¾ç½®é¢œè‰²é”®æ§ï¼ˆå°†é»‘è‰²è®¾ä¸ºé€æ˜ï¼‰
+        SetLayeredWindowAttributes(hwnd, colorkey, 0, LWA_COLORKEY);
+    }
+    else
+    {
+        // è®¾ç½®é€æ˜åº¦ (0-255)
+        BYTE alpha = static_cast<BYTE>(opacity * 255);
+        SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA);
+    }
+
+    // è®¾ç½®é¼ æ ‡ç©¿é€ç©¿é€
+    if (clickThrough) {
+        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED | WS_EX_TRANSPARENT);
+    }
+    else {
+        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
+    }
+}
+
+void AYRenderDevice::OnWindowSizeChanged(int width, int height)
+{
+    // åƒç´ çº§é€æ˜åº¦æ§åˆ¶ï¼Œå› å¤æ‚åº¦è¾ƒé«˜åºŸå¼ƒ
+}
+
+void AYRenderDevice::setWindowAlwaysOnTop(bool topmost)
+{
+    HWND hwnd = glfwGetWin32Window(_window.load());
+    if (!hwnd) {
+        std::cerr << "Failed to get Win32 window handle!" << std::endl;
+        return;
+    }
+
+    if (topmost != _isAlwaysOnTop) _isAlwaysOnTop = topmost;
+
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    if (topmost) {
+        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TOPMOST);
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
+    else {
+        SetWindowLong(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_TOPMOST);
+        SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
 }
 
 void AYRenderDevice::setViewportCallback(ViewportCallback callback)
@@ -92,7 +181,7 @@ GLuint AYRenderDevice::createTexture2D(const uint8_t* pixels, int width, int hei
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    // ÉèÖÃÎÆÀí²ÎÊı
+    // è®¾ç½®çº¹ç†å‚æ•°
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -114,13 +203,13 @@ GLuint AYRenderDevice::createFontTexture(const uint8_t* pixels, int width, int h
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    // ×ÖÌåÎÆÀíµÄÌØÊâÉèÖÃ
+    // å­—ä½“çº¹ç†çš„ç‰¹æ®Šè®¾ç½®
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Ê¹ÓÃ GL_RED ¸ñÊ½´æ´¢µ¥Í¨µÀÊı¾İ£¨×ÖÌåÍ¨³£Ö»ĞèÒªalphaÍ¨µÀ£©
+    // ä½¿ç”¨ GL_RED æ ¼å¼å­˜å‚¨å•é€šé“æ•°æ®ï¼ˆå­—ä½“é€šå¸¸åªéœ€è¦alphaé€šé“ï¼‰
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
 
     return texture;
@@ -128,18 +217,18 @@ GLuint AYRenderDevice::createFontTexture(const uint8_t* pixels, int width, int h
 
 GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag_src)
 {
-    // ´´½¨¶¥µã×ÅÉ«Æ÷
+    // åˆ›å»ºé¡¶ç‚¹ç€è‰²å™¨
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vtx_src, NULL);
     glCompileShader(vertexShader);
 
 
-    // ´´½¨Æ¬¶Î×ÅÉ«Æ÷
+    // åˆ›å»ºç‰‡æ®µç€è‰²å™¨
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragmentShader, 1, &frag_src, NULL);
     glCompileShader(fragmentShader);
 
-    // ´´½¨×ÅÉ«Æ÷³ÌĞò
+    // åˆ›å»ºç€è‰²å™¨ç¨‹åº
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
@@ -147,7 +236,7 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
 
 
 
-    // É¾³ı×ÅÉ«Æ÷¶ÔÏó
+    // åˆ é™¤ç€è‰²å™¨å¯¹è±¡
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
@@ -163,40 +252,40 @@ GLuint AYRenderDevice::getShaderV(const std::string& name, bool reload, const st
 
 void AYRenderDevice::restoreGLState()
 {
-    // »Ö¸´³ÌĞò
+    // æ¢å¤ç¨‹åº
     _stateManager->useProgram(_previousState.currentProgram);
 
-    // »Ö¸´Éî¶È²âÊÔ
+    // æ¢å¤æ·±åº¦æµ‹è¯•
     _stateManager->setDepthTest(_previousState.depthTestEnabled);
 
-    // »Ö¸´Éî¶È»º³åĞ´Èë
+    // æ¢å¤æ·±åº¦ç¼“å†²å†™å…¥
     _stateManager->setDepthMask(_previousState.depthMaskEnabled);
 
-    // »Ö¸´±³ÃæÌŞ³ı
+    // æ¢å¤èƒŒé¢å‰”é™¤
     _stateManager->setCullFace(_previousState.cullFaceEnabled);
 
-    // »Ö¸´»ìºÏ×´Ì¬
+    // æ¢å¤æ··åˆçŠ¶æ€
     _stateManager->setBlend(_previousState.blendEnabled,
         _previousState.currentBlendFunc.src,
         _previousState.currentBlendFunc.dst);
 
-    // »Ö¸´VAO/VBO
+    // æ¢å¤VAO/VBO
     _stateManager->bindVertexArray(_previousState.currentVAO);
     _stateManager->bindBuffer(GL_ARRAY_BUFFER, _previousState.currentVBO);
     _stateManager->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _previousState.currentEBO);
 
-    // »Ö¸´ÎÆÀí
+    // æ¢å¤çº¹ç†
     for (GLuint unit = 0; unit < _previousState.currentTextureUnits.size(); ++unit) {
         _stateManager->bindTexture(GL_TEXTURE_2D, _previousState.currentTextureUnits[unit], unit);
     }
 
-    // »Ö¸´ÊÓ¿Ú
+    // æ¢å¤è§†å£
     _stateManager->setViewport(_previousState.currentViewport.x,
         _previousState.currentViewport.y,
         _previousState.currentViewport.w,
         _previousState.currentViewport.h);
 
-    // »Ö¸´Ïß¿í
+    // æ¢å¤çº¿å®½
     _stateManager->setLineWidth(_previousState.lineWidth);
 }
 
@@ -213,4 +302,30 @@ void AYRenderDevice::_viewportCallbackWrapper(GLFWwindow* window, int width, int
     if (device->_callback) {
         device->_callback(width, height);
     }
+}
+
+void AYRenderDevice::_loadDeviceWindowConfigINI()
+{
+    _config.loadFromFile(_configPath, AYConfigWrapper::ConfigType::INI);
+
+    _isShowBorder = _config.get<bool>("window config.show_border", true);
+    _isAlwaysOnTop = _config.get<bool>("window config.always_on_top", false);
+    _isMousePenetrate = _config.get<bool>("window config.mouse_penetrate", false);
+    _wOpacity = _config.get<float>("window config.opacity", 1.f);
+    _colorKeyR = _config.get<uint32_t>("window config.color_key_r", 1); //é»˜è®¤é”™å¼€çº¯é»‘çš„é¢œè‰²é”®æ•ˆæœ
+    _colorKeyG = _config.get<uint32_t>("window config.color_key_g", 0);
+    _colorKeyB = _config.get<uint32_t>("window config.color_key_b", 0);
+}
+
+void AYRenderDevice::_saveDeviceWindowConfigINI()
+{
+    _config.set<bool>("window config.show_border", _isShowBorder);
+    _config.set<bool>("window config.always_on_top", _isAlwaysOnTop);
+    _config.set<bool>("window config.mouse_penetrate", _isMousePenetrate);
+    _config.set<float>("window config.opacity", _wOpacity);
+    _config.set<uint32_t>("window config.color_key_r", _colorKeyR);
+    _config.set<uint32_t>("window config.color_key_g", _colorKeyG);
+    _config.set<uint32_t>("window config.color_key_b", _colorKeyB);
+
+    _config.saveConfig(_configPath);
 }

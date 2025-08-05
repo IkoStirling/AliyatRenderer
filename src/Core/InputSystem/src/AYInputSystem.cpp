@@ -1,4 +1,4 @@
-#include "AYInputSystem.h"
+ï»¿#include "AYInputSystem.h"
 #include "AYRendererManager.h"
 
 AYInputSystem::AYInputSystem() :
@@ -26,10 +26,10 @@ void AYInputSystem::init()
 	GLFWwindow* window = _device->getWindow();
 	if (!window) return;
 
-	// ÉèÖÃÓÃ»§Ö¸ÕëÒÔ±ãÔÚ¾²Ì¬»Øµ÷ÖĞ·ÃÎÊÊµÀı
-	//glfwSetWindowUserPointer(window, this); ¸úËæ´°¿ÚÊµÀıÈ«¾ÖÎ¨Ò»£¬¿ÉÄÜÔÚ¶à´¦Ê¹ÓÃÔì³É¹ÜÀí»ìÂÒ
+	// è®¾ç½®ç”¨æˆ·æŒ‡é’ˆä»¥ä¾¿åœ¨é™æ€å›è°ƒä¸­è®¿é—®å®ä¾‹
+	//glfwSetWindowUserPointer(window, this); è·Ÿéšçª—å£å®ä¾‹å…¨å±€å”¯ä¸€ï¼Œå¯èƒ½åœ¨å¤šå¤„ä½¿ç”¨é€ æˆç®¡ç†æ··ä¹±
 
-	// ÉèÖÃGLFW»Øµ÷
+	// è®¾ç½®GLFWå›è°ƒ
 	glfwSetKeyCallback(window, &AYInputSystem::keyCallbackWrapper);
 	glfwSetMouseButtonCallback(window, &AYInputSystem::mouseButtonCallbackWrapper);
 	glfwSetCursorPosCallback(window, &AYInputSystem::cursorPosCallbackWrapper);
@@ -42,7 +42,7 @@ void AYInputSystem::init()
 
 void AYInputSystem::update(float delta_time)
 {
-	// ËùÓĞ×´Ì¬×ªÒÆ´¦Àí
+	// æ‰€æœ‰çŠ¶æ€è½¬ç§»å¤„ç†
 	for (auto& [input, state] : _inputStates) {
 		state.previous = state.current;
 		state.previousValue = state.value;
@@ -51,7 +51,7 @@ void AYInputSystem::update(float delta_time)
 	_updateUniversalInputState(delta_time);
 	_updateGamepadState(delta_time);
 
-	// ½×¶Î3£ºÑÜÉúÊı¾İ¼ÆËã
+	// é˜¶æ®µ3ï¼šè¡ç”Ÿæ•°æ®è®¡ç®—
 	for (auto& [input, state] : _inputStates) {
 		state.duration = state.current ? (state.duration + delta_time) : 0.0f;
 	}
@@ -59,11 +59,27 @@ void AYInputSystem::update(float delta_time)
 	_lastMousePos = _currentMousePos;
 }
 
+void AYInputSystem::shutdown()
+{
+	std::unordered_map<
+		UniversalInput,
+		InputState,
+		UniversalInputHash,
+		UniversalInputEqual
+	> is;
+	std::unordered_map<std::string, std::shared_ptr<AYInputBinding>> kb;
+	std::unordered_map<int, bool> gs;
+
+	kb.swap(_keyBindings);
+	is.swap(_inputStates);
+	gs.swap(_gamepadStatusCache);
+}
+
 InputState& AYInputSystem::getInputState(const UniversalInput& input)
 {
 	auto& state = _inputStates[input];
 
-	// ³õÊ¼»¯Î»ÖÃĞÅÏ¢£¨Èç¹ûÊÇÊó±êÊäÈë£©
+	// åˆå§‹åŒ–ä½ç½®ä¿¡æ¯ï¼ˆå¦‚æœæ˜¯é¼ æ ‡è¾“å…¥ï¼‰
 	if (std::holds_alternative<MouseButtonInput>(input))
 	{
 		if (state.pressPosition == glm::vec2(0))
@@ -153,7 +169,7 @@ float AYInputSystem::getAxisValue(const UniversalInput& input) const
 			case GamepadAxis::RightTrigger: value = _gamepadState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]; break;
 			}
 
-			// Ó¦ÓÃËÀÇøºÍËõ·Å
+			// åº”ç”¨æ­»åŒºå’Œç¼©æ”¾
 			if (fabs(value) < arg.deadZone) return 0.0f;
 			return value * arg.scale;
 		}
@@ -168,7 +184,7 @@ float AYInputSystem::getPreviousAxisValue(const UniversalInput& input) const
 		return it->second.previousValue;
 	}
 
-	// ¶ÔÓÚÎ´¼ÇÂ¼µÄÖáÊäÈë£¬·µ»Øµ±Ç°Ö¡Öµ£¨ÈçÊó±êÎ»ÖÃ£©
+	// å¯¹äºæœªè®°å½•çš„è½´è¾“å…¥ï¼Œè¿”å›å½“å‰å¸§å€¼ï¼ˆå¦‚é¼ æ ‡ä½ç½®ï¼‰
 	return std::visit([this](auto&& arg) -> float {
 		using T = std::decay_t<decltype(arg)>;
 
@@ -176,12 +192,12 @@ float AYInputSystem::getPreviousAxisValue(const UniversalInput& input) const
 			switch (arg.axis) {
 			case MouseAxis::PositionX: return _lastMousePos.x * arg.scale;
 			case MouseAxis::PositionY: return _lastMousePos.y * arg.scale;
-			case MouseAxis::ScrollX:   return 0; // ¹öÂÖÃ»ÓĞ"ÉÏÒ»Ö¡"¸ÅÄî
+			case MouseAxis::ScrollX:   return 0; // æ»šè½®æ²¡æœ‰"ä¸Šä¸€å¸§"æ¦‚å¿µ
 			case MouseAxis::ScrollY:   return 0;
 			}
 		}
 		else if constexpr (std::is_same_v<T, GamepadAxisInput>) {
-			return 0.0f; // ÓÎÏ·ÊÖ±úĞèÒªÌØÊâ´¦Àí
+			return 0.0f; // æ¸¸æˆæ‰‹æŸ„éœ€è¦ç‰¹æ®Šå¤„ç†
 		}
 		return 0.0f;
 		}, input);
@@ -199,7 +215,7 @@ glm::vec2 AYInputSystem::getVector2Axis(const std::string& fullActionName) const
 	auto it = _keyBindings.find(bindingName);
 	if (it == _keyBindings.end()) return glm::vec2(0);
 
-	// ²éÕÒXºÍYÖá¶¯×÷
+	// æŸ¥æ‰¾Xå’ŒYè½´åŠ¨ä½œ
 	float x = 0.0f, y = 0.0f;
 	bool hasX = false, hasY = false;
 
@@ -214,7 +230,7 @@ glm::vec2 AYInputSystem::getVector2Axis(const std::string& fullActionName) const
 		}
 	}
 
-	// Èç¹ûÃ»ÓĞÕÒµ½ÌØ¶¨°ó¶¨£¬³¢ÊÔÍ¨ÓÃ²éÑ¯
+	// å¦‚æœæ²¡æœ‰æ‰¾åˆ°ç‰¹å®šç»‘å®šï¼Œå°è¯•é€šç”¨æŸ¥è¯¢
 	if (!hasX || !hasY) {
 		UniversalInput xInput = GamepadAxisInput{ GamepadAxis::LeftX };
 		UniversalInput yInput = GamepadAxisInput{ GamepadAxis::LeftY };
@@ -223,7 +239,7 @@ glm::vec2 AYInputSystem::getVector2Axis(const std::string& fullActionName) const
 		if (!hasY) y = getAxisValue(yInput);
 	}
 
-	return glm::vec2(x, -y); // ×¢ÒâYÖáÍ¨³£ĞèÒªÈ¡·´
+	return glm::vec2(x, -y); // æ³¨æ„Yè½´é€šå¸¸éœ€è¦å–å
 
 }
 
@@ -233,11 +249,11 @@ void AYInputSystem::initGamepad(int joystickId)
 		if (event == GLFW_CONNECTED)
 		{
 
-			std::cout << "ÊÖ±ú " << jid << " ÒÑÁ¬½Ó" << std::endl;
+			std::cout << "æ‰‹æŸ„ " << jid << " å·²è¿æ¥" << std::endl;
 		}
 		else if (event == GLFW_DISCONNECTED)
 		{
-			std::cout << "ÊÖ±ú " << jid << " ÒÑ¶Ï¿ª" << std::endl;
+			std::cout << "æ‰‹æŸ„ " << jid << " å·²æ–­å¼€" << std::endl;
 		}
 		});
 
@@ -250,7 +266,7 @@ void AYInputSystem::initGamepad(int joystickId)
 bool AYInputSystem::isGamepadConnected(int joystickId) const {
 	double currentTime = glfwGetTime();
 
-	// Ã¿0.5ÃëË¢ĞÂÒ»´Î×´Ì¬£¨±ÜÃâ¸ßÆµ²éÑ¯£©
+	// æ¯0.5ç§’åˆ·æ–°ä¸€æ¬¡çŠ¶æ€ï¼ˆé¿å…é«˜é¢‘æŸ¥è¯¢ï¼‰
 	if (currentTime - _lastCheckTime > 0.5) {
 		_lastCheckTime = currentTime;
 		_gamepadStatusCache.clear();
@@ -324,13 +340,13 @@ glm::vec2 AYInputSystem::getMouseDelta() const
 
 glm::vec2 AYInputSystem::getMouseButtonPressPosition(int button) const 
 {
-	// Ã»ÓĞÊµÏÖ
+	// æ²¡æœ‰å®ç°
 	auto helper = MouseButtonInput{ button };
 
 	return glm::vec2(0.0f);
 }
 
-// ¸ß¼¶ÊäÈë¹¦ÄÜ
+// é«˜çº§è¾“å…¥åŠŸèƒ½
 int AYInputSystem::getKeyPressCount(int key) const 
 {
 	auto helper = KeyboardInput{ key };
@@ -359,7 +375,7 @@ float AYInputSystem::getMouseButtonDuration(int button) const
 	return state ? state->duration : 0.f;
 }
 
-// ÊäÈëĞŞÊÎ¼ü
+// è¾“å…¥ä¿®é¥°é”®
 bool AYInputSystem::isShiftPressed() const 
 {
 	return glfwGetKey(_device->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
@@ -389,11 +405,11 @@ void AYInputSystem::_updateUniversalInputState(float delta_time)
 
 void AYInputSystem::_updateAxisStates(float delta_time)
 {
-	// ¸üĞÂÊó±êÎ»ÖÃÖá
+	// æ›´æ–°é¼ æ ‡ä½ç½®è½´
 	getInputState(MouseAxisInput{ MouseAxis::PositionX }).value = _currentMousePos.x;
 	getInputState(MouseAxisInput{ MouseAxis::PositionY }).value = _currentMousePos.y;
 
-	// ¸üĞÂÊÖ±úÖá
+	// æ›´æ–°æ‰‹æŸ„è½´
 	if (_activeGamepad != -1) {
 		auto updateGamepadAxis = [&](GamepadAxis axis, int glfwAxis) {
 			auto& state = getInputState(GamepadAxisInput{ axis });
@@ -413,7 +429,7 @@ void AYInputSystem::_updateGamepadState(float delta_time)
 {
 	if (!isGamepadConnected(_activeGamepad)) 
 	{
-		_activeGamepad = -1; // ±ê¼Ç¶Ï¿ª
+		_activeGamepad = -1; // æ ‡è®°æ–­å¼€
 		auto gamepads = getConnectedGamepads();
 		if (!gamepads.empty())
 			_activeGamepad = gamepads[0];
@@ -422,7 +438,7 @@ void AYInputSystem::_updateGamepadState(float delta_time)
 	}
 	if (_activeGamepad != -1 && glfwGetGamepadState(_activeGamepad, &_gamepadState)) 
 	{
-		// ¸üĞÂËùÓĞÒÑ×¢²áµÄÊÖ±ú°´Å¥×´Ì¬, ²»¸üĞÂ¹ıÈ¥×´Ì¬
+		// æ›´æ–°æ‰€æœ‰å·²æ³¨å†Œçš„æ‰‹æŸ„æŒ‰é’®çŠ¶æ€, ä¸æ›´æ–°è¿‡å»çŠ¶æ€
 		for (auto& [input, state] : _inputStates) {
 			if (auto btn = std::get_if<GamepadButtonInput>(&input))
 			{
@@ -480,9 +496,9 @@ void AYInputSystem::handleMouseButton(int button, int action, int mods)
 	if (action == GLFW_PRESS) 
 	{
 		state.current = true;
-		state.pressCount++;  // ¼ÇÂ¼°´ÏÂ´ÎÊı£¨ÓÃÓÚË«»÷¼ì²â£©
+		state.pressCount++;  // è®°å½•æŒ‰ä¸‹æ¬¡æ•°ï¼ˆç”¨äºåŒå‡»æ£€æµ‹ï¼‰
 		state.lastPressTime = (float)glfwGetTime();
-		state.pressPosition = _currentMousePos; // ¼ÇÂ¼°´ÏÂÊ±µÄÊó±êÎ»ÖÃ
+		state.pressPosition = _currentMousePos; // è®°å½•æŒ‰ä¸‹æ—¶çš„é¼ æ ‡ä½ç½®
 	}
 	else if (action == GLFW_RELEASE) 
 	{
@@ -499,7 +515,7 @@ void AYInputSystem::handleScroll(double xoffset, double yoffset)
 {
 	_scrollDelta = glm::vec2(xoffset, yoffset);
 
-	// ¸üĞÂÖá×´Ì¬
+	// æ›´æ–°è½´çŠ¶æ€
 	UniversalInput xInput{ MouseAxisInput{MouseAxis::ScrollX} };
 	UniversalInput yInput{ MouseAxisInput{MouseAxis::ScrollY} };
 

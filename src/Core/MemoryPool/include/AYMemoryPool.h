@@ -71,6 +71,7 @@ class AYMemoryPoolProxy : public Mod_MemoryPool
 {
 public:
 	virtual void init() override;
+	virtual void shutdown() override {} //不做任何操作，以达到任何时候内存池总是最后析构
 	virtual void update(float delta_time) override {};
 	static void initMemoryPool();
 	static AYMemoryPool& getMemoryPool(int index);
@@ -87,17 +88,17 @@ public:
 
 public:
 	template<typename T, typename... Args>
-	friend T* NewObject(Args... args);
+	friend T* NewObject(Args&&... args);
 
 	template<typename T>
 	friend void DeleteObject(T* ptr);
 
 	// 智能指针和内存池是两个体系，尽量不要混用
 	template<typename T, typename... Args>
-	friend std::shared_ptr<T> MakeMShared(Args... args);
+	friend std::shared_ptr<T> MakeMShared(Args&&... args);
 
 	template<typename T, typename... Args>
-	friend std::unique_ptr<T, PoolDeleter> MakeMUnique(Args... args);
+	friend std::unique_ptr<T, PoolDeleter> MakeMUnique(Args&&... args);
 };
 
 REGISTER_MODULE_CLASS("MemoryPool", AYMemoryPoolProxy);
@@ -107,14 +108,16 @@ struct PoolDeleter {
 	void operator()(T* ptr) const {
 		if (ptr) {
 			static int i = 0;
-			std::string text = std::string("PoolDeleter released ") 
-				+ typeid(T).name() 
-				+ " :(" + std::to_string(i++) + ")\n";
-			std::cout << text;  // 日志
+			//std::string text = std::string("PoolDeleter released ") 
+			//	+ typeid(T).name() 
+			//	+ " :(" + std::to_string(i++) + ")\n";
+			//std::cout << text;  // 日志
 			AYMemoryPoolProxy::destroyObject(ptr);  // 调用内存池的销毁逻辑
 		}
 	}
 };
+
+inline constexpr PoolDeleter pool_deleter; // 单例删除器
 
 template<typename T, typename... Args>
 T* AYMemoryPoolProxy::createObject(Args&&... args)
@@ -141,27 +144,27 @@ void AYMemoryPoolProxy::destroyObject(T* ptr)
 
 
 template<typename T, typename... Args>
-T* NewObject(Args&&... args)
+T* NewMObject(Args&&... args)
 {
 	return AYMemoryPoolProxy::createObject<T>(std::forward<Args>(args)...);
 }
 
 template<typename T>
-void DeleteObject(T* ptr)
+void DeleteMObject(T* ptr)
 {
 	AYMemoryPoolProxy::destroyObject<T>(ptr);
 }
 
 
 template<typename T, typename ...Args>
-std::shared_ptr<T> MakeMShared(Args ...args)
+std::shared_ptr<T> MakeMShared(Args&& ...args)
 {
 	T* p = AYMemoryPoolProxy::createObject<T>(std::forward<Args>(args)...);
-	return std::shared_ptr<T>(p, PoolDeleter{});	//删除器是shard ptr对象的一部分
+	return std::shared_ptr<T>(p, pool_deleter);	//删除器是shard ptr对象的一部分
 }
 
 template<typename T, typename ...Args>
-std::unique_ptr<T, PoolDeleter> MakeMUnique(Args ...args)
+std::unique_ptr<T, PoolDeleter> MakeMUnique(Args&& ...args)
 {
 	T* p = AYMemoryPoolProxy::createObject<T>(std::forward<Args>(args)...);
 	return std::unique_ptr<T, PoolDeleter>(p);		//删除器是unique ptr类型的一部分

@@ -2,23 +2,30 @@
 
 void AYPhysicsSystem::init()
 {
-	createWorld(AYPhysicsSystem::WorldType::AY2D);
-	createWorld(AYPhysicsSystem::WorldType::AY3D);
+	createWorld(WorldType::AY2D);
+	createWorld(WorldType::AY3D);
 }
 
 void AYPhysicsSystem::update(float delta_time)
 {
 	if (_paused) return;
 
-	if (_isFixedPhysicsSimulater) {
-		_worlds[WorldType::AY2D]->step(_fixedTimeStep, _velocityIterations, _positionIterations);
-	}
-	else {
-		_worlds[WorldType::AY2D]->step(delta_time, _velocityIterations, _positionIterations);
+	_syncLogicToPhysics();
+
+
+	for (auto& [type, world] : _worlds)
+	{
+		world.impl->step(_isFixedPhysicsSimulater? _fixedTimeStep: delta_time, _velocityIterations, _positionIterations);
 	}
 
-	for (auto& [type, world] : _worlds) {
-		world->syncPhysicsToLogic();
+	_syncPhysicsToLogic();
+}
+
+void AYPhysicsSystem::addToWorld(EntityID entity, WorldType type)
+{
+	auto& world = _worlds[type];
+	if (world.impl->createBody(entity)) {
+		world.entities.insert(entity);
 	}
 }
 
@@ -30,10 +37,10 @@ void AYPhysicsSystem::createWorld(WorldType type)
 
 	switch (type)
 	{
-	case AYPhysicsSystem::WorldType::AY2D:
-		_worlds.emplace(AYPhysicsSystem::WorldType::AY2D, std::make_unique<Box2DPhysicsWorld>());
+	case WorldType::AY2D:
+		_worlds.emplace(WorldType::AY2D, PhysicsWorld{ std::make_unique<Box2DPhysicsWorld>() });
 		break;
-	case AYPhysicsSystem::WorldType::AY3D:
+	case WorldType::AY3D:
 		break;
 	default:
 		break;
@@ -50,7 +57,7 @@ IAYPhysicsWorld* AYPhysicsSystem::getPhysicsWorld(WorldType type)
 	auto it = _worlds.find(type);
 	if (it != _worlds.end())
 	{
-		return it->second.get();
+		return it->second.impl.get();
 	}
 	return nullptr;
 }
@@ -73,4 +80,26 @@ void AYPhysicsSystem::setDebugDrawEnabled(bool enabled)
 void AYPhysicsSystem::setDebugDrawFlags(uint32_t flags)
 {
 	_debugDrawFlags = flags;
+}
+
+void AYPhysicsSystem::_syncLogicToPhysics()
+{
+	auto view = GET_CAST_MODULE(AYECSEngine, "ECSEngine")->getView<STTransform, STPhysicsComponent>();
+
+	for (auto [entity, transform, physics] : view)
+	{
+		_worlds[physics.worldType].impl->setTransform(entity, transform);
+	}
+}
+
+void AYPhysicsSystem::_syncPhysicsToLogic()
+{
+	auto view = GET_CAST_MODULE(AYECSEngine, "ECSEngine")->getView<STTransform, STPhysicsComponent>();
+
+	for (auto [entity, transform, physics] : view)
+	{
+		auto trans = _worlds[physics.worldType].impl->getTransform(entity);
+		physics.lastTransform = transform;
+		transform = trans;
+	}
 }

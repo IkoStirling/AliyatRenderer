@@ -28,11 +28,6 @@ AYEventThreadPoolManager::AYEventThreadPoolManager()
 
 AYEventThreadPoolManager::~AYEventThreadPoolManager()
 {
-	std::lock_guard<std::mutex> lock(_processedMutex);
-	for (auto it = _processedEvents.begin(); it != _processedEvents.end();)
-	{
-		it = _processedEvents.erase(it);
-	}
 }
 
 void AYEventThreadPoolManager::publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event)
@@ -48,8 +43,8 @@ void AYEventThreadPoolManager::publish(std::unique_ptr<IAYEvent, PoolDeleter> in
 			if (in_event->shouldMerge)
 			{
 				it->merge(*in_event);
+				return;
 			}
-			return;
 		}
 	}
 	_processedEvents.insert(std::move(in_event));
@@ -67,6 +62,27 @@ void AYEventThreadPoolManager::update()
 			execute(std::move(oneEvent));
 			_layerQueues[layer].pop();
 		}
+	}
+}
+
+void AYEventThreadPoolManager::shutdown()
+{
+	std::lock_guard<std::mutex> lock(_processedMutex);
+	for (auto it = _processedEvents.begin(); it != _processedEvents.end();)
+	{
+		it = _processedEvents.erase(it);
+	}
+
+	std::vector<std::priority_queue<
+		std::unique_ptr<IAYEvent, PoolDeleter>,
+		std::vector<std::unique_ptr<IAYEvent, PoolDeleter>>,
+		IAYEventGreator
+		>> lq;
+	lq.swap(_layerQueues);
+
+	for (auto& pool : _layerPools)
+	{
+		pool.get()->stop();
 	}
 }
 

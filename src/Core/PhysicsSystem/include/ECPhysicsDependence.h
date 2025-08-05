@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include "AYECSEngine.h"
+#include "STPhysicsComponent.h"
 #include <box2d/b2_math.h> 
 #include <foundation/PxVec3.h>
 #include <iostream>

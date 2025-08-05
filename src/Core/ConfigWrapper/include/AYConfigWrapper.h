@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -22,7 +22,9 @@ public:
 	void saveConfig(const std::string& path);
 
 	template <typename T>
-	T get(const std::string& path, const std::string& default_value = "");
+	T get(const std::string& path);
+	template <typename T>
+	T get(const std::string& path, const T& default_value);
 
 	template <typename T>
 	void set(const std::string& path, const T& value);
@@ -41,7 +43,13 @@ private:
 };
 
 template<typename T>
-inline T AYConfigWrapper::get(const std::string& path, const std::string& default_value)
+inline T AYConfigWrapper::get(const std::string& path)
+{
+	return _pt.get<T>(path);
+}
+
+template<typename T>
+inline T AYConfigWrapper::get(const std::string& path, const T& default_value)
 {
 	return _pt.get<T>(path,default_value);
 }
@@ -56,6 +64,8 @@ template<typename T>
 inline std::vector<T> AYConfigWrapper::getVector(const std::string& path)
 {
 	std::vector<T> result;
+	if(_pt.empty())
+		return result;
 	for (const auto& item : _pt.get_child(path)) {
 		result.push_back(item.second.get_value<T>());
 	}

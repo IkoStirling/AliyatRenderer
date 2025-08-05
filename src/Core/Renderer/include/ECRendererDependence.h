@@ -1,4 +1,6 @@
-#pragma once
+﻿#pragma once
+#include "AYConfigWrapper.h"
+#include "AYPath.h"
 #include <iostream>
 #include <sstream>
 #include "glad/glad.h"

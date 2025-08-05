@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <memory>
 #include "AYModuleRegistry.h"
 
@@ -12,7 +12,7 @@ void RegisterModule_##CLASS_NAME() { \
         std::make_shared<CLASS_NAME>()); \
 }
 
-//¸Ã·½Ê½±ØĞëÒªÊÖ¶¯ÒıÈë¸ÃÍ·ÎÄ¼ş²ÅÄÜ×¢²á
+//è¯¥æ–¹å¼å¿…é¡»è¦æ‰‹åŠ¨å¼•å…¥è¯¥å¤´æ–‡ä»¶æ‰èƒ½æ³¨å†Œ
 #define REGISTER_MODULE_CLASS(REGISTER_NAME, CLASS_NAME, ...) \
 namespace { \
 struct CLASS_NAME##_Register { \
@@ -32,7 +32,7 @@ struct CLASS_NAME##_Register { \
         (void)registered; \
     } \
 }; \
-/* Ê¹ÓÃº¯Êı¾²Ì¬±äÁ¿±ÜÃâÖØ¸´×¢²á */ \
+/* ä½¿ç”¨å‡½æ•°é™æ€å˜é‡é¿å…é‡å¤æ³¨å†Œ */ \
 static int RegisterModule_##CLASS_NAME() { \
     static CLASS_NAME##_Register reg; \
     return 0; \
@@ -41,13 +41,14 @@ static int CLASS_NAME##_registered = RegisterModule_##CLASS_NAME(); \
 }
 
 /*
-    Ä¿Ç°Ê¹ÓÃ·½Ê½£º
-        ½öÎª·Çµ¥ÀıÄ£¿éÌá¹©µÄµ¥Àı¹ÜÀí·½Ê½
+    ç›®å‰ä½¿ç”¨æ–¹å¼ï¼š
+        ä»…ä¸ºéå•ä¾‹æ¨¡å—æä¾›çš„å•ä¾‹ç®¡ç†æ–¹å¼
 */
 class IAYModule
 {
 public:
 	virtual void init() = 0;
 	virtual void update(float delta_time) = 0;
+	virtual void shutdown() = 0;
 
 };

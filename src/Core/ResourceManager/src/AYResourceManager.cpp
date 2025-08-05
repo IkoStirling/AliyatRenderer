@@ -1,7 +1,10 @@
-#include "AYResourceManager.h"
+ï»¿#include "AYResourceManager.h"
 #include "AYResourceRegistry.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include "AYTexture.h"
+#include "AYAudio.h"
+#include "AYVideo.h"
 
 using json = nlohmann::json;
 
@@ -34,6 +37,8 @@ void AYResourceManager::reloadResource(const std::string& filepath) {
     if (weakIt != _weakCache.end()) {
         if (auto resource = weakIt->second.lock())
         {
+            pinResource(filepath, resource);    //åˆ·æ–°å¼ºç¼“å­˜
+            touchResource(filepath);
             resource->reload(filepath);
         }
     }
@@ -56,7 +61,7 @@ void AYResourceManager::printStats()
     std::cout << "=== Resource Cache Stats ===\n";
     for (const auto& [filepath, weak] : _weakCache) {
         auto shared = weak.lock();
-        //´Ë´¦×÷ÓÃÓò»áÕ¼ÓÃÒ»¸öÒıÓÃ¼ÆÊı
+        //æ­¤å¤„ä½œç”¨åŸŸä¼šå ç”¨ä¸€ä¸ªå¼•ç”¨è®¡æ•°
         int count = shared ? shared.use_count() - 1 : 0;
         std::cout << filepath << " - use_count: " << count << "\n";
     }
@@ -94,6 +99,14 @@ void AYResourceManager::init()
     _listenEvents();
     loadPersistentCache("assets/core/config/persistentResources.json");
     _preloadFromConfig("assets/core/preloadResource.json");
+}
+
+void AYResourceManager::shutdown()
+{
+    std::unordered_map<std::string, std::weak_ptr<IAYResource>> wc;
+    std::unordered_map<std::string, STCacheEntry> sc;
+    _weakCache.swap(wc);
+    _strongCache.swap(sc);
 }
 
 std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::string& filepath)
@@ -152,7 +165,7 @@ void AYResourceManager::unloadTag(const Tag& tag)
 {
     auto resources = getResourcesWithTag(tag);
     for (auto& res : resources) {
-        unloadResource(res->getPath()); // ¼ÙÉè×ÊÔ´½Ó¿ÚÖĞÖ§³Ö getPath()
+        unloadResource(res->getPath()); // å‡è®¾èµ„æºæ¥å£ä¸­æ”¯æŒ getPath()
     }
 }
 
@@ -167,7 +180,7 @@ void AYResourceManager::printTaggedStats(const Tag& tag)
 
 void AYResourceManager::savePersistentCache(const std::string& savePath)
 {
-    // ÔİÊ±ÆúÓÃ£¬Î´Ö§³ÖĞòÁĞ»¯²ÎÊı
+    // æš‚æ—¶å¼ƒç”¨ï¼Œæœªæ”¯æŒåºåˆ—åŒ–å‚æ•°
 
     //json j;
     //for (const auto& [path, entry] : _strongCache) {
@@ -184,7 +197,7 @@ void AYResourceManager::savePersistentCache(const std::string& savePath)
 
 void AYResourceManager::loadPersistentCache(const std::string& loadPath)
 {
-    // ÔİÊ±ÆúÓÃ£¬Î´Ö§³ÖĞòÁĞ»¯²ÎÊı
+    // æš‚æ—¶å¼ƒç”¨ï¼Œæœªæ”¯æŒåºåˆ—åŒ–å‚æ•°
 
     //std::ifstream in(loadPath);
     //if (!in) return;
@@ -208,7 +221,7 @@ void AYResourceManager::loadPersistentCache(const std::string& loadPath)
 
 void AYResourceManager::_preloadFromConfig(const std::string& configPath)
 {
-    // ÔİÊ±ÆúÓÃ£¬Î´Ö§³ÖĞòÁĞ»¯²ÎÊı
+    // æš‚æ—¶å¼ƒç”¨ï¼Œæœªæ”¯æŒåºåˆ—åŒ–å‚æ•°
 
     //std::ifstream in(configPath);
     //if (!in) return;
@@ -223,24 +236,22 @@ void AYResourceManager::_preloadFromConfig(const std::string& configPath)
     //}
 
     //for (const auto& tex : j["textures"]) {
-    //    loadAsync<AYTexture>(tex); // »ò load<> Í¬²½¼ÓÔØ
+    //    loadAsync<AYTexture>(tex); // æˆ– load<> åŒæ­¥åŠ è½½
     //}
 
     /*for (const auto& mesh : j["meshes"]) {
         loadAsync<AYMesh>(mesh);
     }*/
 
-    // Í¬Àí for sounds¡¢shaders µÈµÈ
+    // åŒç† for soundsã€shaders ç­‰ç­‰
 }
 
 AYResourceManager::AYResourceManager()
 {
-
 }
 
 AYResourceManager::~AYResourceManager()
 {
-    savePersistentCache("assets/core/config/persistentResources.json");
 }
 
 void AYResourceManager::_cleanupResources()
@@ -257,4 +268,6 @@ void AYResourceManager::_cleanupResources()
 void AYResourceManager::_listenEvents()
 {
     registerResourceType<AYTexture>();
+    registerResourceType<AYAudio>();
+    registerResourceType<AYVideo>();
 }

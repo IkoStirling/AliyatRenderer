@@ -1,4 +1,4 @@
-#include "AYRendererManager.h"
+ï»¿#include "AYRendererManager.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYPath.h"
@@ -19,7 +19,7 @@ void AYRendererManager::init()
 
 	AYResourceManager::getInstance().loadAsync<AYTexture>(AYPath::Engine::getPresetTexturePath()+"Arrow.png",
 		[](std::shared_ptr<AYTexture> texture) {
-			std::cout << "Texture loaded: " << texture->getWidth() << "x" << texture->getHeight() << std::endl;
+			//std::cout << "Texture loaded: " << texture->getWidth() << "x" << texture->getHeight() << std::endl;
 		});
 
 	_renderer->getMaterialManager()->createMaterial(
@@ -49,22 +49,22 @@ void AYRendererManager::init()
 
 	auto lightManager = _renderer->getLightManager();
 	lightManager->addDirectionalLight({
-		.color = glm::vec3(1.0f, 0.95f, 0.9f),      // Å¯°×É«
+		.color = glm::vec3(1.0f, 0.95f, 0.9f),      // æš–ç™½è‰²
 		.intensity = 1.2f,
-		.direction = glm::vec3(-0.5f, -1.0f, -0.3f) // ×óÉÏºó·½ÕÕÉä
+		.direction = glm::vec3(-0.5f, -1.0f, -0.3f) // å·¦ä¸Šåæ–¹ç…§å°„
 		});
 	lightManager->addPointLight({
-		.color = glm::vec3(0.8f, 0.9f, 1.0f),       // ÀäÉ«µ÷
+		.color = glm::vec3(0.8f, 0.9f, 1.0f),       // å†·è‰²è°ƒ
 		.intensity = 0.8f,
 		.position = glm::vec3(3.0f, 2.0f, 1.0f),
 		.radius = 10.0f,
 		.linear = 0.07f
 		});
 	lightManager->addSpotLight({
-		.color = glm::vec3(1.0f, 0.9f, 0.7f),       // Å¯»ÆÉ«
+		.color = glm::vec3(1.0f, 0.9f, 0.7f),       // æš–é»„è‰²
 		.intensity = 1.5f,
 		.position = glm::vec3(0.0f, 3.0f, 2.0f),
-		.direction = glm::vec3(0.0f, -0.7f, -0.5f), // ÏòÏÂÇ°·½ÕÕÉä
+		.direction = glm::vec3(0.0f, -0.7f, -0.5f), // å‘ä¸‹å‰æ–¹ç…§å°„
 		.cutOff = glm::cos(glm::radians(15.0f)),
 		.outerCutOff = glm::cos(glm::radians(25.0f))
 		});
@@ -74,8 +74,8 @@ void AYRendererManager::update(float delta_time)
 {
 	if (glfwWindowShouldClose(_device->getWindow()))
 	{
-		glfwDestroyWindow(_device->getWindow());	// Ïú»Ù´°¿ÚºÍ OpenGL ÉÏÏÂÎÄ
-		glfwTerminate();							// ÖÕÖ¹ GLFW£¬ÊÍ·ÅËùÓĞ×ÊÔ´
+		glfwDestroyWindow(_device->getWindow());	// é”€æ¯çª—å£å’Œ OpenGL ä¸Šä¸‹æ–‡
+		glfwTerminate();							// ç»ˆæ­¢ GLFWï¼Œé‡Šæ”¾æ‰€æœ‰èµ„æº
 		_onWindowClosed();
 		return;
 	}
@@ -83,20 +83,25 @@ void AYRendererManager::update(float delta_time)
 
 	_updateCameraActive(delta_time);
 
-	// 2. TODO: Ö´ĞĞÊµ¼ÊäÖÈ¾Âß¼­
+	// 2. TODO: æ‰§è¡Œå®é™…æ¸²æŸ“é€»è¾‘
 	_renderAll(delta_time);
 
-	// 3. ½»»»»º³åÇø
+	// 3. äº¤æ¢ç¼“å†²åŒº
 	glfwSwapBuffers(_device->getWindow());
 
 	glfwPollEvents();
+}
+
+void AYRendererManager::shutdown()
+{
+
 }
 
 void AYRendererManager::_renderAll(float delta_time)
 {
 	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
+	//_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
 	_renderer->getCoreRenderer()->beginDraw();
 	_displayDebugInfo();
 	_renderer->getCoreRenderer()->endDraw();
@@ -185,7 +190,7 @@ void AYRendererManager::_displayDebugInfo()
 		d = true;
 
 
-	std::string fps = "µ±Ç°fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
+	std::string fps = "å½“å‰fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
 	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	auto* dr = _renderer->getCoreRenderer();
@@ -217,13 +222,13 @@ void AYRendererManager::_displayDebugInfo()
 
 	//_renderer->getSpriteRenderer()->drawSprite(
 	//	tex_ID,
-	//	//glm::vec2(x, y),  // Î»ÖÃ
+	//	//glm::vec2(x, y),  // ä½ç½®
 	//	glm::vec2(0.f),
-	//	glm::vec2(1200.0f),  // ´óĞ¡
-	//	0.0f,                       // Ğı×ª
-	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// ÑÕÉ«
+	//	glm::vec2(1200.0f),  // å¤§å°
+	//	0.0f,                       // æ—‹è½¬
+	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// é¢œè‰²
 	//	false,
 	//	false,
-	//	glm::vec2(0.5f, 0.5f)       // Ô­µã(Ğı×ªÖĞĞÄ)
+	//	glm::vec2(0.5f, 0.5f)       // åŸç‚¹(æ—‹è½¬ä¸­å¿ƒ)
 	//);
 }

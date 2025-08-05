@@ -34,6 +34,7 @@ public:
 
 	//统一执行所有事件
 	void update();
+	void shutdown();
 
 	//void executeAsync();
 	void execute(std::shared_ptr<const IAYEvent> in_event);

@@ -1,11 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #include "IAYResource.h"
 #include <memory>
 #include <unordered_map>
 #include <functional>
 #include <string>
 #include <any>
-#include "AYTexture.h"
 
 class AYResourceRegistry {
 public:
@@ -21,7 +20,7 @@ public:
     void registerType(const std::string& typeName) 
     {
         _creators[typeName] = [typeName](std::any const& args) -> std::shared_ptr<IAYResource> {
-            // ÀàÐÍ°²È«¼ì²é
+            // ç±»åž‹å®‰å…¨æ£€æŸ¥
             try {
                 if constexpr (sizeof...(Args) == 0) 
                 {
@@ -32,7 +31,7 @@ public:
                     const auto& argTuple = std::any_cast<const std::tuple<Args...>&>(args);
                     return std::apply([](auto&&... args) {
                         return std::make_shared<T>(std::forward<decltype(args)>(args)...);
-                        }, argTuple); //½â°üÔª×é²¢´«µÝµ½lambdaÖÐ£¬·µ»Ølabmda·µ»ØÀàÐÍ
+                        }, argTuple); //è§£åŒ…å…ƒç»„å¹¶ä¼ é€’åˆ°lambdaä¸­ï¼Œè¿”å›žlabmdaè¿”å›žç±»åž‹
                 }
             }
             catch (const std::bad_any_cast& e) 

@@ -141,6 +141,11 @@ public:
      void init();
 
      /*
+     
+     */
+     void shutdown();
+
+     /*
         手动注册要纳入管理的资源类型（继承自IAYResource，与资源类型的自动注册是两码事）
         该函数实现功能：（在异步加载事件完成时执行以下操作）
             a) 完成异步承诺，异步加载得到的future会得到结果
@@ -197,7 +202,6 @@ private:
 
 private:
     void _listenEvents();
-
     std::vector<std::unique_ptr<AYEventToken>> _tokens;
 
 private:
@@ -235,6 +239,7 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
     if (weakIt != _weakCache.end()) {
         if (auto resource = weakIt->second.lock())
         {
+            pinResource(filepath, resource);    //刷新强缓存
             touchResource(filepath);
             return std::dynamic_pointer_cast<T>(resource);
         }
@@ -346,7 +351,7 @@ inline void AYResourceManager::registerResourceType()
         }
     };
 
-    auto system = GET_CAST_MODULE(Mod_EventSystem, "EventSystem");
+    auto system = GET_CAST_MODULE(AYEventSystem, "EventSystem");
     if (system)
     {
         auto token = system->subscribe(Event_ResourceLoadAsync<T>::staticGetType(), loader);
@@ -359,6 +364,7 @@ class AYResourceManagerAdapter : public Mod_ResourceManager
 {
 public:
     void init() override { AYResourceManager::getInstance().init(); }
+    void shutdown() override { AYResourceManager::getInstance().shutdown(); }
     void update(float delta_time) override { AYResourceManager::getInstance().update(delta_time); }
 
 public:

@@ -1,4 +1,4 @@
-set(MODULE_NAME engine_core)
+﻿set(MODULE_NAME engine_core)
 
 file(GLOB SRCS
 	"src/*.cpp"
@@ -11,6 +11,7 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	module_manager
 	event_system
 	resource_manager
+	sound_engine
 	memory_pool
 	network
 	renderer
@@ -18,4 +19,5 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	game_logic
 	scene_manager
 	physics_system
+	ecs_engine
 )

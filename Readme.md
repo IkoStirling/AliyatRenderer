@@ -1,4 +1,4 @@
-## AliyatRenderer
+﻿## AliyatRenderer
 ---
 ### Project Architecture
 This project use the "cmake + vcpkg"
@@ -9,11 +9,13 @@ This project use the "cmake + vcpkg"
 		--MemoryPool
 		--EventSystem
 		--ResourceManager
+		--SoundEngine
 		--Renderer
 		--Network
 		--Physics
 		--InputSystem
 		--SceneManager
+		--ECSEngine (Not yet completed)
 		--Logger (Not yet supported, should use spdlog?)
 		//some system header files
 ### Project Constraints
@@ -36,8 +38,8 @@ Before execute this program, preparing these packages:
 
 	1. Boost::asio
 		Network && TimerManager(Unused)
-	2. Opencv4
-		Renderer...(Picture loaded)
+	2. Opencv4, openal-soft, FFmpeg
+		Resource(Texture, Audio, Video)
 	3. Glm
 		Renderer...(Math)
 	4. nlohmann json
@@ -55,7 +57,7 @@ Before execute this program, preparing these packages:
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree opencv4 nlohmann-json box2d physx libarchive
+	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|
@@ -69,7 +71,7 @@ Run the following commands:
 		|
 
 	
-2. Core code lines: 9447
+2. Core code lines: 14322
 	
 	   Use this in powershell under "src/Core/":
 	   Get-ChildItem -Recurse -Include *.cpp,*.h,*.cxx,*.hpp | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum

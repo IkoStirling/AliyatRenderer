@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <string>
 #include <memory>
 #include <unordered_map>
@@ -26,9 +26,12 @@ public:
 
 	bool unregisterModule(const std::string& name);
 
-	void allModuleInit();
+	void allModuleInit();	//è¯¥å‡½æ•°å·²åºŸå¼ƒ
 
-	void allModuleUpdate(float delta_time);
+	void allModuleUpdate(float delta_time); //è¯¥å‡½æ•°å·²åºŸå¼ƒ
+
+	void allModuleShutdown();
+
 private:
 	AYModuleManager() = default;
 	AYModuleManager(const AYModuleManager&) = delete;
@@ -36,5 +39,5 @@ private:
 
 private:
 	std::unordered_map<std::string, std::shared_ptr<IAYModule>> _moduleMap;
-	mutable std::shared_mutex _moduleMutex; //mutable ÈÃconst·½·¨¿ÉÒÔÊ¹ÓÃËø
+	mutable std::shared_mutex _moduleMutex; //mutable è®©constæ–¹æ³•å¯ä»¥ä½¿ç”¨é”
 };

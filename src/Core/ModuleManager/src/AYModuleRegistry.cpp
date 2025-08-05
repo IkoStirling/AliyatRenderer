@@ -1,4 +1,4 @@
-#include "AYModuleRegistry.h"
+﻿#include "AYModuleRegistry.h"
 #include "IAYModule.h"
 
 AYModuleManager& AYModuleManager::getInstance()
@@ -38,15 +38,16 @@ bool AYModuleManager::unregisterModule(const std::string& name)
 
 void AYModuleManager::allModuleInit()
 {
-	if (hasModule("MemoryPool"))
-		_moduleMap["MemoryPool"]->init();
-
-	if (hasModule("EventSystem"))
-		_moduleMap["EventSystem"]->init();
-
 	std::vector<std::shared_ptr<IAYModule>> modules;
 	{
 		std::shared_lock<std::shared_mutex> lock(_moduleMutex);
+
+		if (hasModule("MemoryPool"))
+			_moduleMap["MemoryPool"]->init();
+
+		if (hasModule("EventSystem"))
+			_moduleMap["EventSystem"]->init();
+
 		for (auto& [name, module] : _moduleMap) {
 			if (module) modules.push_back(module);
 		}
@@ -67,3 +68,12 @@ void AYModuleManager::allModuleUpdate(float delta_time)
 	}
 }
 
+void AYModuleManager::allModuleShutdown()
+{
+	std::unique_lock<std::shared_mutex> lock(_moduleMutex);
+	for (auto it = _moduleMap.begin(); it != _moduleMap.end(); it++)
+	{
+		if (it->second)
+			it->second->shutdown();
+	}
+}

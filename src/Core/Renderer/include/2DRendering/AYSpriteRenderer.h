@@ -1,6 +1,5 @@
-#pragma once
+﻿#pragma once
 #include "AYRenderDevice.h"
-#include "AYConfigWrapper.h"
 #include "STTransform.h"
 #include <glm/glm.hpp>
 #include <memory>

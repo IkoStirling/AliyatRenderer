@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "Mod_InputSystem.h"
 #include "AYRenderDevice.h"
 #include "AYInputBinding.h"
@@ -15,16 +15,17 @@ public:
 
 	void update(float delta_time) override;
 
+    void shutdown() override;
     /*
-        ĞéÄâ°´¼ü×´Ì¬ÓÉ´Ë·ÃÎÊ´´½¨£¨Î¨Ò»Èë¿Ú£©
-        ÔÚ»Øµ÷ÄÚÒÑ¾­×Ô¶¯´´½¨ÁË¼üÅÌºÍÊó±êµÄĞéÄâ°´¼ü×´Ì¬
-        µ«ÊÇÊÖ±ú²¢Ã»ÓĞ´´½¨£¬ĞèÒªÊÖ¶¯³õÊ¼»¯
+        è™šæ‹ŸæŒ‰é”®çŠ¶æ€ç”±æ­¤è®¿é—®åˆ›å»ºï¼ˆå”¯ä¸€å…¥å£ï¼‰
+        åœ¨å›è°ƒå†…å·²ç»è‡ªåŠ¨åˆ›å»ºäº†é”®ç›˜å’Œé¼ æ ‡çš„è™šæ‹ŸæŒ‰é”®çŠ¶æ€
+        ä½†æ˜¯æ‰‹æŸ„å¹¶æ²¡æœ‰åˆ›å»ºï¼Œéœ€è¦æ‰‹åŠ¨åˆå§‹åŒ–
     */
     InputState& getInputState(const UniversalInput& input); 
     const InputState* findInputState(const UniversalInput& input) const;
 
     /*
-        ĞéÄâ°´¼üÓ³Éä£¬ÕâÀïÌá¹©Ó³ÉäÖĞ°´¼ü»î¶¯µÄ×´Ì¬·ÃÎÊ·½·¨
+        è™šæ‹ŸæŒ‰é”®æ˜ å°„ï¼Œè¿™é‡Œæä¾›æ˜ å°„ä¸­æŒ‰é”®æ´»åŠ¨çš„çŠ¶æ€è®¿é—®æ–¹æ³•
     */
     void addInputMapping(const std::string& name, std::shared_ptr<AYInputBinding> binding);
     void removeInputMapping(const std::string& name);
@@ -32,30 +33,30 @@ public:
     bool isActionActive(const std::string& fullActionName) const; //bindingName.actionName
 
     /*
-        ÕâÀïÌá¹©Ô­Ê¼ĞéÄâ°´¼ü×´Ì¬·ÃÎÊ·½·¨£¬£¡£¡£¡ºÍÉÏÃæµÄ°´¼ü»î¶¯×´Ì¬²»Í¬
-        µ«ÊÇÈç¹û²»getInputStateÒ»´Î£¬¾Í²»»áÉúĞ§
+        è¿™é‡Œæä¾›åŸå§‹è™šæ‹ŸæŒ‰é”®çŠ¶æ€è®¿é—®æ–¹æ³•ï¼Œï¼ï¼ï¼å’Œä¸Šé¢çš„æŒ‰é”®æ´»åŠ¨çŠ¶æ€ä¸åŒ
+        ä½†æ˜¯å¦‚æœä¸getInputStateä¸€æ¬¡ï¼Œå°±ä¸ä¼šç”Ÿæ•ˆ
     */
     bool getUniversalInputState(const UniversalInput& input) const;
     bool getPreviousUniversalInputState(const UniversalInput& input) const;
 
     /*
-        ÖáÖµ·ÃÎÊ£¬Èç¹ûµ±Ç°°´¼ü²»Ö§³ÖÖáÖµÔò»á·µ»Ø 0
+        è½´å€¼è®¿é—®ï¼Œå¦‚æœå½“å‰æŒ‰é”®ä¸æ”¯æŒè½´å€¼åˆ™ä¼šè¿”å› 0
     */
     float getAxisValue(const UniversalInput& input) const;
     float getPreviousAxisValue(const UniversalInput& input) const;
     glm::vec2 getVector2Axis(const std::string& fullActionName) const;
     
     /*
-        ÊÖ±úÏà¹Ø
+        æ‰‹æŸ„ç›¸å…³
     */
     void initGamepad(int joystickId = GLFW_JOYSTICK_1);
     bool isGamepadConnected(int joystickId = GLFW_JOYSTICK_1) const;
     std::vector<int> getConnectedGamepads() const;
 
 private:
-    // ÊäÈëÂß¼­¸üĞÂ
+    // è¾“å…¥é€»è¾‘æ›´æ–°
     void _updateUniversalInputState(float delta_time);
-    void _updateAxisStates(float delta_time);   //ÖáÖµÊµÊ±·ÃÎÊ£¬¸Ãº¯ÊıÔİÊ±ÆúÓÃ
+    void _updateAxisStates(float delta_time);   //è½´å€¼å®æ—¶è®¿é—®ï¼Œè¯¥å‡½æ•°æš‚æ—¶å¼ƒç”¨
     void _updateGamepadState(float delta_time);
 
     void _debugInfo()
@@ -72,10 +73,10 @@ private:
 private:
     AYRenderDevice* _device = nullptr;
 
-    // °´¼üÓ³Éä´æ´¢
+    // æŒ‰é”®æ˜ å°„å­˜å‚¨
     std::unordered_map<std::string, std::shared_ptr<AYInputBinding>> _keyBindings;
 
-    // ÊäÈë×´Ì¬´æ´¢
+    // è¾“å…¥çŠ¶æ€å­˜å‚¨
     std::unordered_map<
         UniversalInput,
         InputState,
@@ -83,17 +84,17 @@ private:
         UniversalInputEqual
     > _inputStates;
 
-    glm::vec2 _currentMousePos;     //Í¨¹ı»Øµ÷»ñÈ¡
-    glm::vec2 _lastMousePos;        //Í¨¹ıÂß¼­¸üĞÂ»ñÈ¡
-    glm::vec2 _scrollDelta;         //Í¨¹ı»Øµ÷»ñÈ¡
+    glm::vec2 _currentMousePos;     //é€šè¿‡å›è°ƒè·å–
+    glm::vec2 _lastMousePos;        //é€šè¿‡é€»è¾‘æ›´æ–°è·å–
+    glm::vec2 _scrollDelta;         //é€šè¿‡å›è°ƒè·å–
     int _activeGamepad = -1;
-    GLFWgamepadstate _gamepadState; //Í¨¹ıÂß¼­¸üĞÂ»ñÈ¡
-    mutable std::unordered_map<int, bool> _gamepadStatusCache;  //gamepad»º´æ
+    GLFWgamepadstate _gamepadState; //é€šè¿‡é€»è¾‘æ›´æ–°è·å–
+    mutable std::unordered_map<int, bool> _gamepadStatusCache;  //gamepadç¼“å­˜
     mutable double _lastCheckTime = 0.0;
 
 public:
     /*
-    °´¼üĞÅÏ¢»ñÈ¡½Ó¿Ú£¨old£©
+    æŒ‰é”®ä¿¡æ¯è·å–æ¥å£ï¼ˆoldï¼‰
     */
     bool isKeyPressed(int key) const override;
     bool isKeyJustPressed(int key) const override;
@@ -116,13 +117,13 @@ public:
     bool isCtrlPressed() const override;
     bool isAltPressed() const override;
 private:
-    // ÄÚ²¿»Øµ÷´¦Àí
-    void handleKey(int key, int scancode, int action, int mods);    //ÕâÀï¸üĞÂĞéÄâ°´¼ü×´Ì¬£¨ÈçÃ»ÓĞ»á×Ô¶¯Ìí¼Ó£©
+    // å†…éƒ¨å›è°ƒå¤„ç†
+    void handleKey(int key, int scancode, int action, int mods);    //è¿™é‡Œæ›´æ–°è™šæ‹ŸæŒ‰é”®çŠ¶æ€ï¼ˆå¦‚æ²¡æœ‰ä¼šè‡ªåŠ¨æ·»åŠ ï¼‰
     void handleMouseButton(int button, int action, int mods);
     void handleMousePosition(double x, double y);
     void handleScroll(double xoffset, double yoffset); 
 
-    // ¾²Ì¬»Øµ÷×ª·¢Æ÷
+    // é™æ€å›è°ƒè½¬å‘å™¨
     static void keyCallbackWrapper(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void mouseButtonCallbackWrapper(GLFWwindow* window, int button, int action, int mods);
     static void cursorPosCallbackWrapper(GLFWwindow* window, double xpos, double ypos);

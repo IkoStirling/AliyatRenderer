@@ -11,7 +11,8 @@ public:
 
     // 实现IAYPhysicsBody接口
     void setType(BodyType type) override;
-    void setTransform(STTransform& transform) override;
+    void setTransform(const STTransform& transform) override;
+    STTransform getTransform() override;
     glm::vec2 getPosition() override;
     void setLinearVelocity(const glm::vec2& velocity) override;
     glm::vec2 getLinearVelocity() const override;
@@ -36,7 +37,6 @@ public:
     b2Body* getB2Body() const { return _body; }
 private:
     b2Body* _body;
-    b2Transform _lastTransform;
     std::unordered_map<IAYCollider*, b2Fixture*> _colliderFixtures;
     // 内部辅助方法
     b2Fixture* _createFixture(IAYCollider* collider);

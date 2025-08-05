@@ -21,36 +21,32 @@ public:
 
     }
 
-    IAYPhysicsBody* createBody(IAYPhysical* game_object,
+    IAYPhysicsBody* createBody(EntityID entity,
         const glm::vec2& position,
         float rotation,
         IAYPhysicsBody::BodyType type) override 
     {
         std::lock_guard<std::mutex> lock(_bbodyMutex);
-        _bbodys.push_back(std::make_unique<Box2DPhysicsBody>(_world, position, rotation, type));
-        auto body = _bbodys.back().get();
-        body->setPhysicalObject(game_object);
+        auto [iter, inserted] = _bodies.try_emplace(entity, std::make_unique<Box2DPhysicsBody>(_world, position, rotation, type));
+        auto& body = iter->second;
+        body->setOwningEntity(entity);
         body->setType(type);
-        return body;
+        return body.get();
     }
 
-    void syncPhysicsToLogic() override
+    void setTransform(EntityID entity, const STTransform& transform) override
     {
-        for (auto& body : _bbodys)
-        {
-            if (body->isDynamic())
-            {
-                glm::vec2 position = glmToEngine(body->getPosition());
-                float rotation = body->getB2Body()->GetTransform().q.GetAngle();
-                body->getPhysicalObject()->setPosition(position);
-                body->getPhysicalObject()->setRotation(rotation);
-                //std::cout << "position: \t(" << body->getPosition().x << ", " << body->getPosition().y << ")\n";
-            }
-        }
+        auto& body = _bodies[entity];
+        body->setTransform(transform);
+    }
+    const STTransform& getTransform(EntityID entity) override
+    {
+        auto& body = _bodies[entity];
+        return body->getTransform();
     }
 
 private:
     b2World _world;
-    std::vector<std::unique_ptr<Box2DPhysicsBody>> _bbodys;
+    std::unordered_map<EntityID, std::unique_ptr<Box2DPhysicsBody>> _bodies;
     std::mutex _bbodyMutex;
 };

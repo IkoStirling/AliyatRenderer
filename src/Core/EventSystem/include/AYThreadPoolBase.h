@@ -1,11 +1,11 @@
-#pragma once
+ï»¿#pragma once
 #include <functional>
 #include <mutex>
 #include <queue>
 #include <future>
 #include  <condition_variable>
 
-// Ö»¸ºÔğ´¦Àíº¯ÊıÖ¸ÕëÈÎÎñ£¬²»Ìí¼Ó¶àÓà¹¦ÄÜ
+// åªè´Ÿè´£å¤„ç†å‡½æ•°æŒ‡é’ˆä»»åŠ¡ï¼Œä¸æ·»åŠ å¤šä½™åŠŸèƒ½
 class AYThreadPoolBase
 {
 public:
@@ -19,7 +19,7 @@ public:
 	template<typename F, typename... Args>
 	auto enqueue(F&& f, Args&&... args)->std::future<decltype(f(args...))>;
 	
-
+	void stop();
 private:
 	std::vector<std::thread> _workers;
 	std::mutex _queueMutex;

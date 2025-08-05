@@ -1,4 +1,4 @@
-#include "AYThreadPoolBase.h"
+ï»¿#include "AYThreadPoolBase.h"
 
 AYThreadPoolBase::AYThreadPoolBase(size_t in_threadNums)
 {
@@ -13,8 +13,8 @@ AYThreadPoolBase::AYThreadPoolBase(size_t in_threadNums)
 				{
 					std::unique_lock<std::mutex> lock(_queueMutex);
 					_conditionVariable.wait(lock, [this]() {
-						//Ïß³Ì±»Í¨ÖªÍ£Ö¹£¬µ«»¹ÓĞÈÎÎñÃ»Ö´ĞĞÍê£¬Ôò¼ÌĞøÔËĞĞÎŞĞèµÈ´ı
-						//predicateÎªtrueÊ±ÎŞĞèµÈ´ı£¬Ö±½Ó»½ĞÑ
+						//çº¿ç¨‹è¢«é€šçŸ¥åœæ­¢ï¼Œä½†è¿˜æœ‰ä»»åŠ¡æ²¡æ‰§è¡Œå®Œï¼Œåˆ™ç»§ç»­è¿è¡Œæ— éœ€ç­‰å¾…
+						//predicateä¸ºtrueæ—¶æ— éœ€ç­‰å¾…ï¼Œç›´æ¥å”¤é†’
 						return !_tasksQueue.empty() || shouldThreadStop;
 						});
 					if (_tasksQueue.empty() && shouldThreadStop)
@@ -29,6 +29,11 @@ AYThreadPoolBase::AYThreadPoolBase(size_t in_threadNums)
 }
 
 AYThreadPoolBase::~AYThreadPoolBase()
+{
+	stop();
+}
+
+void AYThreadPoolBase::stop()
 {
 	{
 		std::lock_guard<std::mutex> lock(_queueMutex);
