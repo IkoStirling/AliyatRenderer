@@ -5,6 +5,18 @@
 #include <Windows.h>
 #include <mutex>
 
+/*
+*
+* 
+* 
+* 
+*               OpenGL上下文与线程相关，不要在非渲染线程执行以下操作 ↓↓↓↓↓
+*                                      目前渲染线程在主线程
+* 
+* 
+* 
+* 
+*/
 class AYRenderDevice {
 public:
     AYRenderDevice();
@@ -12,6 +24,8 @@ public:
     bool init(int width, int height);
     void shutdown();
 
+public:
+    // 窗口样式设置
     using ViewportCallback = std::function<void(int, int)>;
 
     GLFWwindow* getWindow();
@@ -22,11 +36,48 @@ public:
     void setViewportCallback(ViewportCallback callback);
     void removeViewportCallback();
 
+public:
+    // GL base
     GLuint createVertexBuffer(const void* data, size_t size, const std::string& type = "static");// type: "dynamic" or "static", 只传入数据
     GLuint createIndexBuffer(const void* data, size_t size);
     GLuint createVertexArray();
+ 
+public:
+    // 纹理
+    enum class TextureType {
+        Standard,    // 标准纹理 (RGBA/RGB等)
+        Font,        // 字体纹理 (单通道)
+        Video,       // 视频纹理 (动态更新)
+        Empty        // 空纹理 (仅分配空间)
+    };
+
+    struct TextureParams {
+        GLenum wrapS = GL_REPEAT;
+        GLenum wrapT = GL_REPEAT;
+        GLenum minFilter = GL_LINEAR;
+        GLenum magFilter = GL_LINEAR;
+        bool generateMipmap = false;
+    };
+
+    TextureParams getDefaultTextureParams(TextureType type);
+
+    // 纹理通用接口
+    GLuint createTexture(TextureType type, const uint8_t* pixels,
+        int width, int height, int channels = 4,
+        const TextureParams* customParams = nullptr);
+
+    void updateTexture(GLuint textureID,
+        const uint8_t* pixels,
+        int width,
+        int height,
+        GLenum format = GL_RGBA);
+    
     GLuint createTexture2D(const uint8_t* pixels, int width, int height, int channels = 4);
     GLuint createFontTexture(const uint8_t* pixels, int width, int height);
+    GLuint createVideoTexture(int width, int height);
+
+public:
+    // Shader
     GLuint createShaderProgram(const char* vtx_src, const char* frag_src);
     GLuint getShaderV(const std::string& name,
         bool reload = false,
@@ -36,6 +87,8 @@ public:
     AYGLStateManager* getGLStateManager() { return _stateManager.get(); }
     void saveGLState() { _previousState = _stateManager->getState(); }
     void restoreGLState();
+
+
 private:
     // windows
     static void _viewportCallbackWrapper(GLFWwindow* window, int width, int height);

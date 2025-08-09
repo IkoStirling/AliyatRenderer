@@ -1,9 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #include "BaseRendering/Camera/AY3DCamera.h"
 
 void AY3DCamera::update(float delta_time)
 {
-    // Æ½»¬¸úËæÄ¿±êÎ»ÖÃ
+    _lastTransform = _transform;
+    // å¹³æ»‘è·Ÿéšç›®æ ‡ä½ç½®
     if (_smoothFollow)
     {
         _transform.position += (_targetPosition - _transform.position) * _followSpeed * delta_time;
@@ -17,9 +18,9 @@ void AY3DCamera::update(float delta_time)
 glm::mat4 AY3DCamera::getViewMatrix() const
 {
     return glm::lookAt(
-        _transform.position,              // Ïà»úÎ»ÖÃ
-        _transform.position + _cachedFront,     // Ä¿±êÎ»ÖÃ£¨Î»ÖÃ+Ç°ÏòÏòÁ¿£©
-        _cachedUp // ¹Ì¶¨ÊÀ½ç¿Õ¼äµÄÉÏÏòÁ¿
+        _transform.position,              // ç›¸æœºä½ç½®
+        _transform.position + _cachedFront,     // ç›®æ ‡ä½ç½®ï¼ˆä½ç½®+å‰å‘å‘é‡ï¼‰
+        _cachedUp // å›ºå®šä¸–ç•Œç©ºé—´çš„ä¸Šå‘é‡
     );
     return glm::inverse(_transform.getTransformMatrix());
 }
@@ -36,7 +37,6 @@ glm::mat4 AY3DCamera::getProjectionMatrix() const
 
 void AY3DCamera::setLookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& up)
 {
-    _transform.position = eye;
     _targetPosition = center;
     _cachedFront = glm::normalize(center - eye);
     _cachedUp = up;
@@ -71,7 +71,7 @@ void AY3DCamera::setTargetPosition(const glm::vec3& target)
 
 void AY3DCamera::rotate(float yaw, float pitch)
 {
-    // ¸üĞÂÏà»úµÄ³¯Ïò
+    // æ›´æ–°ç›¸æœºçš„æœå‘
     _yaw += yaw;
     _pitch = glm::clamp(_pitch - pitch, -89.0f, 89.0f);
 
@@ -81,7 +81,7 @@ void AY3DCamera::rotate(float yaw, float pitch)
     front.z = sin(glm::radians(_yaw)) * cos(glm::radians(_pitch));
     _cachedFront = glm::normalize(front);
 
-    // ÖØĞÂ¼ÆËãÓÒÏòÁ¿ºÍÉÏÏòÁ¿
+    // é‡æ–°è®¡ç®—å³å‘é‡å’Œä¸Šå‘é‡
     _cachedRight = glm::normalize(glm::cross(_cachedFront, glm::vec3(0.0f, 1.0f, 0.0f)));
     _cachedUp = glm::normalize(glm::cross(_cachedRight, _cachedFront));
 }
@@ -106,13 +106,13 @@ const glm::vec3& AY3DCamera::getRight() const
 
 void AY3DCamera::_updateCachedVectors()
 {
-    // ´Ó STTransform µÄĞı×ª¼ÆËã front
+    // ä» STTransform çš„æ—‹è½¬è®¡ç®— front
     _cachedFront.x = cos(glm::radians(_yaw)) * cos(glm::radians(_pitch));
     _cachedFront.y = sin(glm::radians(_pitch));
     _cachedFront.z = sin(glm::radians(_yaw)) * cos(glm::radians(_pitch));
     _cachedFront = glm::normalize(_cachedFront);
 
-    // ¼ÆËã right ºÍ up
+    // è®¡ç®— right å’Œ up
     _cachedRight = glm::normalize(glm::cross(_cachedFront, glm::vec3(0.0f, 1.0f, 0.0f)));
     _cachedUp = glm::normalize(glm::cross(_cachedRight, _cachedFront));
 }

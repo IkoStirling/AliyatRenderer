@@ -1,4 +1,4 @@
-#include "AYRenderer.h"
+ï»¿#include "AYRenderer.h"
 
 AYRenderer::AYRenderer(AYRenderDevice* device) : 
     _device(device)
@@ -16,6 +16,16 @@ AYRenderer::~AYRenderer()
 {
 }
 
+void AYRenderer::shutdown()
+{
+    _fontRenderer->shutdown();
+    _spriteRenderer->shutdown();
+    _coreRenderer->shutdown();
+    _skyboxRenderer->shutdown();
+    _materialManager->shutdown();
+    _cameraSystem->shutdown();
+}
+
 void AYRenderer::clearScreen(float r, float g, float b, float a)
 {
 	glClearColor(r, g, b, a);
@@ -25,7 +35,7 @@ void AYRenderer::clearScreen(float r, float g, float b, float a)
 void AYRenderer::drawFullscreenQuad()
 {
     if (_screenVAO == 0) {
-        // ³õÊ¼»¯È«ÆÁËÄ±ßĞÎ£¨ÓÃÓÚºóÆÚ´¦Àí£©
+        // åˆå§‹åŒ–å…¨å±å››è¾¹å½¢ï¼ˆç”¨äºåæœŸå¤„ç†ï¼‰
         float vertices[] = {
             -1, -1, 0, 0,
              1, -1, 1, 0,

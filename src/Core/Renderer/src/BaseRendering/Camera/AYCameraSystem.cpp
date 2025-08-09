@@ -1,10 +1,25 @@
-#include "BaseRendering/Camera/AYCameraSystem.h"
+﻿#include "BaseRendering/Camera/AYCameraSystem.h"
 #include "BaseRendering/Camera/AY3DCamera.h"
 
 AYCameraSystem::AYCameraSystem()
 {
     createCamera<AY3DCamera>("default");
     switchCamera("default");
+}
+
+void AYCameraSystem::shutdown()
+{
+    std::unordered_map<std::string, std::unique_ptr<IAYCamera>> c;
+    _cameras.swap(c);
+}
+
+void AYCameraSystem::update(float delta_time)
+{
+    for (auto& [name, camera] : _cameras)
+    {
+        camera->update(delta_time);
+    } 
+    _activeCamera->onCameraMoved();
 }
 
 void AYCameraSystem::addCamera(const std::string& name, IAYCamera* camera)

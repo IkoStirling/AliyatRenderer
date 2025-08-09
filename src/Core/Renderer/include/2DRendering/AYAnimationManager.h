@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "AYTexture.h"
 #include "AYAnimatedSprite.h"
 #include <unordered_map>
@@ -15,8 +15,8 @@ public:
     using AnimationCallback = std::function<void()>;
 public:
     AYAnimationManager(AYRenderDevice* device);
-
-    // ¼ÓÔØÍ¼¼¯²¢×¢²á¶¯»­
+    void shutdown();
+    // åŠ è½½å›¾é›†å¹¶æ³¨å†ŒåŠ¨ç”»
     std::shared_ptr<AYSpriteAtlas> loadAtlas(const std::string& atlasName, 
         const std::string& texturePath,
         const glm::vec2& spriteSize,
@@ -39,7 +39,7 @@ public:
         float duration = 0.1
     );
 
-    // ×¢²á¶¯»­»Øµ÷
+    // æ³¨å†ŒåŠ¨ç”»å›žè°ƒ
     void registerAnimationEvent(const std::string& atlasName,
         const std::string& animationName,
         int frameIndex,

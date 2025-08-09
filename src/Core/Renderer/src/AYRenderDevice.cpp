@@ -5,19 +5,20 @@
 #include <GLFW/glfw3native.h>
 
 AYRenderDevice::AYRenderDevice() :
-    _configPath(AYPath::Engine::getPresetConfigPath() + std::string("Renderer/RenderDevice/config.ini"))
+    _configPath("@config/Renderer/RenderDevice/config.ini")
 {
-    _loadDeviceWindowConfigINI();
 }
 
 AYRenderDevice::~AYRenderDevice()
 {
-    _saveDeviceWindowConfigINI();
+
 }
 
 bool AYRenderDevice::init(int width, int height)
 {
     if (!glfwInit()) return false;
+
+    _loadDeviceWindowConfigINI();
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -50,6 +51,7 @@ bool AYRenderDevice::init(int width, int height)
 void AYRenderDevice::shutdown()
 {
     removeViewportCallback();
+    _saveDeviceWindowConfigINI();
 }
 
 GLFWwindow* AYRenderDevice::getWindow()
@@ -81,7 +83,7 @@ void AYRenderDevice::setWindowDesktopEffect(float opacity, bool clickThrough, CO
     SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
 
     
-    if (opacity >= 0.99f)
+    if (opacity >= 0.9999f)
     {
         //设置颜色键控（将黑色设为透明）
         SetLayeredWindowAttributes(hwnd, colorkey, 0, LWA_COLORKEY);
@@ -177,42 +179,27 @@ GLuint AYRenderDevice::createVertexArray()
 
 GLuint AYRenderDevice::createTexture2D(const uint8_t* pixels, int width, int height, int channels)
 {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // 设置纹理参数
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    GLenum format = GL_RGBA;
-    if (channels == 1) format = GL_RED;
-    else if (channels == 2) format = GL_RG;
-    else if (channels == 3) format = GL_RGB;
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    return texture;
+    return createTexture(TextureType::Standard, pixels, width, height, channels);
 }
 
 GLuint AYRenderDevice::createFontTexture(const uint8_t* pixels, int width, int height)
 {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    return createTexture(TextureType::Font, pixels, width, height, 1);
+}
 
-    // 字体纹理的特殊设置
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+GLuint AYRenderDevice::createVideoTexture(int width, int height)
+{
+    return createTexture(TextureType::Video, nullptr, width, height, 4);
+}
 
-    // 使用 GL_RED 格式存储单通道数据（字体通常只需要alpha通道）
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+void AYRenderDevice::updateTexture(GLuint textureID, const uint8_t* pixels, int width, int height, GLenum format)
+{
+    if (!pixels) return;
 
-    return texture;
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+        width, height,
+        format, GL_UNSIGNED_BYTE, pixels);
 }
 
 GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag_src)
@@ -221,7 +208,6 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vtx_src, NULL);
     glCompileShader(vertexShader);
-
 
     // 创建片段着色器
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -233,8 +219,6 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
-
-
 
     // 删除着色器对象
     glDeleteShader(vertexShader);
@@ -287,6 +271,93 @@ void AYRenderDevice::restoreGLState()
 
     // 恢复线宽
     _stateManager->setLineWidth(_previousState.lineWidth);
+}
+
+AYRenderDevice::TextureParams AYRenderDevice::getDefaultTextureParams(TextureType type)
+{
+    TextureParams params;
+
+    switch (type) {
+    case TextureType::Font:
+        params.wrapS = GL_CLAMP_TO_EDGE;
+        params.wrapT = GL_CLAMP_TO_EDGE;
+        params.generateMipmap = false;
+        break;
+
+    case TextureType::Video:
+        params.wrapS = GL_CLAMP_TO_EDGE;
+        params.wrapT = GL_CLAMP_TO_EDGE;
+        params.generateMipmap = false;
+        break;
+
+    case TextureType::Standard:
+    default:
+        params.wrapS = GL_REPEAT;
+        params.wrapT = GL_REPEAT;
+        params.minFilter = GL_LINEAR_MIPMAP_LINEAR;
+        params.generateMipmap = true;
+        break;
+    }
+
+    return params;
+}
+
+GLuint AYRenderDevice::createTexture(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
+{
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // 获取默认参数或使用自定义参数
+    TextureParams params = customParams ? *customParams : getDefaultTextureParams(type);
+
+    // 设置纹理参数
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, params.wrapS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, params.wrapT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, params.minFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, params.magFilter);
+
+    // 确定格式
+    GLenum format = GL_RGBA;
+    GLenum internalFormat = GL_RGBA8;
+
+    if (type == TextureType::Font) {
+        format = GL_RED;
+        internalFormat = GL_R8;
+    }
+    else {
+        if (channels == 1) {
+            format = GL_RED;
+            internalFormat = GL_R8;
+        }
+        else if (channels == 2) {
+            format = GL_RG;
+            internalFormat = GL_RG8;
+        }
+        else if (channels == 3) {
+            format = GL_RGB;
+            internalFormat = GL_RGB8;
+        }
+    }
+
+    // 处理空纹理情况
+    if (type == TextureType::Empty || !pixels) {
+        std::vector<uint8_t> emptyData(width * height * channels, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat,
+            width, height, 0, format,
+            GL_UNSIGNED_BYTE, emptyData.data());
+    }
+    else {
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat,
+            width, height, 0, format,
+            GL_UNSIGNED_BYTE, pixels);
+    }
+
+    if (params.generateMipmap) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    return texture;
 }
 
 void AYRenderDevice::_viewportCallbackWrapper(GLFWwindow* window, int width, int height) {

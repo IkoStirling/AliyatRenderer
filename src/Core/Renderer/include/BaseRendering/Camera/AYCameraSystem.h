@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IAYCamera.h"
 #include <unordered_map>
 #include <string>
@@ -8,8 +8,10 @@ class AYCameraSystem
 {
 public:
     AYCameraSystem();
+    void shutdown();
 
-    // Ïà»ú¹ÜÀí
+    void update(float delta_time);
+    // ç›¸æœºç®¡ç†
     template<typename T, typename... Args>
     T* createCamera(const std::string& name, Args&&... args);
 
@@ -19,7 +21,7 @@ public:
 
     void switchCamera(const std::string& name);
 
-    void setViewportAll(const glm::vec4& viewport); //¸ü¸Ä´°¿Ú´óĞ¡ºóµ÷ÓÃ¸Ãº¯Êı
+    void setViewportAll(const glm::vec4& viewport); //æ›´æ”¹çª—å£å¤§å°åè°ƒç”¨è¯¥å‡½æ•°
 
     IAYCamera* getActiveCamera() const;
 

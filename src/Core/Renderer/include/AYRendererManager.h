@@ -6,6 +6,7 @@
 #include "2DRendering/AYAnimatedSprite.h"
 #include "2DRendering/AYAnimationManager.h"
 #include <vector>
+#include <AYVideo.h>
 
 class AYRendererManager : public Mod_Renderer
 {
@@ -51,6 +52,8 @@ private:
 	float delta;
 	class AYAnimatedSprite* _character;
 	std::shared_ptr<AYAnimatedSprite> orcSprite;
+	std::shared_ptr<AYVideo> videos;
+	GLuint videot;
 };
 
 REGISTER_MODULE_CLASS("Renderer", AYRendererManager)

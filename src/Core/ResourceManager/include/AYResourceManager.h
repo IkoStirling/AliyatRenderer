@@ -79,6 +79,7 @@ public:
 
      /*
          手动卸载资源
+         默认不解析路径
          该函数实现功能：
             a）将资源卸载，并从强弱缓存中移除
      */
@@ -95,6 +96,7 @@ public:
 
     /*
         钉住资源
+        默认不解析路径
         该函数实现功能：
             a）将资源加入强缓存
     */
@@ -103,6 +105,7 @@ public:
 
     /*
         取消持有资源
+        默认不解析路径
         该函数实现功能：
             a）将资源移除强缓存
     */
@@ -155,7 +158,10 @@ public:
     template<typename T, typename ...Args>
     void registerResourceType();
 
-
+    /*
+        底层接口，不建议调用
+        默认不解析路径
+     */
     std::shared_ptr<IAYResource> getResourceByPath(const std::string& filepath);
 
     void tagResource(const std::string& filepath, const Tag& tag);
@@ -227,20 +233,21 @@ private:
 template<typename T, typename ...Args>
 inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, Args && ...args)
 {
-    auto strongIt = _strongCache.find(filepath);
+    std::string rpath = AYPath::resolve(filepath);
+    auto strongIt = _strongCache.find(rpath);
     if (strongIt != _strongCache.end())
     {
-        touchResource(filepath);
+        touchResource(rpath);
         return std::static_pointer_cast<T>(strongIt->second.resource);
     }
 
     //类型确认，可以直接使用static cast
-    auto weakIt = _weakCache.find(filepath);
+    auto weakIt = _weakCache.find(rpath);
     if (weakIt != _weakCache.end()) {
         if (auto resource = weakIt->second.lock())
         {
-            pinResource(filepath, resource);    //刷新强缓存
-            touchResource(filepath);
+            pinResource(rpath, resource);    //刷新强缓存
+            touchResource(rpath);
             return std::dynamic_pointer_cast<T>(resource);
         }
     }
@@ -253,11 +260,11 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
             resource = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
         }
 
-        if (!resource->load(filepath)) 
-            throw std::runtime_error("Failed to load resource: " + filepath);
+        if (!resource->load(rpath))
+            throw std::runtime_error("Failed to load resource: " + rpath);
         
-        _weakCache[filepath] = resource;
-        pinResource(filepath, resource);
+        _weakCache[rpath] = resource;
+        pinResource(rpath, resource);
         trim();
 
         return resource;
@@ -277,6 +284,7 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
     std::function<void(std::shared_ptr<T>)> callback
 )
 {
+    //std::string rpath = AYPath::resolve(filepath);
     auto promise = std::make_shared<std::promise<std::shared_ptr<T>>>();
     auto future = promise->get_future().share();
 
@@ -315,7 +323,8 @@ inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
 template<typename T>
 inline std::shared_ptr<AYResourceHandle<T>> AYResourceManager::createHandle(const std::string& filepath)
 {
-    return std::shared_ptr<AYResourceHandle<T>>(filepath);
+    std::string rpath = AYPath::resolve(filepath);
+    return std::shared_ptr<AYResourceHandle<T>>(rpath);
 }
 
 

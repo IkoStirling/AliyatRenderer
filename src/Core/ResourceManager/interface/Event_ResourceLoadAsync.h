@@ -4,6 +4,7 @@
 #include "STResourceLoadRequest.h"
 #include "AYTexture.h"
 #include "AYAudio.h"
+#include "AYAudioStream.h"
 #include "AYVideo.h"
 
 template <typename T, typename... Args>
@@ -38,4 +39,5 @@ public:
 
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYTexture)
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYAudio)
+REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYAudioStream)
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYVideo)

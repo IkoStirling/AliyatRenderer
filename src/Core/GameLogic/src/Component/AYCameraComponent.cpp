@@ -1,4 +1,4 @@
-#include "Component/AYCameraComponent.h"
+ï»¿#include "Component/AYCameraComponent.h"
 #include "AYEntrant.h"
 #include "AYRendererManager.h"
 #include "BaseRendering/Camera/AY2DCamera.h"
@@ -41,10 +41,10 @@ void AYCameraComponent::update(float delta_time)
 {
     if (!_boundCamera || !getOwner()) return;
 
-    // »ñÈ¡ËùÓĞÕß±ä»»
+    // è·å–æ‰€æœ‰è€…å˜æ¢
     auto& trans = static_cast<AYEntrant*>(getOwner())->getTransform();
 
-    // ¸ù¾İÏà»úÀàĞÍ¸üĞÂ
+    // æ ¹æ®ç›¸æœºç±»å‹æ›´æ–°
     switch (_boundCamera->getType()) {
     case IAYCamera::Type::ORTHOGRAPHIC_2D:
         _update2DCamera(trans);
@@ -115,7 +115,7 @@ void AYCameraComponent::_update2DCamera(const STTransform& ownerTrans)
     auto* cam2D = dynamic_cast<AY2DCamera*>(_boundCamera);
     if (!cam2D) return;
 
-    // Ö±½ÓÍ¬²½Î»ÖÃ£¨¿É¸ù¾İĞèÇóÌí¼ÓÆ«ÒÆ£©
+    // ç›´æ¥åŒæ­¥ä½ç½®ï¼ˆå¯æ ¹æ®éœ€æ±‚æ·»åŠ åç§»ï¼‰
     auto& pos = ownerTrans.position;
     cam2D->setTargetPosition(glm::vec2(pos.x, pos.y));
 }
@@ -125,9 +125,11 @@ void AYCameraComponent::_update3DCamera(const STTransform& ownerTrans)
     auto* cam3D = dynamic_cast<AY3DCamera*>(_boundCamera);
     if (!cam3D) return;
 
-    // Ê¾Àı£ºµÚÈıÈË³Æ¸úËæ
+    // ç¤ºä¾‹ï¼šç¬¬ä¸‰äººç§°è·Ÿéš
     auto& pos = ownerTrans.position;
-    glm::vec3 offset(0, 20.0f, -500.0f); // ºó·½ÉÏ·½Æ«ÒÆ
+    glm::vec3 offset(0, 20.0f, -500.0f); // åæ–¹ä¸Šæ–¹åç§»
+    //glm::vec3 tp(pos + offset); // åæ–¹ä¸Šæ–¹åç§»
+    //std::cout << "[AYCameraComponent] camera target location [" << tp.x << ", " << tp.y << ", " << tp.z << "]\n";
     cam3D->setTargetPosition(pos + offset);
     cam3D->setLookAt(
         pos + offset,

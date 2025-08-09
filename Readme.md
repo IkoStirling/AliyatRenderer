@@ -67,8 +67,8 @@ Run the following commands:
 		| ![pic](assets/core/.projectProgress/2D_orc&3D_Skybox.png)
 		| The current architecture results in drawing 30000 instantiated graphics in one frame, causing the program to have a frame rate of only about 5fps. It is still unclear whether it is a CPU or GPU limitation, and it is difficult to fix such issues until the module is completed and disconnected from the main thread.
 		| ![pic](assets/core/.projectProgress/A_problem_that_needs_to_be_solved.png)
-		|
-		|
+		| This effect is achieved by setting a native Windows window. If you want to implement it in other engines, you need to find a way to obtain the handle of the Windows window. There seems to be a small flaw. It should have been set as a penetrable switch, but now the default pixel free place will directly penetrate below. At least now it can make desktop pets
+		| ![pic](assets/core/.projectProgress/no_border_window&always_on_desktop_top.png)
 
 	
 2. Core code lines: 14322

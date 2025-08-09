@@ -5,7 +5,7 @@ set(INTERFACE_NAME system_event_type_rosource)
 add_library(${INTERFACE_NAME} INTERFACE
 )
 target_include_directories(${INTERFACE_NAME} INTERFACE 
-	${CMAKE_CURRENT_SOURCE_DIR}/interface
+	
 )
 
 
@@ -21,7 +21,9 @@ find_package(OpenAL REQUIRED)
 find_package(FFMPEG REQUIRED)
 
 
-target_include_directories(${MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+target_include_directories(${MODULE_NAME} PUBLIC 
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_SOURCE_DIR}/interface
 	PRIVATE 
 	${FFMPEG_INCLUDE_DIRS}
 )

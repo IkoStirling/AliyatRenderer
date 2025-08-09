@@ -1,14 +1,10 @@
 ﻿#include "AYSoundEngine.h"
 #include "AYPath.h"
+#include "Event_CameraMove.h"
 
-AYSoundEngine::AYSoundEngine()
+AYSoundEngine::AYSoundEngine():
+    _preloadPath("@audios/AudioCachePreload.json")
 {
-}
-
-void AYSoundEngine::init()
-{
-    if (_initialized) return;
-
     ALCdevice* device = alcOpenDevice(nullptr);
     if (!device) {
         std::cerr << "Failed to open OpenAL device" << std::endl;
@@ -28,13 +24,41 @@ void AYSoundEngine::init()
         alcCloseDevice(device);
         return;
     }
+}
+
+AYSoundEngine::~AYSoundEngine()
+{
+    ALCcontext* context = alcGetCurrentContext();
+    ALCdevice* device = alcGetContextsDevice(context);
+    alcMakeContextCurrent(nullptr);
+    if (context) alcDestroyContext(context);
+    if (device) alcCloseDevice(device);
+}
+
+void AYSoundEngine::init()
+{
+    if (_initialized) return;
+
+    auto system = GET_CAST_MODULE(AYEventSystem, "EventSystem");
+    if (system)
+    {
+        auto token = system->subscribe(Event_CameraMove::staticGetType(),
+            [this](const IAYEvent& in_event) {
+                auto& event = static_cast<const Event_CameraMove&>(in_event);
+                auto& trans = event.transform;
+                auto& tp = trans.position;
+                //std::cout << "[AYSoundEngine] update sound location[" << tp.x << ", " << tp.y << ", " << tp.z << "]\n";
+                setListenerPosition(trans.position, trans.getForwardVector(), trans.getUpVector());
+            });
+        _tokens.push_back(std::unique_ptr<AYEventToken>(token));
+    }
     _preloadAudios();
     _initialized = true;
 }
 
 void AYSoundEngine::update(float delta_time)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_cacheMutex);
 
     // 更新监听器位置
     alListener3f(AL_POSITION, _listenerPosition.x, _listenerPosition.y, _listenerPosition.z);
@@ -49,12 +73,8 @@ void AYSoundEngine::update(float delta_time)
     _activeSources.erase(
         std::remove_if(_activeSources.begin(), _activeSources.end(),
             [](const ActiveAudioSource& source) {
-                ALint state;
-                alGetSourcei(source.sourceId, AL_SOURCE_STATE, &state);
-                if (state != AL_PLAYING) {
-                    alDeleteSources(1, &source.sourceId);
-                    return true;
-                }
+                if (source.audio.expired()) return true;
+                if (source.player->isPlaybackFinished()) return true;
                 return false;
             }),
         _activeSources.end());
@@ -64,55 +84,83 @@ void AYSoundEngine::shutdown()
 {
     stopAll();
 
-    ALCcontext* context = alcGetCurrentContext();
-    ALCdevice* device = alcGetContextsDevice(context);
-    alcMakeContextCurrent(nullptr);
-    if (context) alcDestroyContext(context);
-    if (device) alcCloseDevice(device);
-
     _saveAudios();
+
+    _audioCache.clear();
+
+    _tokens.clear();
+
     _initialized = false;
+    std::cout << "[AYSoundEngine] shutdown complete\n";
 }
 
-std::shared_ptr<AYAudio> AYSoundEngine::play2D(const std::string& path, bool loop, float volume, bool asyncLoad)
+
+std::shared_ptr<IAYAudioSource> AYSoundEngine::play2D(const std::string& path, bool isStreaming, bool loop, float volume, bool asyncload)
 {
-    return play3D(path, glm::vec3(0, 0, 0), loop, volume, asyncLoad);
+    return play3D(path, glm::vec3(0, 0, 0), isStreaming, loop, volume, asyncload);
 }
 
-std::shared_ptr<AYAudio> AYSoundEngine::play3D(const std::string& path, const glm::vec3& position, bool loop, float volume, bool asyncLoad)
+std::shared_ptr<IAYAudioSource> AYSoundEngine::play3D(const std::string& path, const glm::vec3& position, bool isStreaming, bool loop, float volume, bool asyncload)
 {
     if (!_initialized) return nullptr;
 
-    std::shared_ptr<AYAudio> audio;
+    std::shared_ptr<IAYAudioSource> audio;
 
     // 检查缓存
     {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> cacheLock(_cacheMutex);
         auto it = _audioCache.find(path);
         if (it != _audioCache.end()) {
             audio = it->second.lock();
+            if (audio) {
+                // 缓存命中，直接播放
+                _playAudioImpl(audio, position, loop, volume, position != glm::vec3(0));
+                return audio;
+            }
         }
     }
 
-    if (!audio) {
-        auto& rm = AYResourceManager::getInstance();
+    auto& rm = AYResourceManager::getInstance();
 
-        if (asyncLoad) {
-            // 异步加载
-            rm.loadAsync<AYAudio>(path, 
-                [this, position, loop, volume](std::shared_ptr<AYAudio> loadedAudio) {
-                if (loadedAudio) {
-                    this->_playAudioImpl(loadedAudio, position, loop, volume, position != glm::vec3(0, 0, 0));
-                }
-                });
+    if (!audio) {
+        if (asyncload) {
+            // 异步加载，可以确保this指针在调用时存在
+            // 3D默认为静态音频
+            if (isStreaming)
+            {
+                rm.loadAsync<AYAudioStream>(path,
+                    [this, position, loop, volume, path](std::shared_ptr<AYAudioStream> loadedAudio) {
+                        if (loadedAudio) {
+                            std::lock_guard<std::mutex> lock(_cacheMutex);
+                            _audioCache[path] = loadedAudio;
+                            _playAudioImpl(loadedAudio, position, loop, volume, position != glm::vec3(0, 0, 0));
+                        }
+                    });
+            }
+            else
+            {
+                rm.loadAsync<AYAudio>(path,
+                    [this, position, loop, volume, path](std::shared_ptr<AYAudio> loadedAudio) {
+                        if (loadedAudio) {
+                            std::lock_guard<std::mutex> lock(_cacheMutex);
+                            _audioCache[path] = loadedAudio;
+                            _playAudioImpl(loadedAudio, position, loop, volume, position != glm::vec3(0, 0, 0));
+                        }
+                    });
+            }
+            
             return nullptr;
         }
         else {
             // 同步加载
-            audio = rm.load<AYAudio>(path);
+            if (isStreaming)
+                audio = rm.load<AYAudio>(path);
+            else
+                audio = rm.load<AYAudioStream>(path);
+
             if (!audio) return nullptr;
 
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::mutex> lock(_cacheMutex);
             _audioCache[path] = audio;
         }
     }
@@ -123,37 +171,78 @@ std::shared_ptr<AYAudio> AYSoundEngine::play3D(const std::string& path, const gl
 
 void AYSoundEngine::setMasterVolume(float volume)
 {
+    std::lock_guard<std::mutex> lock(_cacheMutex);
+    float _oldMasterInv = 1 / _masterVolume;
+    _masterVolume = std::clamp(volume, 0.0f, 1.0f);
+
+    for (auto& player : _players) {
+        player->setMasterVolume(volume);
+    }
 }
 
 void AYSoundEngine::pauseAll()
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_cacheMutex);
     for (auto& source : _activeSources) {
-        alSourcePause(source.sourceId);
+        source.player->pause();
     }
 }
 
 void AYSoundEngine::resumeAll()
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_cacheMutex);
     for (auto& source : _activeSources) {
-        alSourcePlay(source.sourceId);
+        source.player->resume();
     }
 }
 
 void AYSoundEngine::stopAll()
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_cacheMutex);
     for (auto& source : _activeSources) {
-        alSourceStop(source.sourceId);
-        alDeleteSources(1, &source.sourceId);
+        source.player->stop();
     }
     _activeSources.clear();
 }
 
+void AYSoundEngine::setSourcePosition(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position)
+{
+    std::lock_guard<std::mutex> lock(_sourceMutex);
+
+    // 查找音源
+    auto it = std::find_if(_activeSources.begin(), _activeSources.end(),
+        [audio](const ActiveAudioSource& s) { return s.audio.lock() == audio; });
+
+    if (it != _activeSources.end()) {
+        it->player->setPosition(position);
+    }
+}
+
+void AYSoundEngine::setSourceVelocity(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& velocity)
+{
+    std::lock_guard<std::mutex> lock(_sourceMutex);
+
+    auto it = std::find_if(_activeSources.begin(), _activeSources.end(),
+        [audio](const ActiveAudioSource& s) { return s.audio.lock() == audio; });
+
+    if (it != _activeSources.end()) {
+        it->player->setVelocity(velocity);
+    }
+}
+
+void AYSoundEngine::setAttenuationParameter(float rolloff_factor, float reference_distance, float max_distance)
+{
+    _rolloffFactor = rolloff_factor;
+    _referenceDistance = reference_distance;
+    _maxDistance = max_distance;
+
+    for (auto player : _players)
+        player->set3DParameters(_rolloffFactor, _referenceDistance, _maxDistance);
+}
+
 void AYSoundEngine::setListenerPosition(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up)
 {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_cacheMutex);
     _listenerPosition = position;
     _listenerForward = glm::normalize(forward);
     _listenerUp = glm::normalize(up);
@@ -161,51 +250,68 @@ void AYSoundEngine::setListenerPosition(const glm::vec3& position, const glm::ve
 
 void AYSoundEngine::_preloadAudios()
 {
-    _preloadPath = AYPath::Engine::getPresetAudioPath() + std::string("AudioCachePreload.json");
     _preloadFile.loadFromFile(_preloadPath, AYConfigWrapper::ConfigType::JSON);
 
+    auto& rm = AYResourceManager::getInstance();
     for (const auto& path : _preloadFile.getVector<std::string>("audio_preload"))
     {
-        auto& rm = AYResourceManager::getInstance();
-        rm.loadAsync<AYAudio>(path, [](std::shared_ptr<AYAudio> loadedAudio){});
+        rm.loadAsync<AYAudio>(path, [this,path](std::shared_ptr<AYAudio> loadedAudio){
+            std::lock_guard<std::mutex> lock(_cacheMutex);
+            _audioCache[path] = loadedAudio;
+            });
     }
 }
 
 void AYSoundEngine::_saveAudios()
 {
-    for (const auto& [path, _] : _audioCache)
+    std::vector<std::string> paths;
+    for (const auto& [path, audio] : _audioCache)
     {
-        _preloadFile.set<std::string>("audio_preload", path);
+        if(!audio.lock()->isStreaming())
+            paths.push_back(path);
     }
-
+    _preloadFile.set<std::string>("audio_preload", paths);
     _preloadFile.saveConfig(_preloadPath);
 }
 
-void AYSoundEngine::_playAudioImpl(const std::shared_ptr<AYAudio>& audio, const glm::vec3& position, bool loop, float volume, bool is3D)
+void AYSoundEngine::_playAudioImpl(const std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position, bool loop, float volume, bool is3D)
 {
-    ALuint sourceId;
-    alGenSources(1, &sourceId);
-
-    // 设置源属性
-    alSourcei(sourceId, AL_BUFFER, audio->getAudioBuffer());
-    alSourcei(sourceId, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
-    alSourcef(sourceId, AL_GAIN, volume * _masterVolume);
-
-    if (is3D) {
-        alSource3f(sourceId, AL_POSITION, position.x, position.y, position.z);
-        alSourcei(sourceId, AL_SOURCE_RELATIVE, AL_FALSE);
-        alSourcef(sourceId, AL_ROLLOFF_FACTOR, 1.0f);
-        alSourcef(sourceId, AL_REFERENCE_DISTANCE, 10.0f);
-        alSourcef(sourceId, AL_MAX_DISTANCE, 100.0f);
-    }
-    else {
-        alSource3f(sourceId, AL_POSITION, 0, 0, 0);
-        alSourcei(sourceId, AL_SOURCE_RELATIVE, AL_TRUE);
+    std::shared_ptr<AYAudioPlayer> splayer;
+    for (auto player : _players)
+    {
+        if (player->isAvaliableOrInterruptible())
+        {
+            splayer = player;
+            break;
+        }
     }
 
-    alSourcePlay(sourceId);
+    if (!splayer)
+    {
+        if (_players.size() < maxAudioPlayerNum)
+        {
+            _players.push_back(std::make_shared<AYAudioPlayer>());
+            splayer = _players.back();
+            splayer->set3DParameters(_rolloffFactor, _referenceDistance, _maxDistance);
+        }
+        else
+            return;
+    }
+
+    if (audio->getChannels() == 2)
+        is3D = false;
+
+    splayer->set3DEnabled(is3D);
+    splayer->setVolume(volume);
+    splayer->play(audio, loop);
 
     // 添加到活动源列表
-    std::lock_guard<std::mutex> lock(_mutex);
-    _activeSources.push_back({ audio, sourceId, position, is3D });
+    std::lock_guard<std::mutex> lock(_sourceMutex);
+    _activeSources.push_back({
+    audio,
+    splayer,
+    loop, // 循环音频标记为持久
+    time(nullptr)
+    });
+
 }

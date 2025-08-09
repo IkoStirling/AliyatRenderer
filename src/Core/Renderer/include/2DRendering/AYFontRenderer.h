@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 #include "AYRenderDevice.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include FT_MULTIPLE_MASTERS_H  // ¿É±ä×ÖÌå/¶àÖ÷×ÖÌåÖ§³Ö
+#include FT_MULTIPLE_MASTERS_H  // å¯å˜å­—ä½“/å¤šä¸»å­—ä½“æ”¯æŒ
 #include <string>
 #include <glm/glm.hpp>
 #include <unordered_map>
@@ -19,30 +19,30 @@ static std::u32string utf8_to_utf32(const std::string& utf8) {
 
 struct Character {
     GLuint textureID;
-    glm::ivec2 size;    //size.y ×ÖĞÎµÄ¸ß¶È
-    glm::ivec2 bearing; //bearing.y»ùÏßµ½¶¥²¿µÄ¾àÀë
+    glm::ivec2 size;    //size.y å­—å½¢çš„é«˜åº¦
+    glm::ivec2 bearing; //bearing.yåŸºçº¿åˆ°é¡¶éƒ¨çš„è·ç¦»
     unsigned int advance;
-    glm::vec2 atlasPos; // ÎÆÀíÍ¼¼¯Î»ÖÃ
-    glm::vec2 atlasSize; // ÔÚÍ¼¼¯ÖĞµÄ³ß´ç
+    glm::vec2 atlasPos; // çº¹ç†å›¾é›†ä½ç½®
+    glm::vec2 atlasSize; // åœ¨å›¾é›†ä¸­çš„å°ºå¯¸
 };
 
 /*
-    ÉĞÎ´Ö§³Ö¿É±ä×ÖÌå
-    ÇëÖ±½ÓÊ¹ÓÃÏµÍ³×ÖÌå
+    å°šæœªæ”¯æŒå¯å˜å­—ä½“
+    è¯·ç›´æ¥ä½¿ç”¨ç³»ç»Ÿå­—ä½“
 */
 class AYFontRenderer {
 public:
     AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer);
     ~AYFontRenderer();
-
+    void shutdown();
     /*
-        ¼ÓÔØÕû¸ö×ÖÌåÎÄ¼ş
+        åŠ è½½æ•´ä¸ªå­—ä½“æ–‡ä»¶
     */
     bool loadFont(const std::string& fontPath, unsigned int fontSize, const std::map<std::string, float>& axisValues = {});
     void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
 
     /*
-        ¿É±äÖáÌå£¬ÔİÎ´Ö§³Ö
+        å¯å˜è½´ä½“ï¼Œæš‚æœªæ”¯æŒ
     */
     bool setVariationAxis(const std::string& axisName, float value);
     bool getVariationAxisRange(const std::string& axisName, float& min, float& max, float& def);
@@ -58,8 +58,8 @@ private:
 
 private:
     /*
-        ½«×ÖÌåäÖÈ¾µ½Í¼¼¯£¨Ã¿¼ÓÔØÒ»¸ö×Ö¾ÍÏòµ±Ç°Í¼¼¯µÄÎÆÀíÆ«ÒÆ¸²¸Ç£¬È»ºó´æ´¢±àÂëÓëÊµ¼Ê×Ö·ûĞÅÏ¢µÄmap£©
-        µ±Ê¹ÓÃÊ±ÔÚÃ¿¸öÍ¼¼¯ÖĞ±éÀú²éÕÒÄ¿±ê×Ö·û£¬Èç¹ûÕÒµ½ÔòäÖÈ¾µ±Ç°×Ö·û
+        å°†å­—ä½“æ¸²æŸ“åˆ°å›¾é›†ï¼ˆæ¯åŠ è½½ä¸€ä¸ªå­—å°±å‘å½“å‰å›¾é›†çš„çº¹ç†åç§»è¦†ç›–ï¼Œç„¶åå­˜å‚¨ç¼–ç ä¸å®é™…å­—ç¬¦ä¿¡æ¯çš„mapï¼‰
+        å½“ä½¿ç”¨æ—¶åœ¨æ¯ä¸ªå›¾é›†ä¸­éå†æŸ¥æ‰¾ç›®æ ‡å­—ç¬¦ï¼Œå¦‚æœæ‰¾åˆ°åˆ™æ¸²æŸ“å½“å‰å­—ç¬¦
     */
     struct TextureAtlas {
         GLuint textureID;
@@ -71,11 +71,11 @@ private:
     };
 
     const std::vector<std::pair<uint32_t, uint32_t>> _chineseRanges = {
-        {0x4E00, 0x9FFF},   // »ù±¾ºº×ÖÇø£¨°üº¬"Ò»¶¡ÆßÍòÕÉÈıÉÏÏÂ²»Óë"µÈ£©
-        {0x4E8D, 0x4EFF},   // ¼ÌĞø²¹³ä³£ÓÃºº×Ö
-        {0x3400, 0x4DBF},   // À©Õ¹AÇøÈ«²¿£¨¸²¸Ç¸ü¶àĞÕÊÏÓÃ×Ö£©
-        //{0x4F00, 0x4FDF},   // À©Õ¹AÇø³£ÓÃ²¿·Ö£¨"¶ªÆ¹ÅÒÇÇ¹Ô³Ë"µÈ£©
-        //{0x20000, 0x2A6DF}  // À©Õ¹B-FÇø£¨°´Ğè¼ÓÔØ£©
+        {0x4E00, 0x9FFF},   // åŸºæœ¬æ±‰å­—åŒºï¼ˆåŒ…å«"ä¸€ä¸ä¸ƒä¸‡ä¸ˆä¸‰ä¸Šä¸‹ä¸ä¸"ç­‰ï¼‰
+        {0x4E8D, 0x4EFF},   // ç»§ç»­è¡¥å……å¸¸ç”¨æ±‰å­—
+        {0x3400, 0x4DBF},   // æ‰©å±•AåŒºå…¨éƒ¨ï¼ˆè¦†ç›–æ›´å¤šå§“æ°ç”¨å­—ï¼‰
+        //{0x4F00, 0x4FDF},   // æ‰©å±•AåŒºå¸¸ç”¨éƒ¨åˆ†ï¼ˆ"ä¸¢ä¹’ä¹“ä¹”ä¹–ä¹˜"ç­‰ï¼‰
+        //{0x20000, 0x2A6DF}  // æ‰©å±•B-FåŒºï¼ˆæŒ‰éœ€åŠ è½½ï¼‰
     };
 
     void _addCharToAtlas(FT_Face face, char32_t charCode);
@@ -84,7 +84,7 @@ private:
     bool _loadChar(FT_Face face, char32_t charCode);
     bool _findChar(Character& theChar, char32_t charCode); 
 
-    void _reloadCharacters();   //Çå¿ÕËùÓĞÍ¼¼¯£¬ÖØĞÂ¼ÓÔØ×Ö·û
+    void _reloadCharacters();   //æ¸…ç©ºæ‰€æœ‰å›¾é›†ï¼Œé‡æ–°åŠ è½½å­—ç¬¦
 
 private:
     AYRenderDevice* _device;
@@ -92,10 +92,10 @@ private:
     std::vector<TextureAtlas> _atlases;
     GLuint _vao, _vbo;
     GLuint _shaderProgram;
-    unsigned int _atlasSize = 1024; // ÎÆÀíÍ¼¼¯³ß´ç
+    unsigned int _atlasSize = 1024; // çº¹ç†å›¾é›†å°ºå¯¸
 
     FT_Library _ftLibrary;
-    FT_Face _currentFace =  nullptr; // ĞèÒª±£´æµ±Ç°×ÖÌåface
+    FT_Face _currentFace =  nullptr; // éœ€è¦ä¿å­˜å½“å‰å­—ä½“face
     std::map<std::string, float> _currentAxisValues;
     unsigned int _currentFontSize = 0;
 };

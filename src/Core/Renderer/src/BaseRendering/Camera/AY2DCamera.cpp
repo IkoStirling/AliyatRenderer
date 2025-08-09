@@ -1,15 +1,18 @@
-#pragma once
+ï»¿#pragma once
 #include "BaseRendering/Camera/AY2DCamera.h"
+
 
 void AY2DCamera::update(float delta_time)
 {
-    // 1. ¼ÆËãÄ¿±êµãÔÚÆÁÄ»¿Õ¼äµÄÎ»ÖÃ
+    _lastTransform = _transform;
+
+    // 1. è®¡ç®—ç›®æ ‡ç‚¹åœ¨å±å¹•ç©ºé—´çš„ä½ç½®
     glm::vec2 screenPos = glm::vec2(_targetPosition - _transform.position) + getScreenCenter();
-    // 2. ¼ÆËãËÀÇø±ß½ç£¨ÏñËØ×ø±ê£©
+    // 2. è®¡ç®—æ­»åŒºè¾¹ç•Œï¼ˆåƒç´ åæ ‡ï¼‰
     glm::vec2 deadzoneMin(_viewport.z * _deadzone.x, _viewport.w * _deadzone.z);
     glm::vec2 deadzoneMax(_viewport.z * _deadzone.y, _viewport.w * _deadzone.w);
 
-    // 3. ¼ÆËãÒÆ¶¯Æ«ÒÆ
+    // 3. è®¡ç®—ç§»åŠ¨åç§»
     glm::vec2 moveOffset(0.0f);
     if (screenPos.x < deadzoneMin.x) moveOffset.x = screenPos.x - deadzoneMin.x;
     else if (screenPos.x > deadzoneMax.x) moveOffset.x = screenPos.x - deadzoneMax.x;
@@ -17,10 +20,10 @@ void AY2DCamera::update(float delta_time)
     if (screenPos.y < deadzoneMin.y) moveOffset.y = screenPos.y - deadzoneMin.y;
     else if (screenPos.y > deadzoneMax.y) moveOffset.y = screenPos.y - deadzoneMax.y;
 
-    // Ó¦ÓÃÒÆ¶¯
+    // åº”ç”¨ç§»åŠ¨
     glm::vec2 newPos = glm::vec2(_transform.position) + moveOffset * delta_time * _moveSpeed;
 
-    // µØÍ¼±ß½çÔ¼Êø
+    // åœ°å›¾è¾¹ç•Œçº¦æŸ
     newPos.x = glm::clamp(newPos.x,
         _mapBounds.x + _viewport.z * _deadzone.x,
         _mapBounds.y - _viewport.z * (1 - _deadzone.y));
@@ -31,11 +34,12 @@ void AY2DCamera::update(float delta_time)
     //std::cout << "screenPos: (" << screenPos.x << ", " << screenPos.y << ")\n";
 
     _transform.position = glm::vec3(newPos,1.f);
+
 }
 
 glm::mat4 AY2DCamera::getViewMatrix() const
 {
-    // ½«ÆÁÄ»ÖĞĞÄ¶¨ÒåÎª(0,0), Õı³£ÊÇÔÚ×óÉÏ½Ç
+    // å°†å±å¹•ä¸­å¿ƒå®šä¹‰ä¸º(0,0), æ­£å¸¸æ˜¯åœ¨å·¦ä¸Šè§’
     return glm::translate(glm::mat4(1.0f),
         -glm::vec3(
             glm::vec2(_transform.position) + _additionalOffset,

@@ -72,13 +72,18 @@ const char* SPRITE_VERTEX_SHADER_ATLAS = R"(
 AYSpriteRenderer::AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer):
     _device(device),
     _renderer(renderer),
-    _configPath(AYPath::Engine::getPresetConfigPath() + std::string("Renderer/SpriteRenderer/config.ini"))
+    _configPath("@config/Renderer/SpriteRenderer/config.ini")
 {
     _loadSpriteRendererConfigINI();
     _initBuffers();
 }
 
 AYSpriteRenderer::~AYSpriteRenderer()
+{
+
+}
+
+void AYSpriteRenderer::shutdown()
 {
     _saveSpriteRendererConfigINI();
     if (_vao) {
@@ -88,7 +93,6 @@ AYSpriteRenderer::~AYSpriteRenderer()
         glDeleteBuffers(1, &_vbo);
     }
 }
-
 
 
 void AYSpriteRenderer::drawSprite(GLuint texture,

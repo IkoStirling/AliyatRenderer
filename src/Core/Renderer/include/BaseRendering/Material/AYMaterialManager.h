@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "STMaterial.h"
 #include <unordered_map>
 
@@ -9,6 +9,12 @@ public:
     {
         createMaterial({.baseColor = glm::vec4(1.f,1.f,1.f,1.f)});
     }
+    void shutdown()
+    {
+        std::unordered_map<uint32_t, STMaterial> m;
+        _materials.swap(m);
+    }
+
     uint32_t createMaterial(const STMaterial& mat) {
         uint32_t id = _next++;
         _materials[id] = mat;

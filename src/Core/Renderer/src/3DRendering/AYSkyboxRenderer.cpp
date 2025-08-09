@@ -102,15 +102,19 @@ static const float skyboxVertices[] = {
 AYSkyboxRenderer::AYSkyboxRenderer(AYRenderDevice* device, AYRenderer* renderer) :
 	_device(device),
 	_renderer(renderer),
-	_configPath(AYPath::Engine::getPresetConfigPath() + "Renderer/SkyboxRenderer/config.ini")
+	_configPath("@config/Renderer/SkyboxRenderer/config.ini")
 {
     _setupSkyboxGeometry();
 	_loadSkyboxRendererConfigINI();
 
-    loadSkybox({ AYPath::Engine::getPresetTexturePath() + "skyBox.png"},SkyboxType::Equirectangular);
+    loadSkybox({ "@textures/skyBox.png"},SkyboxType::Equirectangular);
 }
 
 AYSkyboxRenderer::~AYSkyboxRenderer()
+{
+}
+
+void AYSkyboxRenderer::shutdown()
 {
     _saveSkyboxRendererConfigINI();
     if (_skyboxVAO) glDeleteVertexArrays(1, &_skyboxVAO);
@@ -221,9 +225,10 @@ GLuint AYSkyboxRenderer::_loadCubemap(const std::vector<std::string>&faces)
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     for (unsigned int i = 0; i < faces.size(); i++) {
-        auto tex = AYResourceManager::getInstance().load<AYTexture>(faces[i]);
+        std::string rface = AYPath::resolve(faces[i]);
+        auto tex = AYResourceManager::getInstance().load<AYTexture>(rface);
         if (!tex || !tex->isLoaded()) {
-            std::cerr << "Failed to load texture: " << faces[i] << std::endl;
+            std::cerr << "Failed to load texture: " << rface << std::endl;
             return 0;
         }
         if (tex) {
@@ -248,9 +253,10 @@ GLuint AYSkyboxRenderer::_loadCubemap(const std::vector<std::string>&faces)
 }
 
 GLuint AYSkyboxRenderer::_loadEquirectangularMap(const std::string& path) {
-    auto tex = AYResourceManager::getInstance().load<AYTexture>(path);
+    std::string rpath = AYPath::resolve(path);
+    auto tex = AYResourceManager::getInstance().load<AYTexture>(rpath);
     if (!tex || !tex->isLoaded()) {
-        std::cerr << "Failed to load texture: " << path << std::endl;
+        std::cerr << "Failed to load texture: " << rpath << std::endl;
         return 0;
     }
 

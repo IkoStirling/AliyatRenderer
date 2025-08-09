@@ -27,21 +27,9 @@ void AYResourceManager::unloadResource(const std::string& filepath) {
 }
 
 void AYResourceManager::reloadResource(const std::string& filepath) {
-    auto strongIt = _strongCache.find(filepath);
-    if (strongIt != _strongCache.end()) {
-        strongIt->second.resource->reload(filepath);
-        return;
-    }
-
-    auto weakIt = _weakCache.find(filepath);
-    if (weakIt != _weakCache.end()) {
-        if (auto resource = weakIt->second.lock())
-        {
-            pinResource(filepath, resource);    //刷新强缓存
-            touchResource(filepath);
-            resource->reload(filepath);
-        }
-    }
+    std::string rpath = AYPath::resolve(filepath);
+    auto resource = getResourceByPath(filepath);
+    resource->reload(rpath);
 }
 
 void AYResourceManager::pinResource(const std::string& filepath, const std::shared_ptr<IAYResource>& res)
@@ -69,7 +57,8 @@ void AYResourceManager::printStats()
 
 void AYResourceManager::touchResource(const std::string& filepath)
 {
-    auto strongIt = _strongCache.find(filepath);
+    std::string rpath = AYPath::resolve(filepath);
+    auto strongIt = _strongCache.find(rpath);
     if (strongIt != _strongCache.end()) {
         strongIt->second.lastUsed = std::chrono::steady_clock::now();
     }
@@ -97,16 +86,14 @@ void AYResourceManager::update(float delta_time)
 void AYResourceManager::init()
 {
     _listenEvents();
-    loadPersistentCache("assets/core/config/persistentResources.json");
-    _preloadFromConfig("assets/core/preloadResource.json");
 }
 
 void AYResourceManager::shutdown()
 {
-    std::unordered_map<std::string, std::weak_ptr<IAYResource>> wc;
-    std::unordered_map<std::string, STCacheEntry> sc;
-    _weakCache.swap(wc);
-    _strongCache.swap(sc);
+    //std::unordered_map<std::string, std::weak_ptr<IAYResource>> wc;
+    //std::unordered_map<std::string, STCacheEntry> sc;
+    //_weakCache.swap(wc);
+    //_strongCache.swap(sc);
 }
 
 std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::string& filepath)
@@ -120,6 +107,7 @@ std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::str
     if (weakIt != _weakCache.end()) {
         if (auto resource = weakIt->second.lock())
         {
+            pinResource(filepath, resource);
             return resource;
         }
     }
@@ -129,20 +117,22 @@ std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::str
 
 void AYResourceManager::tagResource(const std::string& filepath, const Tag& tag)
 {
-    _tagMap[tag].insert(filepath);
-    if (auto res = getResourceByPath(filepath)) {
+    std::string rpath = AYPath::resolve(filepath);
+    _tagMap[tag].insert(rpath);
+    if (auto res = getResourceByPath(rpath)) {
         res->addTag(tag);
     }
 }
 
 void AYResourceManager::untagResource(const std::string& filepath, const Tag& tag)
 {
-    _tagMap[tag].erase(filepath);
+    std::string rpath = AYPath::resolve(filepath);
+    _tagMap[tag].erase(rpath);
     if (_tagMap[tag].empty()) {
         _tagMap.erase(tag);
     }
 
-    if (auto res = getResourceByPath(filepath)) {
+    if (auto res = getResourceByPath(rpath)) {
         res->removeTag(tag);
     }
 }
@@ -269,5 +259,6 @@ void AYResourceManager::_listenEvents()
 {
     registerResourceType<AYTexture>();
     registerResourceType<AYAudio>();
+    registerResourceType<AYAudioStream>();
     registerResourceType<AYVideo>();
 }

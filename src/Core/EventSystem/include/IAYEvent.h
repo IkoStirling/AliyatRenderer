@@ -18,23 +18,12 @@ public: \
 	virtual std::type_index getTypeIndex()const override { \
 		return typeid(CLASS_NAME); \
 	}\
-	virtual std::unique_ptr<IAYEvent> clone()const override{ \
-		return std::make_unique<CLASS_NAME>(*this);\
-	}\
 	static const char* staticGetType(){ \
 		static std::string str = EVENT_TYPE_NAME; \
 		return str.c_str(); \
 	}\
 	static std::type_index staticGetTypeIndex(){ \
 		return typeid(CLASS_NAME); \
-	}\
-public: \
-	/* unused function */ \
-	static std::shared_ptr<CLASS_NAME> UNUSED_create_shared() { \
-		CLASS_NAME* ptr = new CLASS_NAME(); \
-		return std::shared_ptr<CLASS_NAME>(ptr, [](CLASS_NAME* p) { \
-			delete p; \
-			}); \
 	}\
 private:\
 
@@ -57,43 +46,7 @@ public: \
 	static std::type_index staticGetTypeIndex(){ \
 		return typeid(CLASS_NAME<TEMPLATE_TYPE_NAME>); \
 	}\
-public: \
-	/* unused function */ \
-	static std::shared_ptr<CLASS_NAME<TEMPLATE_TYPE_NAME>> UNUSED_create_shared() { \
-		auto ptr = new CLASS_NAME<TEMPLATE_TYPE_NAME>(); \
-		return std::shared_ptr<CLASS_NAME<TEMPLATE_TYPE_NAME>>(ptr, [](CLASS_NAME<TEMPLATE_TYPE_NAME>* p) { \
-			delete p; \
-			}); \
-	}\
 private:\
-
-//#define DECLARE_TEMPLATE_EVENT_CLASS(CLASS_NAME, EVENT_TYPE_NAME, TEMPLATE_TYPE_NAME, ...) \
-//public: \
-//    virtual const char* getType()const override { \
-//        static std::string str = EVENT_TYPE_NAME + std::string(typeid(TEMPLATE_TYPE_NAME).name()) + \
-//                (sizeof...(__VA_ARGS__) > 0 ? ("_" + std::to_string(sizeof...(__VA_ARGS__))) : ""); \
-//        return str.c_str(); \
-//    }\
-//    virtual std::type_index getTypeIndex()const override { \
-//        return typeid(CLASS_NAME<TEMPLATE_TYPE_NAME, ##__VA_ARGS__>); \
-//    }\
-//    virtual std::unique_ptr<IAYEvent> clone()const override{ \
-//        return std::make_unique<CLASS_NAME<TEMPLATE_TYPE_NAME, ##__VA_ARGS__>>(*this);\
-//    }\
-//    static const char* staticGetType(){ \
-//        static std::string str = EVENT_TYPE_NAME + std::string(typeid(TEMPLATE_TYPE_NAME).name()) + \
-//                                (sizeof...(__VA_ARGS__) > 0 ? ("_" + std::to_string(sizeof...(__VA_ARGS__))) : ""); \
-//        return str.c_str(); \
-//    }\
-//    static std::type_index staticGetTypeIndex(){ \
-//        return typeid(CLASS_NAME<TEMPLATE_TYPE_NAME, ##__VA_ARGS__>); \
-//    }\
-//public: \
-//    static std::shared_ptr<CLASS_NAME<TEMPLATE_TYPE_NAME, ##__VA_ARGS__>> UNUSED_create_shared() { \
-//        auto ptr = new CLASS_NAME<TEMPLATE_TYPE_NAME, ##__VA_ARGS__>(); \
-//        return std::shared_ptr<CLASS_NAME<TEMPLATE_TYPE_NAME, ##__VA_ARGS__>>(ptr, [](auto* p) { delete p; }); \
-//    }\
-//private:
 
 
 #define REGISTER_EVENT_CLASS(CLASS_NAME, ...) \

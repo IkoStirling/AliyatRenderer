@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "AYRenderDevice.h"
 #include "AYConfigWrapper.h"
 #include "STTransform.h"
@@ -14,6 +14,7 @@ class AYCoreRenderer
 public:
 	AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer);
 	~AYCoreRenderer();
+    void shutdown();
 
     enum class Space 
     {
@@ -41,8 +42,8 @@ private:
     struct InstanceGroup 
     {
         std::vector<glm::mat4> matrices;
-        int vertexCount = -1;  // Ã¿¸öÊµÀı¶ÔÓ¦µÄ¶¥µãÊı
-        int baseVertex = -1;   // ¶¥µã»º³åÖĞµÄÆğÊ¼Î»ÖÃ
+        int vertexCount = -1;  // æ¯ä¸ªå®ä¾‹å¯¹åº”çš„é¡¶ç‚¹æ•°
+        int baseVertex = -1;   // é¡¶ç‚¹ç¼“å†²ä¸­çš„èµ·å§‹ä½ç½®
         int indexCount = -1;
         int baseIndex = -1;
         InstanceType type;
@@ -63,8 +64,8 @@ private:
         glm::mat4 viewMatrix;
         bool useInstanced;
         bool depthTestEnabled;
-        STMaterial::Type materialType;  // ²ÄÖÊÀàĞÍ
-        uint32_t materialID;          // ²ÄÖÊÎ¨Ò»±êÊ¶
+        STMaterial::Type materialType;  // æè´¨ç±»å‹
+        uint32_t materialID;          // æè´¨å”¯ä¸€æ ‡è¯†
 
         bool operator==(const BatchKey& other) const 
         {
@@ -92,7 +93,7 @@ private:
 
     RenderBatch* _currentBatch = nullptr;
 
-    GLuint _vboDouble[2];   //Ë«»º³åÊÇÎªÁË½â¾öcpuÓëgpuĞÔÄÜ²»Æ½ºâ£¬µ¼ÖÂÒ»·½µÈ´ıÁíÒ»·½µÄÎÊÌâ
+    GLuint _vboDouble[2];   //åŒç¼“å†²æ˜¯ä¸ºäº†è§£å†³cpuä¸gpuæ€§èƒ½ä¸å¹³è¡¡ï¼Œå¯¼è‡´ä¸€æ–¹ç­‰å¾…å¦ä¸€æ–¹çš„é—®é¢˜
     GLuint _instanceVboDouble[2];
     int _currentBufferIndex = 0;
 
@@ -100,9 +101,9 @@ private:
     GLuint _instanceVBO = 0;
 public:
     // -------------Base draw Functions-----------------
-    // ËùÓĞÍ¼ĞÎÂß¼­Îª£º½«¶¥µã±ä»»³ÉĞèÒªµÄ£¨Ä£ĞÍ¾ØÕó*¶¥µãÎ»ÖÃ£©´æÈë»º´æ£¬µÈ´ıÍ³Ò»Åú´ÎäÖÈ¾´¦Àí
-    // Í¼ĞÎ2D/3DÖ»´ú±í¸ÃÍ¼ĞÎµÄÎïÀíĞÎ×´£¬²»´ú±í×ø±êÏµ
-    // ÆÁÄ»×ø±êÏµ½«Ê¹ÓÃÕı½»Í¶Ó°£¬Ïß¶Î¿í¶È²»±ä»¯£¬ÇÒ²»ÊÜÊÓÍ¼Ó°Ïì£¬¼´UI
+    // æ‰€æœ‰å›¾å½¢é€»è¾‘ä¸ºï¼šå°†é¡¶ç‚¹å˜æ¢æˆéœ€è¦çš„ï¼ˆæ¨¡å‹çŸ©é˜µ*é¡¶ç‚¹ä½ç½®ï¼‰å­˜å…¥ç¼“å­˜ï¼Œç­‰å¾…ç»Ÿä¸€æ‰¹æ¬¡æ¸²æŸ“å¤„ç†
+    // å›¾å½¢2D/3Dåªä»£è¡¨è¯¥å›¾å½¢çš„ç‰©ç†å½¢çŠ¶ï¼Œä¸ä»£è¡¨åæ ‡ç³»
+    // å±å¹•åæ ‡ç³»å°†ä½¿ç”¨æ­£äº¤æŠ•å½±ï¼Œçº¿æ®µå®½åº¦ä¸å˜åŒ–ï¼Œä¸”ä¸å—è§†å›¾å½±å“ï¼Œå³UI
 
     InstanceGroup* findOrCreateInstanceGroup(
         InstanceType type,
@@ -114,7 +115,7 @@ public:
 
     void addIndexData(std::vector<uint32_t>& indices, InstanceGroup* group);
 
-    // »ù´¡Í¼ĞÎ
+    // åŸºç¡€å›¾å½¢
     void drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space);
     void drawLine2D(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color);
     void drawTriangle(const VertexInfo& p1,
@@ -130,25 +131,25 @@ public:
         const glm::vec3& to,
         float headSize,
         const glm::vec4& color,
-        Space space = Space::World);    //Ã»ÓĞ½øĞĞÊÀ½ç×ø±êÊÊÅä
+        Space space = Space::World);    //æ²¡æœ‰è¿›è¡Œä¸–ç•Œåæ ‡é€‚é…
 
     void drawRect2D(const STTransform& transform,
         const glm::vec2& size,
         uint32_t materialID,
         bool wireframe = false,
-        Space space = Space::World);    //ÊµÀı»¯äÖÈ¾
+        Space space = Space::World);    //å®ä¾‹åŒ–æ¸²æŸ“
 
     void drawCircle2D(const STTransform& transform,
         float radius,
         uint32_t materialID,
         int segments = 32,
         bool wireframe = false,
-        Space space = Space::World);    //ÊµÀı»¯äÖÈ¾
+        Space space = Space::World);    //å®ä¾‹åŒ–æ¸²æŸ“
 
 
     //void drawCapsule2D(const glm::vec2& base, const glm::vec2& tip, float radius, const glm::vec4& color);
 
-    // 3D»ù´¡Í¼ĞÎ
+    // 3DåŸºç¡€å›¾å½¢
 
 
     void drawBox3D(const STTransform& transform,
@@ -161,7 +162,7 @@ public:
     //    float radius, const glm::vec4& color,
     //    int segments = 16);
 
-    //// ¸´ºÏÍ¼ĞÎ
+    //// å¤åˆå›¾å½¢
     //void drawCapsule3D(const STTransform& transform,
     //    float radius,
     //    float half_height,
@@ -182,13 +183,13 @@ public:
 
     //void drawArrow3D(const glm::vec3& from, const glm::vec3& to, float headSize, const glm::vec4& color);
 
-    // ¸¨Öú±ê¼Ç
+    // è¾…åŠ©æ ‡è®°
     //void drawCross2D(const glm::vec2& position, float size, const glm::vec4& color);
     //void drawCross3D(const glm::vec3& position, float size, const glm::vec4& color);
     //void drawGrid2D(const glm::vec2& center, int divisions, float spacing, const glm::vec4& color);
     //void drawGrid3D(const glm::vec3& center, int divisions, float spacing, const glm::vec3& axisColor);
 
-    // ÉäÏß¼ì²â¿ÉÊÓ»¯
+    // å°„çº¿æ£€æµ‹å¯è§†åŒ–
     //void drawRay2D(const glm::vec2& origin, const glm::vec2& direction, float length, const glm::vec4& color);
     //void drawRay3D(const glm::vec3& origin, const glm::vec3& direction, float length, const glm::vec4& color);
 
@@ -236,7 +237,7 @@ private:
 private:
     // -------------Cache Managment-----------------
 
-    size_t _vertexBufferSize = 1024;    //Í³Ò»ÎªÊıÁ¿¶ø·Ç×Ö½Ú
+    size_t _vertexBufferSize = 1024;    //ç»Ÿä¸€ä¸ºæ•°é‡è€Œéå­—èŠ‚
     size_t _instanceBufferSize = 32;
     size_t _indexBufferSize = 1024;
 

@@ -1,5 +1,6 @@
-#pragma once
+ï»¿#pragma once
 #include "Core.h"
+#include "AYPath.h"
 #include <unordered_set>
 #include <string>
 #include <typeindex>
@@ -38,7 +39,7 @@ public:
 	using TagSet = std::unordered_set<Tag>;
 public:
 
-    //×ÓÀàÖØÔØĞèÒªµ÷ÓÃ¸Ã·½·¨
+    //å­ç±»é‡è½½éœ€è¦è°ƒç”¨è¯¥æ–¹æ³•
     virtual bool load(const std::string& filepath)
     {
         _resourcePath = filepath;

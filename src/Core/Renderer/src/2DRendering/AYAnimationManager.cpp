@@ -1,9 +1,14 @@
-#include "2DRendering/AYAnimationManager.h"
+ï»¿#include "2DRendering/AYAnimationManager.h"
 #include "AYResourceManager.h"
 
 AYAnimationManager::AYAnimationManager(AYRenderDevice* device) :
 	_device(device)
 {
+}
+
+void AYAnimationManager::shutdown()
+{
+
 }
 
 std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& atlasName,
@@ -12,12 +17,12 @@ std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& 
 	const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
 	const std::vector<bool>& loops)
 {
-	// ¼ì²éÊÇ·ñÒÑ¼ÓÔØ
+	// æ£€æŸ¥æ˜¯å¦å·²åŠ è½½
 	if (auto it = _atlasMap.find(atlasName); it != _atlasMap.end()) {
 		return it->second;
 	}
 
-	// ¼ÓÔØÎÆÀí
+	// åŠ è½½çº¹ç†
 	auto tex = AYResourceManager::getInstance().load<AYTexture>(texturePath);
 	if (!tex) return nullptr;
 
@@ -26,14 +31,14 @@ std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& 
 		tex->getHeight(),
 		tex->getChannels());
 
-	// ´æ´¢Í¼¼¯Êı¾İ
+	// å­˜å‚¨å›¾é›†æ•°æ®
 	auto atlas = std::make_shared<AYSpriteAtlas>(
 		textureId,
 		spriteSize,
 		glm::vec2(tex->getWidth(), tex->getHeight())
 	);
 
-	// Ìí¼Ó¶¯»­ÇĞÆ¬
+	// æ·»åŠ åŠ¨ç”»åˆ‡ç‰‡
 	size_t i = 0;
 	for (const auto& [name, frames] : animations) {
 		auto loop = i < loops.size() ? loops[i++] : false;
@@ -64,28 +69,28 @@ std::vector<AYAnimationFrame> AYAnimationManager::makeFrames(
 	std::vector<AYAnimationFrame> outFrames;
 	if (beginIndex < 0 || frameCount <= 0) return outFrames;
 
-	// ¼ÆËãÍ¼¼¯µÄĞĞÁĞÊı
+	// è®¡ç®—å›¾é›†çš„è¡Œåˆ—æ•°
 	const int cols = static_cast<int>(atlasSize.x / spriteSize.x);
 	const int rows = static_cast<int>(atlasSize.y / spriteSize.y);
 	const int totalFrames = cols * rows;
 
-	// ÑéÖ¤²ÎÊıÓĞĞ§ĞÔ
+	// éªŒè¯å‚æ•°æœ‰æ•ˆæ€§
 	if (cols == 0 || rows == 0 || beginIndex >= totalFrames) {
 		return outFrames;
 	}
 
-	// ¼ÆËã½áÊøË÷Òı£¨È·±£²»Ô½½ç£©
+	// è®¡ç®—ç»“æŸç´¢å¼•ï¼ˆç¡®ä¿ä¸è¶Šç•Œï¼‰
 	const int endIndex = std::min(beginIndex + frameCount, totalFrames);
-	frameCount = endIndex - beginIndex; // ĞŞÕıÊµ¼ÊÖ¡Êı
+	frameCount = endIndex - beginIndex; // ä¿®æ­£å®é™…å¸§æ•°
 
-	// Ô¤·ÖÅäÄÚ´æ
+	// é¢„åˆ†é…å†…å­˜
 	outFrames.reserve(frameCount);
 
-	// ¼ÆËãÃ¿¸öÖ¡µÄUV×ø±ê
+	// è®¡ç®—æ¯ä¸ªå¸§çš„UVåæ ‡
 	for (int i = 0; i < frameCount; ++i) {
 		const int index = beginIndex + i;
-		const int row = index / cols;  // ¼ÆËãĞĞºÅ
-		const int col = index % cols;  // ¼ÆËãÁĞºÅ
+		const int row = index / cols;  // è®¡ç®—è¡Œå·
+		const int col = index % cols;  // è®¡ç®—åˆ—å·
 
 		outFrames.push_back({
 			glm::vec2(col * spriteSize.x / atlasSize.x,  // u offset

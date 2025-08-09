@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "AYRenderDevice.h"
 #include "BaseRendering/AYRenderContext.h"
 #include "2DRendering/AYFontRenderer.h"
@@ -14,6 +14,7 @@ class AYRenderer
 {
 public:
     explicit AYRenderer(AYRenderDevice* device);
+    void shutdown();
     ~AYRenderer();
 
     void clearScreen(float r, float g, float b, float a);

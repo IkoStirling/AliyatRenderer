@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "AYRenderDevice.h"
 #include "BaseRendering/AYRenderContext.h"
 #include "AYConfigWrapper.h"
@@ -12,11 +12,12 @@ class AYSkyboxRenderer {
 public:
     AYSkyboxRenderer(AYRenderDevice* device, AYRenderer* renderer);
     ~AYSkyboxRenderer();
+    void shutdown();
 public:
     enum class SkyboxType {
-        Cube_6Faces,        // ´«Í³6ÃæÁ¢·½ÌåÌùÍ¼
-        Equirectangular,    // µ¥ÕÅÈ«¾°ÌùÍ¼
-        Hemisphere          // °ëÇòÌì¿Õ
+        Cube_6Faces,        // ä¼ ç»Ÿ6é¢ç«‹æ–¹ä½“è´´å›¾
+        Equirectangular,    // å•å¼ å…¨æ™¯è´´å›¾
+        Hemisphere          // åŠçƒå¤©ç©º
     };
 
     void render(const AYRenderContext& context);

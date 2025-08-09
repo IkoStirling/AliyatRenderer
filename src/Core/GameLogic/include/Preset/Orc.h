@@ -6,6 +6,7 @@
 #include "BaseRendering/Camera/AY3DCamera.h"
 #include "Component/AYPlayerController.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
+#include "AYSoundEngine.h"
 
 class Orc : public AYEntrant
 {
@@ -122,6 +123,15 @@ public:
 			{
 				_orcSprite->playAnimation("dead01");
 			}
+			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_KP_0 }))
+			{
+				static bool flag0 = true;
+				if (flag0)
+				{
+					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/amb_dark_01.wav", true, true);
+					flag0 = false;
+				}
+			}
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_C }))
 			{
 				std::cout << "C\n";
@@ -136,10 +146,10 @@ public:
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_Q }))
 			{
 				static int duration = 0;
-				switcher = 1 - switcher;
 				duration--;
 				if (duration < 0)
 				{
+					switcher = 1 - switcher;
 					_camera[switcher]->activate();
 					duration = 20;
 				}

@@ -21,6 +21,17 @@ void AYRendererManager::init()
 		[](std::shared_ptr<AYTexture> texture) {
 			//std::cout << "Texture loaded: " << texture->getWidth() << "x" << texture->getHeight() << std::endl;
 		});
+	//AYResourceManager::getInstance().loadAsync<AYVideo>(AYPath::Engine::getPresetTexturePath()+"Arrow.png",
+	//	[this](std::shared_ptr<AYVideo> video) {
+	//		videos = video;
+	//		videot = _device->createVideoTexture(video->getWidth(), video->getHeight());
+	//	});
+	//AYResourceManager::getInstance().loadAsync<AYVideo>("@videos/test_video.mp4",
+	//	[this](std::shared_ptr<AYVideo> video) {
+	//		videos = video;
+	//	});
+	videos = AYResourceManager::getInstance().load<AYVideo>("@videos/test_video.mp4");
+	tex_ID = loadTexture("@textures/500_497.png");
 
 	_renderer->getMaterialManager()->createMaterial(
 		{
@@ -81,6 +92,7 @@ void AYRendererManager::update(float delta_time)
 	}
 	delta = delta_time;
 
+	
 	_updateCameraActive(delta_time);
 
 	// 2. TODO: 执行实际渲染逻辑
@@ -94,7 +106,9 @@ void AYRendererManager::update(float delta_time)
 
 void AYRendererManager::shutdown()
 {
-
+	_animeMana->shutdown();
+	_renderer->shutdown();
+	_device->shutdown();
 }
 
 void AYRendererManager::_renderAll(float delta_time)
@@ -117,11 +131,12 @@ void AYRendererManager::_renderAll(float delta_time)
 
 void AYRendererManager::_updateCameraActive(float delta_time)
 {
-	auto* camera = getCameraSystem()->getActiveCamera();
+	auto* cameraSystem = getCameraSystem();
+	auto* camera = cameraSystem->getActiveCamera();
 	auto& context = _renderer->getRenderContext();
 	context.currentCamera = camera;
 	context.validate();
-	context.currentCamera->update(delta_time);
+	cameraSystem->update(delta_time);
 	const auto& viewport = context.currentCamera->getViewport();
 	_device->getGLStateManager()->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
 
@@ -217,18 +232,61 @@ void AYRendererManager::_displayDebugInfo()
 	}
 
 	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);
-	dr->drawCircle2D({ glm::vec3( 50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
-	
+	dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
+
 
 	//_renderer->getSpriteRenderer()->drawSprite(
 	//	tex_ID,
-	//	//glm::vec2(x, y),  // 位置
-	//	glm::vec2(0.f),
+	//	{ glm::vec3(x, y, 0) },
 	//	glm::vec2(1200.0f),  // 大小
-	//	0.0f,                       // 旋转
 	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
 	//	false,
 	//	false,
 	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
 	//);
+
+	if (!videot) {
+		//videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());
+		//videot = _device->createVideoTexture(1920, 1080);
+	}
+	//_device->updateTexture(videot, videos->getCurrentFramePixelData(), videos->getWidth(), videos->getHeight());
+	//_renderer->getSpriteRenderer()->drawSprite(
+	//	videot,
+	//	{ glm::vec3(x, y, 0) , glm::vec3(0,x,0) },
+	//	glm::vec2(1200.0f),  // 大小
+	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
+	//	false,
+	//	false,
+	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	//);
+
+	if (videos)
+	{
+		if (videos->updateFrame(delta) && !videot) {
+			videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());
+			// 确保图像连续存储（FFmpeg数据可能是非连续的）
+			cv::Mat continuousFrame;
+			if (!videos->getCurrentFrameData().isContinuous()) {
+				videos->getCurrentFrameData().copyTo(continuousFrame);
+			}
+			else {
+				continuousFrame = videos->getCurrentFrameData();
+			}
+
+			//// 保存为PNG格式
+			cv::imwrite("debug_frame.png", continuousFrame);
+		}
+
+		_device->updateTexture(videot, videos->getCurrentFramePixelData(), videos->getWidth(), videos->getHeight());
+		_renderer->getSpriteRenderer()->drawSprite(
+			videot,
+			//{ glm::vec3(x, y, 0) , glm::vec3(0,0,0) },
+			{},
+			glm::vec2(1920,1080),  // 大小
+			glm::vec4(1.0f, 1.f, 1.f, 0.9f),// 颜色
+			false,
+			false,
+			glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+		);
+	}
 }

@@ -1,4 +1,4 @@
-set(MODULE_NAME configer)
+ï»¿set(MODULE_NAME configer)
 set(INTERFACE_NAME ${MODULE_NAME}_xxx)
 
 
@@ -21,11 +21,11 @@ target_include_directories(${MODULE_NAME} PUBLIC
 
 find_package(Boost CONFIG REQUIRED COMPONENTS property_tree)
 
-# ÑÏ¸ñÀ´Ëµ½Ó¿Ú¿âÊÇĞèÒª·½Á´½Ó£¬ÕâÀïÏàµ±ÓÚÖ±½ÓincludeÁËinterfaceÄ¿Â¼
+# ä¸¥æ ¼æ¥è¯´æ¥å£åº“æ˜¯éœ€è¦æ–¹é“¾æ¥ï¼Œè¿™é‡Œç›¸å½“äºç›´æ¥includeäº†interfaceç›®å½•
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}) 
 
-# CMAKE×Ô¶¯È¥ÖØ£¬²»»áÁ´½ÓÁ½´Î
-target_link_libraries(${MODULE_NAME} PUBLIC 
+# CMAKEè‡ªåŠ¨å»é‡ï¼Œä¸ä¼šé“¾æ¥ä¸¤æ¬¡
+target_link_libraries(${MODULE_NAME} PUBLIC module_manager
 	PRIVATE
 	Boost::property_tree
 ) 

@@ -24,7 +24,7 @@ std::string mat4ToStringPretty(const glm::mat4& matrix) {
 AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer) :
     _device(device),
     _renderer(renderer),
-    _configPath(AYPath::Engine::getPresetConfigPath() + "Renderer/CoreRenderer/config.ini")
+    _configPath("@config/Renderer/CoreRenderer/config.ini")
 {
     _loadCoreRendererConfigINI();
     _setupDebugShader();
@@ -33,6 +33,10 @@ AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer) :
 }
 
 AYCoreRenderer::~AYCoreRenderer()
+{
+}
+
+void AYCoreRenderer::shutdown()
 {
     _saveCoreRendererConfigINI();
 }

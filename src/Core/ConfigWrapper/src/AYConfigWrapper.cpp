@@ -1,12 +1,13 @@
-#include "AYConfigWrapper.h"
+﻿#include "AYConfigWrapper.h"
 #include <filesystem>
 #include <iostream>
 
 void AYConfigWrapper::loadFromFile(const std::string& path, ConfigType type)
 {
+	std::string rpath = AYPath::resolve(path);
 	_pt.clear();
 	_type = type;
-    std::filesystem::path p(path);
+    std::filesystem::path p(rpath);
     if (!std::filesystem::exists(p.parent_path()))
     {
 		try
@@ -19,28 +20,28 @@ void AYConfigWrapper::loadFromFile(const std::string& path, ConfigType type)
         }
     }
 
-	if (!std::filesystem::exists(path))
+	if (!std::filesystem::exists(rpath))
 	{
 		switch (type)
 		{
 		case AYConfigWrapper::ConfigType::INI:
-			boost::property_tree::write_ini(path, _pt);
+			boost::property_tree::write_ini(rpath, _pt);
 			break;
 		case AYConfigWrapper::ConfigType::JSON:
-			boost::property_tree::write_json(path, _pt);
+			boost::property_tree::write_json(rpath, _pt);
 			break;
 		case AYConfigWrapper::ConfigType::XML:
-			boost::property_tree::write_xml(path, _pt);
+			boost::property_tree::write_xml(rpath, _pt);
 			break;
 		default:
-			if (path.ends_with(".ini")) {
-				std::ofstream(path) << "[default]\n";
+			if (rpath.ends_with(".ini")) {
+				std::ofstream(rpath) << "[default]\n";
 			}
-			else if (path.ends_with(".json")) {
-				std::ofstream(path) << "{}\n";
+			else if (rpath.ends_with(".json")) {
+				std::ofstream(rpath) << "{}\n";
 			}
-			else if (path.ends_with(".xml")) {
-				std::ofstream(path) << "<root/>\n";
+			else if (rpath.ends_with(".xml")) {
+				std::ofstream(rpath) << "<root/>\n";
 			}
 			break;
 		}
@@ -50,13 +51,13 @@ void AYConfigWrapper::loadFromFile(const std::string& path, ConfigType type)
 		switch (type)
 		{
 		case AYConfigWrapper::ConfigType::INI:
-			boost::property_tree::read_ini(path, _pt);
+			boost::property_tree::read_ini(rpath, _pt);
 			break;
 		case AYConfigWrapper::ConfigType::JSON:
-			boost::property_tree::read_json(path, _pt);
+			boost::property_tree::read_json(rpath, _pt);
 			break;
 		case AYConfigWrapper::ConfigType::XML:
-			boost::property_tree::read_xml(path, _pt);
+			boost::property_tree::read_xml(rpath, _pt);
 			break;
 		default:
 			break;
@@ -70,17 +71,18 @@ void AYConfigWrapper::loadFromFile(const std::string& path, ConfigType type)
 
 void AYConfigWrapper::saveConfig(const std::string& path)
 {
+	std::string rpath = AYPath::resolve(path);
 	try {
 		switch (_type)
 		{
 		case AYConfigWrapper::ConfigType::INI:
-			boost::property_tree::write_ini(path, _pt);
+			boost::property_tree::write_ini(rpath, _pt);
 			break;
 		case AYConfigWrapper::ConfigType::JSON:
-			boost::property_tree::write_json(path, _pt);
+			boost::property_tree::write_json(rpath, _pt);
 			break;
 		case AYConfigWrapper::ConfigType::XML:
-			boost::property_tree::write_xml(path, _pt);
+			boost::property_tree::write_xml(rpath, _pt);
 			break;
 		default:
 			break;

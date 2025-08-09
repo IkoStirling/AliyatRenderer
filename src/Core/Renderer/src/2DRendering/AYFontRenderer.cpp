@@ -57,6 +57,11 @@ AYFontRenderer::AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer):
 
 AYFontRenderer::~AYFontRenderer()
 {
+
+}
+
+void AYFontRenderer::shutdown()
+{
     if (_currentFace) {
         FT_Done_Face(_currentFace);
     }

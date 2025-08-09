@@ -10,6 +10,7 @@ class AYSpriteRenderer {
 public:
     AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer);
     ~AYSpriteRenderer();
+    void shutdown();
 
     void drawSprite(GLuint texture,
         const STTransform& transform,

@@ -1,33 +1,47 @@
-#pragma once
+ï»¿#pragma once
 #include <glm/glm.hpp>
 #include "STTransform.h"
+#include "AYEventRegistry.h"
+#include "Event_CameraMove.h"
 
 class IAYCamera {
 public:
     virtual ~IAYCamera() = default;
 
-    // »ñÈ¡ÊÓÍ¼¾ØÕó£¨View Matrix£©
+    // è·å–è§†å›¾çŸ©é˜µï¼ˆView Matrixï¼‰
     virtual glm::mat4 getViewMatrix() const = 0;
 
-    // »ñÈ¡Í¶Ó°¾ØÕó£¨Projection Matrix£©
+    // è·å–æŠ•å½±çŸ©é˜µï¼ˆProjection Matrixï¼‰
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
-    // Ã¿Ö¡¸üĞÂ£¨²ÎÊı¿ÉÀ©Õ¹£©
+    // æ¯å¸§æ›´æ–°ï¼ˆå‚æ•°å¯æ‰©å±•ï¼‰
     virtual void update(float delta_time) = 0;
 
-    // Ïà»úÀàĞÍ±êÊ¶
+    // ç›¸æœºç±»å‹æ ‡è¯†
     enum class Type { PERSPECTIVE_3D, ORTHOGRAPHIC_2D, CUSTOM };
     virtual Type getType() const = 0;
 
-    // ÊÓ¿Ú¿ØÖÆ
-    virtual void setViewport(const glm::vec4& viewport) { _viewport = viewport; }   //ÓÉÉãÏñ»ú¾ö¶¨äÖÈ¾ÊÓ¿Ú
+    // è§†å£æ§åˆ¶
+    virtual void setViewport(const glm::vec4& viewport) { _viewport = viewport; }   //ç”±æ‘„åƒæœºå†³å®šæ¸²æŸ“è§†å£
     glm::vec4 getViewport() const { return _viewport; }
 
     virtual void setAdditionalOffset(const glm::vec2& offset) { _additionalOffset = offset; }
 
     virtual const glm::vec3 getPosition() const { return _transform.position; }
+
+    virtual void onCameraMoved() const
+    {
+        if (_lastTransform == _transform)
+            return;
+        AYEventRegistry::publish(Event_CameraMove::staticGetType(),
+            [this](IAYEvent* event) {
+                auto eI = static_cast<Event_CameraMove*>(event);
+                eI->transform = _transform;
+            });
+    }
 protected:
     STTransform _transform;
+    STTransform _lastTransform;
     glm::vec3 _targetPosition = glm::vec3(0.f);
     glm::vec4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
     glm::vec2 _additionalOffset{ 0.0f };
