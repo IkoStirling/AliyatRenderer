@@ -102,4 +102,12 @@ void AYPhysicsSystem::_syncPhysicsToLogic()
 		physics.lastTransform = transform;
 		transform = trans;
 	}
+
+	// 测试用
+	auto view2 = GET_CAST_MODULE(AYECSEngine, "ECSEngine")->getView<STTransform>();
+	for (auto [entity, transform] : view2)
+	{
+		auto trans = _worlds[WorldType::AY2D].impl->getTransform(entity);
+		transform = trans;
+	}
 }

@@ -43,6 +43,7 @@ public:
         轴值访问，如果当前按键不支持轴值则会返回 0
     */
     float getAxisValue(const UniversalInput& input) const;
+    float getScrollDelta(const UniversalInput& input);
     float getPreviousAxisValue(const UniversalInput& input) const;
     glm::vec2 getVector2Axis(const std::string& fullActionName) const;
     
@@ -84,9 +85,9 @@ private:
         UniversalInputEqual
     > _inputStates;
 
-    glm::vec2 _currentMousePos;     //通过回调获取
-    glm::vec2 _lastMousePos;        //通过逻辑更新获取
-    glm::vec2 _scrollDelta;         //通过回调获取
+    glm::vec2 _currentMousePos = glm::vec2(0);     //通过回调获取
+    glm::vec2 _lastMousePos = glm::vec2(0);        //通过逻辑更新获取
+    glm::vec2 _scrollDelta = glm::vec2(0);         //通过回调获取
     int _activeGamepad = -1;
     GLFWgamepadstate _gamepadState; //通过逻辑更新获取
     mutable std::unordered_map<int, bool> _gamepadStatusCache;  //gamepad缓存

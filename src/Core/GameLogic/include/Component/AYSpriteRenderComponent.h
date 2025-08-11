@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IAYRenderComponent.h"
 #include "2DRendering/AYAnimationManager.h"
 #include "AYEntrant.h"
@@ -31,6 +31,7 @@ public:
 			return;
 		auto& trans = ent->getTransform();
 
+
 		if(_isVisible)
 			_sprite->render(
 				trans,
@@ -57,7 +58,7 @@ public:
 		auto renderMgr = GET_CAST_MODULE(AYRendererManager, "Renderer");
 		auto animMgr = renderMgr->get2DAnimationManager();
 
-		// ×ª»»¶¯»­ÅäÖÃ¸ñÊ½
+		// è½¬æ¢åŠ¨ç”»é…ç½®æ ¼å¼
 		std::vector<AnimeDataCreator> animeData;
 		std::vector<bool> loops;
 		for (const auto& anim : animations) {
@@ -65,15 +66,15 @@ public:
 			loops.push_back(anim.loop);
 		}
 
-		// ´´½¨¶¯»­Êı¾İ
+		// åˆ›å»ºåŠ¨ç”»æ•°æ®
 		auto data = animMgr->makeAnimationData(characterSize, atlasSize, animeData);
 		auto atlas = animMgr->loadAtlas(name, texturePath, characterSize, data, loops);
 
-		// ´´½¨¾«Áé
+		// åˆ›å»ºç²¾çµ
 		_sprite = std::unique_ptr<AYAnimatedSprite>(
 			renderMgr->create2DSprite(atlas)
 		);
-		_spriteSize = glm::vec3(200); // Ä¬ÈÏ´óĞ¡
+		_spriteSize = glm::vec3(200); // é»˜è®¤å¤§å°
 	}
 
 	void playAnimation(const std::string& name) {

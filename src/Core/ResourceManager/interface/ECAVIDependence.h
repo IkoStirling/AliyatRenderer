@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 #include <iostream>
 #include <atomic>
 #include <queue>

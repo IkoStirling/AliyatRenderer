@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IAYCamera.h"
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
@@ -19,12 +19,19 @@ public:
 	glm::mat4 getProjectionMatrix() const override;
 
 	void setViewBox(float near, float far);
+	float getPixelPerMeter() const override
+	{
+		// å‡è®¾é»˜è®¤ 1ç±³ = 100åƒç´ ï¼ˆåŸºç¡€æ¯”ä¾‹ï¼‰
+		const float BASE_PPM = 66.7f;
+		// åŠ¨æ€ç¼©æ”¾åçš„ PPM
+		return BASE_PPM * _zoom;
+	}
 	void setDeadzone(const glm::vec4& zone) { _deadzone = zone; } // left, right, bottom, top
-	void setTargetPosition(const glm::vec2& targetPos) { _targetPosition = glm::vec3(targetPos, 1.f); }
-	void setCurrentPosition(const glm::vec2& currentPos) { _transform.position = glm::vec3(currentPos,1.f); }
-	glm::vec2 getScreenCenter() const { return  glm::vec2(_viewport.z, _viewport.w) * 0.5f; }
+	void setTargetPosition(const glm::vec2& targetPos) { _targetPosition = glm::vec3(targetPos, 0.f) * getPixelPerMeter(); }
+	void setCurrentPosition(const glm::vec2& currentPos) { _transform.position = glm::vec3(currentPos,0.f) * getPixelPerMeter(); }
+	glm::vec2 getScreenCenter() const { return  glm::vec2(_viewport.z / _zoom, _viewport.w / _zoom) * 0.5f; }
 private:
-	glm::vec4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // ÆÁÄ»±ÈÀıËÀÇø(ÉãÏñ»ú²»»á¸úËæµÄËÄ±ßĞÎÇøÓò£©
+	glm::vec4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // å±å¹•æ¯”ä¾‹æ­»åŒº(æ‘„åƒæœºä¸ä¼šè·Ÿéšçš„å››è¾¹å½¢åŒºåŸŸï¼‰
 	glm::vec4 _mapBounds{ -5000.f, 5000.f, -5000.f, 5000.f };
 
 	float _moveSpeed = 5.f;

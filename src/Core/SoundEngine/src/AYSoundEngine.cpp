@@ -69,6 +69,11 @@ void AYSoundEngine::update(float delta_time)
     };
     alListenerfv(AL_ORIENTATION, orientation);
 
+    for (auto& player : _players)
+    {
+        player->update();
+    }
+
     // 清理已完成播放的源
     _activeSources.erase(
         std::remove_if(_activeSources.begin(), _activeSources.end(),

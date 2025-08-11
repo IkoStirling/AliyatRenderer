@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "IAYComponent.h"
 #include "BaseRendering/Camera/IAYCamera.h"
 #include "AYEntrant.h"
@@ -21,6 +21,8 @@ public:
     IAYCamera* getCamera() const;
 
     void shake(float intensity, float duration);
+
+    void setZoom(float zoom);
 
     void setupCamera(IAYCamera::Type type);
 

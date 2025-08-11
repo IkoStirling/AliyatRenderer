@@ -32,6 +32,7 @@ void AYRendererManager::init()
 	//	});
 	videos = AYResourceManager::getInstance().load<AYVideo>("@videos/test_video.mp4");
 	tex_ID = loadTexture("@textures/500_497.png");
+	tex_ID2 = loadTexture("@textures/1918_1100.png");
 
 	_renderer->getMaterialManager()->createMaterial(
 		{
@@ -208,6 +209,8 @@ void AYRendererManager::_displayDebugInfo()
 	std::string fps = "当前fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
 	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
+	auto& context = getRenderContext();
+	auto ppm = context.currentCamera->getPixelPerMeter();
 	auto* dr = _renderer->getCoreRenderer();
 
 	/*dr->drawLine2D({ {glm::vec2(10.f),0}, glm::vec4(0, 1, 0, 1) },
@@ -227,40 +230,36 @@ void AYRendererManager::_displayDebugInfo()
 	}
 	for (int i = 1; i < 20; i++) {
 		for (int j = 1; j < 20; j++) {
-			dr->drawBox3D({ glm::vec3(i * -100.f + 1000.f, 0, j * -100.f + 1000.f) }, glm::vec3(20.f), 3, false, AYCoreRenderer::Space::World);
+			dr->drawBox3D({ glm::vec3(i * -100.f + 1000.f, 0, j * -100.f + 1000.f) / ppm }, glm::vec3(20.f), 3, false, AYCoreRenderer::Space::World);
 		}
 	}
 
-	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);
 	dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
+	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);
 
+	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) }, glm::vec2(1920 *0.4f, 1080 * 0.4f), 2, true, AYCoreRenderer::Space::Screen);
+	_renderer->getSpriteRenderer()->drawSprite(
+		tex_ID,
+		{ glm::vec3(0/ ppm, 0/ ppm, 0) },
+		//{},
+		glm::vec2(500.0f),  // 大小
+		glm::vec4(1.0f, 1.f, 1.f, 1.f),// 颜色
+		false,
+		false,
+		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	);
+	_renderer->getSpriteRenderer()->drawSprite(
+		tex_ID2,
+		{ glm::vec3(500/ ppm, 0/ ppm, 0) },
+		//{},
+		glm::vec2(500.0f),  // 大小
+		glm::vec4(1),// 颜色
+		false,
+		false,
+		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	);
 
-	//_renderer->getSpriteRenderer()->drawSprite(
-	//	tex_ID,
-	//	{ glm::vec3(x, y, 0) },
-	//	glm::vec2(1200.0f),  // 大小
-	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
-	//	false,
-	//	false,
-	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-	//);
-
-	if (!videot) {
-		//videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());
-		//videot = _device->createVideoTexture(1920, 1080);
-	}
-	//_device->updateTexture(videot, videos->getCurrentFramePixelData(), videos->getWidth(), videos->getHeight());
-	//_renderer->getSpriteRenderer()->drawSprite(
-	//	videot,
-	//	{ glm::vec3(x, y, 0) , glm::vec3(0,x,0) },
-	//	glm::vec2(1200.0f),  // 大小
-	//	glm::vec4(0.0f, 1.f, 0.f, 0.9f),// 颜色
-	//	false,
-	//	false,
-	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-	//);
-
-	if (videos)
+	if (videos && 0)
 	{
 		if (videos->updateFrame(delta) && !videot) {
 			videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());

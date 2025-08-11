@@ -65,7 +65,10 @@ public:
 		}
 
 		// 转换为RGBA格式（如果需要）
-		if (_imageData.channels() == 3) {
+		if (_imageData.channels() == 4) {
+			cv::cvtColor(_imageData, _imageData, cv::COLOR_BGRA2RGBA);  // 显式转换
+		}
+		else if (_imageData.channels() == 3) {
 			cv::cvtColor(_imageData, _imageData, cv::COLOR_BGR2RGBA);
 		}
 		else if (_imageData.channels() == 1) {

@@ -35,12 +35,17 @@ protected:
     glm::vec2 _getMovementInput() {
         auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
         float x = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX })
-            + inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_A }) ? 1.f : 0.f
-            - inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_D }) ? 1.f : 0.f;
+            + (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_D }) ? 1.f : 0.f)
+            - (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_A }) ? 1.f : 0.f);
         float y = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftY })
-            - inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_S }) ? 1.f : 0.f
-            + inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_W }) ? 1.f : 0.f;
-        return glm::normalize(glm::vec2(x, y));
+            - (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_S }) ? 1.f : 0.f)
+            + (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_W }) ? 1.f : 0.f);
+        auto result = glm::vec2(x, y);
+        if (glm::length(result) > 0)
+            return glm::normalize(glm::vec2(x, y)); 
+        else
+            return result;
+        
     }
 
     void _updateMovement(const glm::vec2& input, float deltaTime) {
@@ -60,13 +65,27 @@ protected:
         ));
 
         // 5. 调试输出（临时）
-        //std::cout << "[AYPlayerController] Input: (" << input.x << ", " << input.y
-        //    << ")  Velocity: (" << newVelX
-        //    << ", " << _physics->getPhysicsBody()->getLinearVelocity().y << ")\n";
+        static float time = 0;
+        time += deltaTime;
+        if (time > 1.f)
+        {
+            time -= 1.f;
+            auto pos = _physics->getPhysicsBody()->getPosition();
+            std::cout << std::fixed << std::setprecision(4)
+                << "[AYPlayerController]  \tInput: (" << input.x << ", " << input.y
+                << ")  \tVelocity: (" << newVelX
+                << ", " << _physics->getPhysicsBody()->getLinearVelocity().y
+                << ")  \tPosition(" << pos.x << ", " << pos.y << ")\n";
+        }
+
+
     }
 
     bool _shouldJump() {
         auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
+        return _physics->getPhysicsBody()->getLinearVelocity().y <= 0.01f  &&
+        (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_SPACE }) ||
+            inputSystem->isActionActive("default.GamePad_A"));
         return _physics->isGrounded() &&
             (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_SPACE }) ||
                 inputSystem->isActionActive("default.GamePad_A"));
@@ -75,7 +94,6 @@ protected:
     void _updateJump() {
         if (_shouldJump())
         {
-            std::cout << "should jump \n";
             _physics->getPhysicsBody()->applyImpulse(glm::vec2(0, _jumpForce));
         }
     }

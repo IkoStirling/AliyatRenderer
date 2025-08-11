@@ -1,0 +1,10 @@
+﻿<td class='key-cell'>
+    <div class='key-content'> 
+    <span class='key-text' title="{{ key }}">{{ key }}</span>   
+    <form action="/delete" method="get" class="delete-form" onsubmit="return confirm('Are you sure?')">
+        <input type="hidden" id="current_file" name="file" value="{{ file_path }}">
+        <input type="hidden" name="key" value="{{ key }}">
+        <button type="submit" class="delete-btn">Delete</button>
+    </form>
+    </div>
+</td>

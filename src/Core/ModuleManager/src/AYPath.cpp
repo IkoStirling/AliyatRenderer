@@ -13,6 +13,7 @@ const std::string AYPath::Engine::PresetShaderPath = AYPath::Engine::PresetPath 
 const std::string AYPath::Engine::PresetConfigPath = AYPath::Engine::PresetPath + "config/";
 const std::string AYPath::Engine::PresetAudioPath = AYPath::Engine::PresetPath + "audios/";
 const std::string AYPath::Engine::PresetVideoPath = AYPath::Engine::PresetPath + "videos/";
+const std::string AYPath::Engine::PresetWebPath = AYPath::Engine::PresetPath + "web/";
 
 
 std::string AYPath::Engine::getAssetsPath() { return AssetsPath; }
@@ -24,6 +25,7 @@ std::string AYPath::Engine::getPresetShaderPath() { return PresetShaderPath; }
 std::string AYPath::Engine::getPresetConfigPath() { return PresetConfigPath; }
 std::string AYPath::Engine::getPresetAudioPath() { return PresetAudioPath; }
 std::string AYPath::Engine::getPresetVideoPath() { return PresetVideoPath; }
+std::string AYPath::Engine::getPresetWebPath() { return PresetWebPath; }
 
 std::string AYPath::Windows::getAppCachePath()
 {

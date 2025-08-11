@@ -13,7 +13,6 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	resource_manager
 	sound_engine
 	memory_pool
-	network
 	renderer
 	input_system
 	game_logic

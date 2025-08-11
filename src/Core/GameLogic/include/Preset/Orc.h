@@ -19,7 +19,7 @@ public:
 		_physics->setBodyType(IAYPhysicsBody::BodyType::Dynamic);
 		_controller = addComponent<AYPlayerController>("_controller");
 		_controller->setMoveSpeed(5.0f);
-		_controller->setJumpForce(7.0f);
+		_controller->setJumpForce(10.0f);
 		_camera.push_back(addComponent<AYCameraComponent>("_orc2DCamera"));
 		_camera.push_back(addComponent<AYCameraComponent>("_orc3DCamera"));
 		_camera[0]->setupCamera(IAYCamera::Type::ORTHOGRAPHIC_2D);
@@ -42,7 +42,8 @@ public:
 		);
 		_orcSprite->playAnimation("idle01");
 
-		_transform.rotation.y = 180.f;
+		//	注意渲染精灵朝向问题，
+		// _transform.rotation.y = 180.f;
     }
 
     virtual void beginPlay()override
@@ -105,6 +106,8 @@ public:
 			if (glm::length(movement) > 0.0f) {
 				movement = glm::normalize(movement);
 			}
+
+
 			
 			if (inputSystem->getUniversalInputState(MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT }) ||
 				inputSystem->isActionActive("default.GamePad_X"))
@@ -128,7 +131,8 @@ public:
 				static bool flag0 = true;
 				if (flag0)
 				{
-					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/amb_dark_01.wav", true, true);
+					//GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/amb_dark_01.wav", true, true);
+					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/Evening_wanders.mp3", true, true, 0.5f);
 					flag0 = false;
 				}
 			}
@@ -186,13 +190,21 @@ public:
 				else
 				{
 					_orcSprite->setVisible(true);
+					static float baseZoom = 1.f;
+					float deltaY = inputSystem->getScrollDelta(MouseAxisInput{ MouseAxis::ScrollY });
+					if (deltaY > 0.99f || deltaY < -0.99f)
+					{
+						deltaY = glm::clamp(deltaY, -1.0f, 1.0f);
+						baseZoom = glm::clamp(baseZoom + deltaY * 0.1f, 0.5f, 3.0f);
+						_camera[switcher]->getCamera()->setZoom(baseZoom);
+					}
 					// 2D相机的原始移动逻辑
 					if (movement != glm::vec3(0.0f)) {
 						auto& trans = getTransform();
 						//setPosition(trans.position + glm::vec3(movement * moveSpeed * delta_time));
 
 						if (movement.x != 0) {
-							_orcSprite->setFlip(movement.x > 0, false);
+							_orcSprite->setFlip(movement.x < 0, false);
 						}
 						_orcSprite->playAnimation("walk01");
 					}

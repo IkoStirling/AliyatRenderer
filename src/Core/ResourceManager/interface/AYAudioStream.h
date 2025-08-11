@@ -23,6 +23,7 @@ public:
     int getSampleRate() const override { return _sampleRate; }
     int getChannels() const override { return _channels; }
     float getDuration() const override { return _duration; }
+    float getSuggestedGain() const override { return 1.f; }
     ALenum getFormat() const override { return _format; }
 
     virtual bool load(const std::string& filepath) override;

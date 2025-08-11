@@ -151,8 +151,9 @@ void AYSpriteRenderer::drawSprite3D(GLuint texture,
     const auto& context = _renderer->getRenderContext();
     glm::mat4 projection = context.currentCamera->getProjectionMatrix();
     glm::mat4 view = context.currentCamera->getViewMatrix();
-
-    glm::mat4 model = transform.getTransformMatrix();
+    STTransform pTrans = transform;
+    pTrans.position *= context.currentCamera->getPixelPerMeter();   // 物理坐标到像素坐标
+    glm::mat4 model = pTrans.getTransformMatrix();
     glm::vec3 originOffset = size * origin;
     model = glm::translate(model, -originOffset);
     model = glm::scale(model, size);
@@ -196,7 +197,11 @@ void AYSpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
     glm::mat4 projection = context.currentCamera->getProjectionMatrix();
     glm::mat4 view = context.currentCamera->getViewMatrix();
 
-    glm::mat4 model = transform.getTransformMatrix();
+    STTransform pTrans = transform;
+    pTrans.position *= context.currentCamera->getPixelPerMeter();   // 物理坐标到像素坐标
+    glm::mat4 model = pTrans.getTransformMatrix();
+    std::cout << "[AYSpriteRenderer]  \tPosition(" << pTrans.position.x << ", " << pTrans.position.y << ")\n";
+
 
     glm::vec3 originOffset = size * glm::vec3(origin.x, origin.y, 0.f);
     model = glm::translate(model, -originOffset);

@@ -194,10 +194,10 @@ bool AYVideo::load(const std::string& filepath)
 
     // 查找音频流
     _audioStreamIndex = av_find_best_stream(_formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    if (_audioStreamIndex >= 0) {
-        _audio = std::make_unique<AYAudioStream>();
-        _audio->load(filepath);
-    }
+    //if (_audioStreamIndex >= 0) {
+    //    _audio = std::make_unique<AYAudioStream>();
+    //    _audio->load(filepath);
+    //}
 
     IAYResource::load(filepath);
     _loaded = true;
@@ -231,8 +231,8 @@ size_t AYVideo::sizeInBytes()
 
 void AYVideo::releaseData()
 {
-    if (_audio && _audio->getPCMData()!=std::vector<uint8_t>())
-        _audio->unload();
+    //if (_audio && _audio->getPCMData()!=std::vector<uint8_t>())
+    //    _audio->unload();
     if (_codecContext) {
         avcodec_free_context(&_codecContext);
         _codecContext = nullptr;

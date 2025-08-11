@@ -34,6 +34,7 @@ public:
         AYPath::Resolver::setAlias("@videos", AYPath::Engine::getPresetVideoPath());
         AYPath::Resolver::setAlias("@shaders", AYPath::Engine::getPresetShaderPath());
         AYPath::Resolver::setAlias("@config", AYPath::Engine::getPresetConfigPath());
+        AYPath::Resolver::setAlias("@web", AYPath::Engine::getPresetWebPath());
         // 初始化代码...
         initialized = true;
     }
@@ -88,6 +89,7 @@ public:
         static std::string getPresetCachePath();
         static std::string getPresetAudioPath();
         static std::string getPresetVideoPath();
+        static std::string getPresetWebPath();
 
     private:
         // 静态路径成员变量
@@ -100,6 +102,7 @@ public:
         static const std::string PresetConfigPath;
         static const std::string PresetAudioPath;
         static const std::string PresetVideoPath;
+        static const std::string PresetWebPath;
     };
 
     class Windows

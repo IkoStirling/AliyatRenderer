@@ -1,19 +1,23 @@
 ﻿#pragma once
 #include "IAYComponent.h"
 #include "AYPhysicsSystem.h"
-
+#include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 
 class AYPhysicsComponent : public IAYComponent
 {
 public:
-
+    EntityID entity;
     virtual void beginPlay() override
     {
         auto physicsSystem = GET_CAST_MODULE(AYPhysicsSystem, "PhysicsSystem");
+        auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
+        // 仅过渡前使用
+        entity = ecsEngine->createEntity();
+        ecsEngine->addComponent<STTransform>(entity);
 
         _physicsBody = physicsSystem->getPhysicsWorld(WorldType::AY2D)
             ->createBody(
-                0,
+                entity,
                 glm::vec2(),
                 0.f,
                 _bodyType);
@@ -23,7 +27,12 @@ public:
         }
     }
 
-    virtual void update(float delta_time) override {}
+    virtual void update(float delta_time) override {
+        auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
+        // 仅过渡前使用
+        auto trans = ecsEngine->getComponent<STTransform>(entity);
+        getOwner()->setTransform(trans);
+    }
 
     virtual void endPlay() override {}
 

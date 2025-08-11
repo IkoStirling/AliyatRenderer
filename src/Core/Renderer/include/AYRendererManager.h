@@ -26,6 +26,7 @@ public:
 
 	AYRenderContext& getRenderContext();
 	AYRenderDevice* getRenderDevice() { return _device.get(); };
+	AYRenderer* getRenderer() { return _renderer.get(); };
 	AYAnimationManager* get2DAnimationManager() { return _animeMana.get(); }
 	AYCameraSystem* getCameraSystem() { return _renderer->getCameraSystem(); }
 	GLuint loadTexture(const std::string& path);
@@ -49,6 +50,7 @@ private:
 	//******************debug**********************
 	void _displayDebugInfo();
 	GLuint tex_ID = 0;
+	GLuint tex_ID2 = 0;
 	float delta;
 	class AYAnimatedSprite* _character;
 	std::shared_ptr<AYAnimatedSprite> orcSprite;

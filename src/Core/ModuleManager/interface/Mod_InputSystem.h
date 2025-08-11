@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IAYModule.h"
 #include "AYInputType.h"
 #include "glm/glm.hpp"
@@ -6,27 +6,27 @@
 class AYInputBinding;
 
 struct InputState {
-    bool current = false;   // µ±Ç°Ö¡×´Ì¬
-    bool previous = false;  // ÉÏÒ»Ö¡×´Ì¬
-    float duration = 0.0f;  // °´¼ü³ÖĞøÊ±¼ä(Ãë)
-    int pressCount = 0;     // Á¬Ğø°´ÏÂ´ÎÊı(ÓÃÓÚË«»÷¼ì²â)
-    float lastPressTime = 0.0f;     // ×îºóÒ»´Î°´ÏÂÊ±¼ä
-    float value = 0.0f;     // ÓÃÓÚÖáÊäÈë
-    float previousValue = 0.0f;     // ÉÏÒ»Ö¡ÖáÖµ
-    glm::vec2 pressPosition{ 0 };   // ¶Ô¼üÅÌÊäÈëÎŞĞ§
+    bool current = false;   // å½“å‰å¸§çŠ¶æ€
+    bool previous = false;  // ä¸Šä¸€å¸§çŠ¶æ€
+    float duration = 0.0f;  // æŒ‰é”®æŒç»­æ—¶é—´(ç§’)
+    int pressCount = 0;     // è¿ç»­æŒ‰ä¸‹æ¬¡æ•°(ç”¨äºåŒå‡»æ£€æµ‹)
+    float lastPressTime = 0.0f;     // æœ€åä¸€æ¬¡æŒ‰ä¸‹æ—¶é—´
+    float value = 0.0f;     // ç”¨äºè½´è¾“å…¥
+    float previousValue = 0.0f;     // ä¸Šä¸€å¸§è½´å€¼
+    glm::vec2 pressPosition{ 0 };   // å¯¹é”®ç›˜è¾“å…¥æ— æ•ˆ
 };
 
 class Mod_InputSystem : public IAYModule 
 {
 public:
     /*
-    ĞéÄâ°´¼ü×´Ì¬ÓÉ´Ë·ÃÎÊ´´½¨£¨Î¨Ò»Èë¿Ú£©
+    è™šæ‹ŸæŒ‰é”®çŠ¶æ€ç”±æ­¤è®¿é—®åˆ›å»ºï¼ˆå”¯ä¸€å…¥å£ï¼‰
     */
     virtual InputState& getInputState(const UniversalInput& input) = 0;
     virtual const InputState* findInputState(const UniversalInput& input) const = 0;
 
     /*
-        ĞéÄâ°´¼üÓ³Éä£¬ÕâÀïÌá¹©Ó³ÉäÖĞ°´¼ü»î¶¯µÄ×´Ì¬·ÃÎÊ·½·¨
+        è™šæ‹ŸæŒ‰é”®æ˜ å°„ï¼Œè¿™é‡Œæä¾›æ˜ å°„ä¸­æŒ‰é”®æ´»åŠ¨çš„çŠ¶æ€è®¿é—®æ–¹æ³•
     */
     virtual void addInputMapping(const std::string& name, std::shared_ptr<AYInputBinding> binding) = 0;
     virtual void removeInputMapping(const std::string& name) = 0;
@@ -34,26 +34,27 @@ public:
     virtual bool isActionActive(const std::string& fullActionName) const = 0; //bindingName.actionName
 
     /*
-        ÕâÀïÌá¹©Ô­Ê¼ĞéÄâ°´¼ü×´Ì¬·ÃÎÊ·½·¨£¬£¡£¡£¡ºÍÉÏÃæµÄ°´¼ü»î¶¯×´Ì¬²»Í¬
+        è¿™é‡Œæä¾›åŸå§‹è™šæ‹ŸæŒ‰é”®çŠ¶æ€è®¿é—®æ–¹æ³•ï¼Œï¼ï¼ï¼å’Œä¸Šé¢çš„æŒ‰é”®æ´»åŠ¨çŠ¶æ€ä¸åŒ
     */
     virtual bool getUniversalInputState(const UniversalInput& input) const = 0;
     virtual bool getPreviousUniversalInputState(const UniversalInput& input) const = 0;
 
     /*
-        ÖáÖµ·ÃÎÊ£¬Èç¹ûµ±Ç°°´¼ü²»Ö§³ÖÖáÖµÔò»á·µ»Ø 0
+        è½´å€¼è®¿é—®ï¼Œå¦‚æœå½“å‰æŒ‰é”®ä¸æ”¯æŒè½´å€¼åˆ™ä¼šè¿”å› 0
     */
     virtual float getAxisValue(const UniversalInput& input) const = 0;
+    virtual float getScrollDelta(const UniversalInput& input) = 0;
     virtual float getPreviousAxisValue(const UniversalInput& input) const = 0;
     virtual glm::vec2 getVector2Axis(const std::string& fullActionName) const = 0;
 
     /*
-        ÊÖ±úÏà¹Ø
+        æ‰‹æŸ„ç›¸å…³
     */
     virtual void initGamepad(int joystickId) = 0;
     virtual bool isGamepadConnected(int joystickId) const = 0;
     virtual std::vector<int> getConnectedGamepads() const = 0;
 
-    // ×´Ì¬²éÑ¯½Ó¿Ú
+    // çŠ¶æ€æŸ¥è¯¢æ¥å£
     virtual bool isKeyPressed(int key) const = 0;
     virtual bool isKeyJustPressed(int key) const = 0;
     virtual bool isKeyReleased(int key) const = 0;

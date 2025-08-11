@@ -141,11 +141,12 @@ REGISTER_MODULE_CLASS("ECSEngine", AYECSEngine)
 template<typename T>
 inline AYECSEngine::ComponentPool<T>* AYECSEngine::getPool()
 {
+    // 获取时如不存在初始化空池
     auto type = std::type_index(typeid(T));
-    auto it = _componentPools.find(type); // 改用 find 而不是 at
-    return (it != _componentPools.end()) ?
-        static_cast<ComponentPool<T>*>(it->second.get()) :
-        nullptr;
+    if (_componentPools.count(type) == 0) {
+        _componentPools[type] = std::make_unique<ComponentPool<T>>(); // 自动创建空池
+    }
+    return static_cast<ComponentPool<T>*>(_componentPools[type].get());
 }
 
 template<typename T>

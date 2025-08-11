@@ -25,9 +25,15 @@ public:
     virtual void setViewport(const glm::vec4& viewport) { _viewport = viewport; }   //由摄像机决定渲染视口
     glm::vec4 getViewport() const { return _viewport; }
 
+    virtual void setZoom(float zoom) { 
+        _zoom = glm::clamp(zoom, 0.5f, 3.0f);
+        std::cout << "[IAYCamera] zoom: " << _zoom << std::endl;
+    }
+    virtual float getPixelPerMeter() const { return 1.f * _zoom; }
+
     virtual void setAdditionalOffset(const glm::vec2& offset) { _additionalOffset = offset; }
 
-    virtual const glm::vec3 getPosition() const { return _transform.position; }
+    virtual const glm::vec3 getPosition() const { return _transform.position / getPixelPerMeter(); }
 
     virtual void onCameraMoved() const
     {
@@ -45,4 +51,6 @@ protected:
     glm::vec3 _targetPosition = glm::vec3(0.f);
     glm::vec4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
     glm::vec2 _additionalOffset{ 0.0f };
+
+    float _zoom = 1.f;
 };

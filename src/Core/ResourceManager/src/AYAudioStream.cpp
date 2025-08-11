@@ -22,6 +22,10 @@ bool AYAudioStream::load(const std::string& filepath) {
     _fmtCtx = AVCreator::createFormatContext(rpath);
     if (!_fmtCtx || !_fmtCtx->get()) return false;
 
+    // 增加探测尺寸和分析时长（单位：微秒）
+    _fmtCtx->get()->probesize = 10 * 1024 * 1024;  // 10MB
+    _fmtCtx->get()->max_analyze_duration = 5 * AV_TIME_BASE;  // 5秒
+
     // 查找音频流
     AVCodecParameters* codecPar = nullptr;
     _streamIndex = _fmtCtx->findStream(codecPar, AVMEDIA_TYPE_AUDIO);

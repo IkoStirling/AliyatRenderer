@@ -1,0 +1,29 @@
+﻿<h2>Editing: {{ display_name }}</h2>
+
+<div class='add-config-form'>
+    <form action='/add' method='post'>
+        <input type='hidden' name='file' value='{{ file_path }}'>
+        <input type='text' name='new_key' placeholder='Key' required>
+        <input type='text' name='new_value' placeholder='Value' required>
+        <select name='new_type'>
+            <option value='string'>String</option>
+            <option value='number'>Number</option>
+            <option value='boolean'>Boolean</option>
+        </select>
+        <button type='submit' class='button add-config-btn'>Add</button>
+    </form>
+</div>
+
+<div class="config-form-container">
+    <input type='hidden' name='file' value='{{ file_path }}'>
+    <div class='config-container'>
+        <table class='config-table'>
+            <tr><th>Key</th><th>Value</th></tr>
+            {{ config_items }}
+        </table>
+    </div>
+    <div class='button-container'>
+        <button type='submit' class='button' onclick="saveAllChanges()">Save Changes</button>
+        <button type='button' class='button' onclick="location.href='/'">Refresh</button>
+    </div>
+</div>

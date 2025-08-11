@@ -152,8 +152,9 @@ float AYInputSystem::getAxisValue(const UniversalInput& input) const
 			switch (arg.axis) {
 			case MouseAxis::PositionX: return _currentMousePos.x * arg.scale;
 			case MouseAxis::PositionY: return _currentMousePos.y * arg.scale;
-			case MouseAxis::ScrollX:   return _scrollDelta.x * arg.scale;
-			case MouseAxis::ScrollY:   return _scrollDelta.y * arg.scale;
+			case MouseAxis::ScrollX:   
+			case MouseAxis::ScrollY: 
+				throw std::logic_error("Scroll axis should be consumed via getScrollDelta()!");
 			}
 		}
 		else if constexpr (std::is_same_v<T, GamepadAxisInput>) {
@@ -172,6 +173,28 @@ float AYInputSystem::getAxisValue(const UniversalInput& input) const
 			// 应用死区和缩放
 			if (fabs(value) < arg.deadZone) return 0.0f;
 			return value * arg.scale;
+		}
+		return 0.0f;
+		}, input);
+}
+
+float AYInputSystem::getScrollDelta(const UniversalInput& input)
+{
+	return std::visit([this](auto&& arg) -> float {
+		using T = std::decay_t<decltype(arg)>;
+
+		if constexpr (std::is_same_v<T, MouseAxisInput>) {
+			float tmp;
+			switch (arg.axis) {
+			case MouseAxis::ScrollX:
+				tmp = _scrollDelta.x;
+				_scrollDelta = glm::vec2(0);
+				return tmp;
+			case MouseAxis::ScrollY:
+				tmp = _scrollDelta.y;
+				_scrollDelta = glm::vec2(0);
+				return tmp;
+			}
 		}
 		return 0.0f;
 		}, input);

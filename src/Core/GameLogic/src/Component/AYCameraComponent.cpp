@@ -87,6 +87,12 @@ void AYCameraComponent::shake(float intensity, float duration)
     _shakeTimer = 0.0f;
 }
 
+void AYCameraComponent::setZoom(float zoom)
+{
+    if (!_boundCamera) return;
+    _boundCamera->setZoom(zoom);
+}
+
 void AYCameraComponent::setupCamera(IAYCamera::Type type)
 {
     auto cameraSystem = GET_CAST_MODULE(AYRendererManager, "Renderer")->getCameraSystem();

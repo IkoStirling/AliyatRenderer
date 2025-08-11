@@ -25,12 +25,26 @@ bool AYAudioPlayer::play(const std::shared_ptr<IAYAudioSource>& source, bool loo
     if (!source->isStreaming()) {
         ALuint buffer;
         alGenBuffers(1, &buffer);
+
+        float sourceGain = source->getSuggestedGain(); // 默认返回1.0f
+        // 应用动态范围压缩
+        const float compressionFactor = 0.8f; // 轻度压缩
         alBufferData(buffer, source->getFormat(),
             source->getPCMData().data(),
             source->getPCMData().size(),
             source->getSampleRate());
+
+        // 设置缓冲区独立增益
+        if (alIsExtensionPresent("AL_SOFT_buffer_gain")) {
+            alBufferf(buffer, AL_GAIN, sourceGain * compressionFactor);
+        }
+        else {
+            _volume.store(sourceGain * compressionFactor * _volume.load());
+        }
+
         alSourcei(_source, AL_BUFFER, buffer);
         alSourcei(_source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
+        updateSourceProperties();
         alSourcePlay(_source);
     }
     // 流式音频需要缓冲
@@ -38,6 +52,7 @@ bool AYAudioPlayer::play(const std::shared_ptr<IAYAudioSource>& source, bool loo
         if (!refillBuffers(3)) { // 预缓冲3个区块
             return false;
         }
+        updateSourceProperties();
         alSourcePlay(_source);
     }
 
@@ -136,11 +151,7 @@ void AYAudioPlayer::set3DParameters(float rolloff, float refDistance, float maxD
     _referenceDistance = refDistance;
     _maxDistance = maxDistance;
 
-    if (_is3DEnabled) {
-        alSourcef(_source, AL_ROLLOFF_FACTOR, _rolloffFactor);
-        alSourcef(_source, AL_REFERENCE_DISTANCE, _referenceDistance);
-        alSourcef(_source, AL_MAX_DISTANCE, _maxDistance);
-    }
+    updateSourceProperties();
 }
 
 bool AYAudioPlayer::isPlaybackFinished() const {
@@ -247,7 +258,7 @@ void AYAudioPlayer::cleanup() {
 }
 
 void AYAudioPlayer::updateSourceProperties() {
-    alSourcef(_source, AL_GAIN, _volume.load());
+    alSourcef(_source, AL_GAIN, _volume.load() * _masterVolume.load());
 
     if (_is3DEnabled) {
         alSource3f(_source, AL_POSITION, _position.x, _position.y, _position.z);
@@ -267,16 +278,25 @@ bool AYAudioPlayer::refillBuffers(size_t minFrames) {
     ALint queued;
     alGetSourcei(_source, AL_BUFFERS_QUEUED, &queued);
 
+    const size_t targetFrames = _currentSource->getSampleRate() / 50;
+
     while (queued < minFrames) {
         auto source = std::static_pointer_cast<AYAudioStream>(_currentSource);
         auto frame = source->decodeNextFrame();
         if (!frame) return false;
 
+        if (frame->data.size() % (2 * _currentSource->getChannels()) != 0) {
+            frame->data.resize(frame->data.size() - (frame->data.size() %
+                (2 * _currentSource->getChannels())));
+        }
+
         ALuint buffer;
         alGenBuffers(1, &buffer);
+
         alBufferData(buffer, _currentSource->getFormat(),
             frame->data.data(), frame->data.size(),
             _currentSource->getSampleRate());
+
         alSourceQueueBuffers(_source, 1, &buffer);
         queued++;
     }

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
@@ -15,8 +15,8 @@
 #include <functional>
 #include <mutex>
 
-#include "AYPacket.h"
-#include "ByteBuffer.h"
+#include "Base/AYPacket.h"
+#include "Base/ByteBuffer.h"
 
 namespace Network
 {

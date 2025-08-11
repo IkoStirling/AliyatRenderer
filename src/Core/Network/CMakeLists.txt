@@ -1,10 +1,10 @@
-set(MODULE_NAME network)
+﻿set(MODULE_NAME network)
 
 
 find_package(Boost CONFIG REQUIRED COMPONENTS asio)
 
-file(GLOB SRCS
-	"src/*.cpp"
+file(GLOB_RECURSE SRCS
+	"*.cpp"
 	)
 add_library(${MODULE_NAME} STATIC
     ${SRCS}
