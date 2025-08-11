@@ -38,7 +38,7 @@ add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/SoundEngine)
 add_subdirectory(src/Core/Renderer)
 add_subdirectory(src/Core/InputSystem)
-add_subdirectory(src/Core/Network)
+#add_subdirectory(src/Core/Network)
 add_subdirectory(src/Core/SceneManager)
 add_subdirectory(src/Core/PhysicsSystem)
 add_subdirectory(src/Core/ECSEngine)
@@ -58,6 +58,11 @@ file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 
 add_executable(TESTLIBS test.cpp)
 target_link_libraries(TESTLIBS PRIVATE engine_core)
+
+
+find_package(httplib CONFIG REQUIRED)
+add_executable(ConfigResolver "ConfigResolver.cpp")
+target_link_libraries(ConfigResolver PRIVATE module_manager httplib::httplib)
 
 
 
