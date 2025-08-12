@@ -21,10 +21,10 @@ public:
 	void setViewBox(float near, float far);
 	float getPixelPerMeter() const override
 	{
-		// 假设默认 1米 = 100像素（基础比例）
+		// 假设默认 1米 = 100像素（基础比例）,不要动态缩放！！不要动态缩放！！
+		// 如果这里再与zoom相乘，会导致双倍缩放，因为投影矩阵里已经应用了！！
 		const float BASE_PPM = 66.7f;
-		// 动态缩放后的 PPM
-		return BASE_PPM * _zoom;
+		return BASE_PPM;
 	}
 	void setDeadzone(const glm::vec4& zone) { _deadzone = zone; } // left, right, bottom, top
 	void setTargetPosition(const glm::vec2& targetPos) { _targetPosition = glm::vec3(targetPos, 0.f) * getPixelPerMeter(); }

@@ -27,7 +27,7 @@ void Box2DPhysicsBody::setType(BodyType type)
 }
 
 void Box2DPhysicsBody::setTransform(const STTransform& transform) {
-    _body->SetTransform(glmToBox2D(transform.position), transform.rotation.z);
+    _body->SetTransform(glmToBox2D(transform.position), transform.rotation.getEulerAngles().z);
 }
 
 STTransform Box2DPhysicsBody::getTransform()

@@ -29,7 +29,7 @@ public:
         _zoom = glm::clamp(zoom, 0.5f, 3.0f);
         std::cout << "[IAYCamera] zoom: " << _zoom << std::endl;
     }
-    virtual float getPixelPerMeter() const { return 1.f * _zoom; }
+    virtual float getPixelPerMeter() const { return 1.f; }
 
     virtual void setAdditionalOffset(const glm::vec2& offset) { _additionalOffset = offset; }
 

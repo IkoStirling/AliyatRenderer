@@ -54,10 +54,11 @@ Before execute this program, preparing these packages:
 		Physics
 	9. libarchive
 		may be Network ( use zstd when compress network msg)
+	10.glm
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive
+	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|

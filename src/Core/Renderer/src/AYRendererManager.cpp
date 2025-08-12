@@ -240,7 +240,7 @@ void AYRendererManager::_displayDebugInfo()
 	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) }, glm::vec2(1920 *0.4f, 1080 * 0.4f), 2, true, AYCoreRenderer::Space::Screen);
 	_renderer->getSpriteRenderer()->drawSprite(
 		tex_ID,
-		{ glm::vec3(0/ ppm, 0/ ppm, 0) },
+		{ glm::vec3(0/ ppm, 00/ ppm, 0) },
 		//{},
 		glm::vec2(500.0f),  // 大小
 		glm::vec4(1.0f, 1.f, 1.f, 1.f),// 颜色
@@ -250,7 +250,7 @@ void AYRendererManager::_displayDebugInfo()
 	);
 	_renderer->getSpriteRenderer()->drawSprite(
 		tex_ID2,
-		{ glm::vec3(500/ ppm, 0/ ppm, 0) },
+		{ glm::vec3((0 + 500)/ ppm, (0 + 500) / ppm, 0) },
 		//{},
 		glm::vec2(500.0f),  // 大小
 		glm::vec4(1),// 颜色
