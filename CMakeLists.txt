@@ -61,9 +61,14 @@ target_link_libraries(TESTLIBS PRIVATE engine_core)
 
 
 find_package(httplib CONFIG REQUIRED)
+find_package(efsw CONFIG REQUIRED)
 add_executable(ConfigResolver "ConfigResolver.cpp")
-target_link_libraries(ConfigResolver PRIVATE module_manager httplib::httplib)
-
+target_link_libraries(ConfigResolver PRIVATE module_manager httplib::httplib efsw::efsw)
+if (WIN32)
+    set_target_properties(ConfigResolver PROPERTIES
+        LINK_OPTIONS "/SUBSYSTEM:WINDOWS"
+    )
+endif()
 
 
 #--------------Project0001-------------#

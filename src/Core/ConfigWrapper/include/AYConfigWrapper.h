@@ -14,61 +14,84 @@
 class AYConfigWrapper
 {
 public:
-	
 	enum class ConfigType {
 		INI,
 		JSON,
 		XML,
-		//YAML,
 		NONE
 	};
-	
+
+	AYConfigWrapper();
+
+	// Load from file (thread-safe)
 	void loadFromFile(const std::string& path, ConfigType type);
+
+	// Save full config (thread-safe)
 	bool saveConfig(const std::string& path);
 	bool saveConfig();
+
+	// Save only modified keys (thread-safe)
 	bool saveIncremental(const std::string& path);
 	bool saveIncremental();
 
+	// Remove a key (thread-safe)
 	bool remove(const std::string& path);
 
+	// Set value (thread-safe)
 	template <typename T>
 	void set(const std::string& path, const T& value);
+
 	template <typename T>
 	void set(const std::string& path, const std::vector<T>& value);
+
 	template <typename K, typename V>
 	void set(const std::string& path, const std::map<K, V>& value);
 
+	// Get value (thread-safe)
 	template <typename T>
 	T get(const std::string& path);
+
 	template <typename T>
 	T get(const std::string& path, const T& default_value);
 
 	template <typename T>
 	std::vector<T> getVector(const std::string& path);
+
 	template <typename K, typename V>
 	std::map<K, V> getMap(const std::string& path);
 
+	// Utility
+	bool hasChanges() const;
+	const std::unordered_set<std::string>& getModifiedKeys() const;
+	void clearChanges();
 
-	bool hasChanges() const { return !_modifiedKeys.empty(); }
-	const std::unordered_set<std::string>& getModifiedKeys() const { return _modifiedKeys; }
-	void clearChanges() { _modifiedKeys.clear(); _originalPt = _currentPt; }
+	// Debug access (still thread-safe, but caller must not hold reference across threads)
+	boost::property_tree::ptree getPt();
+	const boost::property_tree::ptree& getOriginalPt() const;
 
-	// 供调试用
-	boost::property_tree::ptree& getPt() { return _currentPt; }
-	const boost::property_tree::ptree& getOriginalPt() const { return _originalPt; }
 private:
+	// Internal save (does file IO, should NOT be called with lock held if it might cause re-entrancy)
 	bool _internalSave(const boost::property_tree::ptree& pt, const std::string& path);
+
+	bool _removeEmptyParents(boost::property_tree::ptree& pt, const std::string& path);
+
+	// Data
 	boost::property_tree::ptree _currentPt;
-	boost::property_tree::ptree _originalPt; // 保存原始状态
-	boost::property_tree::ptree _pt;
-	std::unordered_set<std::string> _modifiedKeys; // 记录修改过的键
+	boost::property_tree::ptree _originalPt;
+	boost::property_tree::ptree _pt; // (似乎未使用，可删除)
+	std::unordered_set<std::string> _modifiedKeys;
 	std::string _path;
 	ConfigType _type;
+
+	// Mutex for thread safety
+	mutable std::mutex _mutex;
+	mutable std::mutex _ptreeMutex;
 };
 
 template<typename T>
 inline void AYConfigWrapper::set(const std::string& path, const T& value)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	auto setValue = [this, &path, &value]() {
 		_currentPt.put<T>(path, value);
 		_modifiedKeys.insert(path);
@@ -98,6 +121,7 @@ inline void AYConfigWrapper::set(const std::string& path, const T& value)
 template<typename T>
 inline void AYConfigWrapper::set(const std::string& path, const std::vector<T>& value)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	auto setValue = [this, &path, &value]() {
 		boost::property_tree::ptree array_node;
 		for (const T& val : value) {
@@ -124,6 +148,7 @@ inline void AYConfigWrapper::set(const std::string& path, const std::vector<T>& 
 template <typename K, typename V>
 inline void AYConfigWrapper::set(const std::string& path, const std::map<K, V>& value)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	auto setValue = [this, &path, &value]() {
 		boost::property_tree::ptree map_node;
 		for (const auto& [key, val] : value) {
@@ -152,12 +177,14 @@ inline void AYConfigWrapper::set(const std::string& path, const std::map<K, V>& 
 template<typename T>
 inline T AYConfigWrapper::get(const std::string& path)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	return _currentPt.get<T>(path);
 }
 
 template<typename T>
 inline T AYConfigWrapper::get(const std::string& path, const T& default_value)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	return _currentPt.get<T>(path,default_value);
 }
 
@@ -171,6 +198,8 @@ inline std::vector<T> AYConfigWrapper::getVector(const std::string& path)
 		std::cout << "INI not support vector\n";
 	}
 	try {
+		std::lock_guard<std::mutex> lock(_mutex);
+
 		// 检查路径是否存在
 		if (!_currentPt.get_child_optional(path)) {
 			return result;  // 返回空 vector
@@ -194,8 +223,11 @@ inline std::map<K, V> AYConfigWrapper::getMap(const std::string& path)
 	{
 		std::cout << "INI not support map\n";
 	}
-	for (const auto& item : _currentPt.get_child(path)) {
-		result[item.first] = item.second.get_value<V>();
+	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		for (const auto& item : _currentPt.get_child(path)) {
+			result[item.first] = item.second.get_value<V>();
+		}
 	}
 	return result;
 }

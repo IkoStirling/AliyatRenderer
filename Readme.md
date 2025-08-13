@@ -56,21 +56,20 @@ Before execute this program, preparing these packages:
 		may be Network ( use zstd when compress network msg)
 	10.glm
 
+	11.efsw
+		FileWatch
+
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm
+	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm efsw
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|
-| This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation
-        | ![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)
-		| The system now supports 3D camera functionality and equirectangular skyboxes, but there's a rendering issue with 2D sprites - they only appear at z=0 depth and remain fixed in screen space, causing them to stay in place even when the 3D camera moves.
-		| ![pic](assets/core/.projectProgress/2D_orc&3D_Skybox.png)
-		| The current architecture results in drawing 30000 instantiated graphics in one frame, causing the program to have a frame rate of only about 5fps. It is still unclear whether it is a CPU or GPU limitation, and it is difficult to fix such issues until the module is completed and disconnected from the main thread.
-		| ![pic](assets/core/.projectProgress/A_problem_that_needs_to_be_solved.png)
-		| This effect is achieved by setting a native Windows window. If you want to implement it in other engines, you need to find a way to obtain the handle of the Windows window. There seems to be a small flaw. It should have been set as a penetrable switch, but now the default pixel free place will directly penetrate below. At least now it can make desktop pets
-		| ![pic](assets/core/.projectProgress/no_border_window&always_on_desktop_top.png)
-
+| This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation| ![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)|
+| The system now supports 3D camera functionality and equirectangular skyboxes, but there's a rendering issue with 2D sprites - they only appear at z=0 depth and remain fixed in screen space, causing them to stay in place even when the 3D camera moves.| ![pic](assets/core/.projectProgress/2D_orc&3D_Skybox.png)|
+| The current architecture results in drawing 30000 instantiated graphics in one frame, causing the program to have a frame rate of only about 5fps. It is still unclear whether it is a CPU or GPU limitation, and it is difficult to fix such issues until the module is completed and disconnected from the main thread.| ![pic](assets/core/.projectProgress/A_problem_that_needs_to_be_solved.png)|
+| This effect is achieved by setting a native Windows window. If you want to implement it in other engines, you need to find a way to obtain the handle of the Windows window. There seems to be a small flaw. It should have been set as a penetrable switch, but now the default pixel free place will directly penetrate below. At least now it can make desktop pets| ![pic](assets/core/.projectProgress/no_border_window&always_on_desktop_top.png)|
+| Now ConfigResolver can correctly edit files in a multithreaded environment, handle the problem of Chinese encoding, and add file monitoring to automatically update the front page. Maybe the code logic is a bit confusing, but as a small tool, I think it is enough. To quote Todd, "It just work". It will not consider too much performance nor consume too much performance| ![pic](assets/core/.projectProgress/config_resolver.png)|
 	
 2. Core code lines: 14322
 	

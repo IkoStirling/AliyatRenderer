@@ -100,6 +100,7 @@ private:
 
     AYConfigWrapper _config;
     std::string _configPath;
+    bool _isEnableWindowEffect;
     bool _isShowBorder;
     bool _isAlwaysOnTop;
     bool _isMousePenetrate;

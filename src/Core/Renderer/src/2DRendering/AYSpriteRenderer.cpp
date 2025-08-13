@@ -200,7 +200,6 @@ void AYSpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
         origin,
         size
     );
-    //std::cout << "[AYSpriteRenderer]  \tPosition(" << pTrans.position.x << ", " << pTrans.position.y << ")\n";
 
     auto shader = _getAtlasShader();
 

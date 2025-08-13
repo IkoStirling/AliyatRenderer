@@ -259,7 +259,7 @@ void AYRendererManager::_displayDebugInfo()
 		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
 	);
 
-	if (videos && 0)
+	if (videos && 1)
 	{
 		if (videos->updateFrame(delta) && !videot) {
 			videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());

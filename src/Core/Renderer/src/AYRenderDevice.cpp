@@ -35,7 +35,8 @@ bool AYRenderDevice::init(int width, int height)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
 
     setWindowAlwaysOnTop(_isAlwaysOnTop);
-    setWindowDesktopEffect(_wOpacity, _isMousePenetrate, RGB(_colorKeyR, _colorKeyG, _colorKeyB));
+    if(_isEnableWindowEffect)
+        setWindowDesktopEffect(_wOpacity, _isMousePenetrate, RGB(_colorKeyR, _colorKeyG, _colorKeyB));
 
     glfwSwapInterval(1);
 
@@ -394,17 +395,19 @@ void AYRenderDevice::_loadDeviceWindowConfigINI()
 {
     _config.loadFromFile(_configPath, AYConfigWrapper::ConfigType::INI);
 
+    _isEnableWindowEffect = _config.get<bool>("window config.enable_window_effect", false);
     _isShowBorder = _config.get<bool>("window config.show_border", true);
     _isAlwaysOnTop = _config.get<bool>("window config.always_on_top", false);
     _isMousePenetrate = _config.get<bool>("window config.mouse_penetrate", false);
     _wOpacity = _config.get<float>("window config.opacity", 1.f);
-    _colorKeyR = _config.get<uint32_t>("window config.color_key_r", 1); //默认错开纯黑的颜色键效果
+    _colorKeyR = _config.get<uint32_t>("window config.color_key_r", 0); 
     _colorKeyG = _config.get<uint32_t>("window config.color_key_g", 0);
     _colorKeyB = _config.get<uint32_t>("window config.color_key_b", 0);
 }
 
 void AYRenderDevice::_saveDeviceWindowConfigINI()
 {
+    _config.set<bool>("window config.enable_window_effect", _isEnableWindowEffect);
     _config.set<bool>("window config.show_border", _isShowBorder);
     _config.set<bool>("window config.always_on_top", _isAlwaysOnTop);
     _config.set<bool>("window config.mouse_penetrate", _isMousePenetrate);
