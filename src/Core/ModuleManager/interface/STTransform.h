@@ -117,19 +117,23 @@ public:
     }
 
     // 获取方向向量
-    glm::vec3 getForwardVector() const {
+    glm::vec3 getForwardVector() const 
+    {
         return glm::normalize(glm::vec3(rotation.getMatrix() * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
     }
 
-    glm::vec3 getUpVector() const {
+    glm::vec3 getUpVector() const 
+    {
         return glm::normalize(glm::vec3(rotation.getMatrix() * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)));
     }
 
-    glm::vec3 getRightVector() const {
+    glm::vec3 getRightVector() const 
+    {
         return glm::normalize(glm::vec3(rotation.getMatrix() * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
     }
 
-    bool approximatelyEqual(const glm::vec3& a, const glm::vec3& b, float epsilon = glm::epsilon<float>()) const {
+    static bool approximatelyEqual(const glm::vec3& a, const glm::vec3& b, float epsilon = glm::epsilon<float>())
+    {
         return glm::all(glm::lessThanEqual(glm::abs(a - b), glm::vec3(epsilon)));
     }
 

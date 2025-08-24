@@ -1,4 +1,4 @@
-#version 460 core
+ï»¿#version 460 core
 layout(std430, binding = 0) buffer LightData {
     vec4 directionalDirections[4];
     vec4 directionalColors[4];
@@ -18,9 +18,17 @@ layout(std430, binding = 0) buffer LightData {
 
 uniform vec3 u_ViewPos;
 uniform vec4 u_BaseColor;
-
 uniform float u_Metallic;
 uniform float u_Roughness;
+
+uniform sampler2D u_AlbedoTexture;  // æ–°å¢ï¼šalbedoçº¹ç†
+uniform bool u_UseAlbedoTexture;    // æ–°å¢ï¼šæ˜¯å¦ä½¿ç”¨albedoçº¹ç†æ ‡å¿—
+uniform sampler2D u_OpacityTexture;      // é€æ˜åº¦è´´å›¾
+uniform bool u_UseOpacityTexture;        // æ˜¯å¦ä½¿ç”¨é€æ˜åº¦è´´å›¾
+uniform bool u_DebugMode;        // æ˜¯å¦ä½¿ç”¨é€æ˜åº¦è´´å›¾
+
+
+
 
 in vec2 v_TexCoord;
 in vec3 v_Normal;
@@ -29,7 +37,7 @@ out vec4 FragColor;
 
 
 vec3 CalcDirectionalLight(vec4 directionalColors, vec4 directionalDirections, vec3 normal, vec3 viewDir) {
-    // Âş·´Éä
+    // æ¼«åå°„
     float intensity = directionalColors.a;
     vec3 color = directionalColors.rgb;
     vec3 direction = directionalDirections.xyz;
@@ -38,18 +46,18 @@ vec3 CalcDirectionalLight(vec4 directionalColors, vec4 directionalDirections, ve
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = color * diff * intensity;
     
-    // ¾µÃæ·´Éä (Blinn-Phong)
+    // é•œé¢åå°„ (Blinn-Phong)
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     vec3 specular = color * spec * intensity;
     
-    // ¼òµ¥Ä£Äâ½ğÊô¶ÈÓ°Ïì
+    // ç®€å•æ¨¡æ‹Ÿé‡‘å±åº¦å½±å“
     float metallicFactor = 1.0 - u_Metallic * 0.5;
     
     return (diffuse + specular) * metallicFactor;
 }
 
-// ¼ÆËãµã¹âÔ´¹±Ï×
+// è®¡ç®—ç‚¹å…‰æºè´¡çŒ®
 vec3 CalcPointLight(vec4 pointPositions, vec4 pointColors, vec4 pointParams, vec3 normal, vec3 fragPos, vec3 viewDir) 
 {
     vec3 position = pointPositions.xyz;
@@ -63,26 +71,26 @@ vec3 CalcPointLight(vec4 pointPositions, vec4 pointColors, vec4 pointParams, vec
     vec3 lightDir = normalize(position - fragPos);
     float dist = length(position - fragPos);
     
-    // Ë¥¼õ¼ÆËã
+    // è¡°å‡è®¡ç®—
     float attenuation = 1.0 / (constant + linear * dist + 
                  quadratic * (dist * dist));
     
-    // Âş·´Éä
+    // æ¼«åå°„
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = color * diff * intensity * attenuation;
     
-    // ¾µÃæ·´Éä
+    // é•œé¢åå°„
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     vec3 specular = color * spec * intensity * attenuation;
     
-    // ½ğÊô¶ÈÓ°Ïì
+    // é‡‘å±åº¦å½±å“
     float metallicFactor = 1.0 - u_Metallic * 0.5;
     
     return (diffuse + specular) * metallicFactor;
 }
 
-// ¼ÆËã¾Û¹âµÆ¹±Ï×
+// è®¡ç®—èšå…‰ç¯è´¡çŒ®
 vec3 CalcSpotLight(vec4 spotPositions,vec4 spotDirections,vec4 spotColors,vec4 spotParams,vec4 spotAttenuation, vec3 normal, vec3 fragPos, vec3 viewDir) 
 {
     vec3 position = spotPositions.xyz;
@@ -100,21 +108,21 @@ vec3 CalcSpotLight(vec4 spotPositions,vec4 spotDirections,vec4 spotColors,vec4 s
     float attenuation = 1.0 / (constant + linear * dist + 
                  quadratic * (dist * dist));
     
-    // ¾Û¹âÇ¿¶È¼ÆËã
+    // èšå…‰å¼ºåº¦è®¡ç®—
     float theta = dot(lightDir, normalize(-direction));
     float epsilon = cutOff - outerCutOff;
     float spotIntensity  = clamp((theta - outerCutOff) / epsilon, 0.0, 1.0);
     
-    // Âş·´Éä
+    // æ¼«åå°„
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = color * diff * intensity * attenuation * spotIntensity;
     
-    // ¾µÃæ·´Éä
+    // é•œé¢åå°„
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
     vec3 specular = color * spec * intensity * attenuation * spotIntensity;
     
-    // ½ğÊô¶ÈÓ°Ïì
+    // é‡‘å±åº¦å½±å“
     float metallicFactor = 1.0 - u_Metallic * 0.5;
     
     return (diffuse + specular) * metallicFactor;
@@ -129,42 +137,63 @@ void main()
 
     vec3 ambient = vec3(0.1);
     
-    // ³õÊ¼»¯¹âÕÕ½á¹û
-    vec3 result = ambient * u_BaseColor.rgb;
+    // è·å–åŸºç¡€é¢œè‰²ï¼šå¦‚æœä½¿ç”¨çº¹ç†åˆ™ä»çº¹ç†é‡‡æ ·ï¼Œå¦åˆ™ä½¿ç”¨u_BaseColor
+    vec4 baseColor = u_BaseColor;
+    if (u_UseAlbedoTexture) {
+        baseColor = texture(u_AlbedoTexture, v_TexCoord);
+    }
+
+    float alpha = baseColor.a;
+    if (u_UseOpacityTexture) {
+        // ä»é€æ˜åº¦è´´å›¾ä¸­è·å–Alphaå€¼ï¼ˆé€šå¸¸å­˜å‚¨åœ¨Ré€šé“ï¼‰
+        alpha *= texture(u_OpacityTexture, v_TexCoord).r;
+    }
+
+    // å®Œå…¨é€æ˜çš„åƒç´ ç›´æ¥ä¸¢å¼ƒ
+    if (alpha < 0.01) {
+        discard;
+    }
+
+    // åˆå§‹åŒ–å…‰ç…§ç»“æœ
+    vec3 result = ambient * baseColor.rgb;
     
     int numDirLights = lights.lightCounts.x;
     int numPointLights = lights.lightCounts.y;
     int numSpotLights = lights.lightCounts.z;
 
-    // ´¦ÀíËùÓĞ¶¨Ïò¹â
+    // å¤„ç†æ‰€æœ‰å®šå‘å…‰
     for(int i = 0; i < numDirLights; i++) {
         result += CalcDirectionalLight(
             lights.directionalColors[i],
             lights.directionalDirections[i],
-            normal, viewDir) * u_BaseColor.rgb;
+            normal, viewDir) * baseColor.rgb;
     }
 
-    // ´¦ÀíËùÓĞµã¹âÔ´
+    // å¤„ç†æ‰€æœ‰ç‚¹å…‰æº
     for(int i = 0; i < numPointLights; i++) {
         result += CalcPointLight(lights.pointPositions[i],
             lights.pointColors[i],
             lights.pointParams[i],
-            normal, v_FragPos, viewDir) * u_BaseColor.rgb;
+            normal, v_FragPos, viewDir) * baseColor.rgb;
     }
     
-    // ´¦ÀíËùÓĞ¾Û¹âµÆ
+    // å¤„ç†æ‰€æœ‰èšå…‰ç¯
     for(int i = 0; i < numSpotLights; i++) {
         result += CalcSpotLight(lights.spotPositions[i],
             lights.spotDirections[i],
             lights.spotColors[i],
             lights.spotParams[i],
             lights.spotAttenuation[i],
-            normal, v_FragPos, viewDir) * u_BaseColor.rgb;
+            normal, v_FragPos, viewDir) * baseColor.rgb;
     }
     
-    // ´Ö²Ú¶È¼òµ¥Ó°Ïì¸ß¹â·¶Î§
+    // ç²—ç³™åº¦ç®€å•å½±å“é«˜å…‰èŒƒå›´
     float roughnessFactor = 1.0 - u_Roughness * 0.3;
     result *= roughnessFactor;
     
-    FragColor = vec4(result, u_BaseColor.a);
+    FragColor = vec4(result, alpha);
+
+    if (u_DebugMode) {
+    FragColor = vec4(vec3(gl_FragCoord.z), 1.0); // å¯è§†åŒ–æ·±åº¦
+    }
 }

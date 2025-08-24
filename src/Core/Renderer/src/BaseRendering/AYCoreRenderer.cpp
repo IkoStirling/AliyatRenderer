@@ -47,7 +47,7 @@ void AYCoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices)
         // 按vector类似方案扩容
         _vertexBufferSize = std::max(_vertexBufferSize * 3 / 2, requiredVertices);
 
-        glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+        _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _vbo);
         glBufferData(GL_ARRAY_BUFFER,
             _vertexBufferSize * sizeof(VertexInfo),
             nullptr,  // 只分配空间，不初始化数据
@@ -63,7 +63,7 @@ void AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
         _instanceBufferSize = std::max(_instanceBufferSize * 3 / 2,
             requiredInstances);
 
-        glBindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
+        _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
         glBufferData(GL_ARRAY_BUFFER,
             _instanceBufferSize * sizeof(glm::mat4),
             nullptr,
@@ -79,8 +79,8 @@ void AYCoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
         _indexBufferSize = std::max(_indexBufferSize * 3 / 2,
             _indexBufferSize);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-        glBufferData(GL_ARRAY_BUFFER,
+        _device->getGLStateManager()->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
             _indexBufferSize * sizeof(uint32_t),
             nullptr,
             GL_DYNAMIC_DRAW);
@@ -95,7 +95,7 @@ void AYCoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices)
 
     ensureVertexBufferCapacity(vertices.size());
 
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+    _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _vbo);
 
     // 孤儿化缓冲区（抛弃旧数据）
     glBufferData(GL_ARRAY_BUFFER,
@@ -118,7 +118,7 @@ void AYCoreRenderer::uploadInstanceData(const std::vector<glm::mat4>& instances)
 
     ensureInstanceBufferCapacity(instances.size());
 
-    glBindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
+    _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
 
     glBufferData(GL_ARRAY_BUFFER,
         _instanceBufferSize * sizeof(glm::mat4),
@@ -139,7 +139,7 @@ void AYCoreRenderer::uploadIndexData(const std::vector<uint32_t>& indices)
 
     ensureIndexBufferCapacity(indices.size());
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+    _device->getGLStateManager()->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
 
     // 孤儿化缓冲区（抛弃旧数据）
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -190,16 +190,17 @@ void AYCoreRenderer::addVertexData(const std::vector<VertexInfo>& vertices, Inst
     _currentBatch->vertices.insert(_currentBatch->vertices.end(), vertices.begin(), vertices.end());
 }
 
-void AYCoreRenderer::addIndexData(std::vector<uint32_t>& indices, InstanceGroup* group)
+void AYCoreRenderer::addIndexData(const std::vector<uint32_t>& indices, InstanceGroup* group) const
 {
     // 调整索引偏移量
-    for (auto& index : indices) {
+    auto indicesC = indices;
+    for (auto& index : indicesC) {
         index += group->baseVertex;
     }
 
     group->baseIndex = _currentBatch->indices.size();
     group->indexCount = indices.size();
-    _currentBatch->indices.insert(_currentBatch->indices.end(), indices.begin(), indices.end());
+    _currentBatch->indices.insert(_currentBatch->indices.end(), indicesC.begin(), indicesC.end());
 }
 
 void AYCoreRenderer::drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space)
@@ -368,6 +369,59 @@ void AYCoreRenderer::drawBox3D(const STTransform& transform,
     }
 }
 
+void AYCoreRenderer::drawMesh(const STTransform& transform,
+    const STMesh& mesh,
+    bool wireframe,
+    Space space)
+{
+    const auto& mat = _renderer->getMaterialManager()->getMaterial(mesh.materialName);
+
+    if (mat.type == STMaterial::Type::Transparent) {
+        // 计算网格中心到摄像机的距离
+        glm::vec3 worldCenter = transform.getTransformMatrix() * glm::vec4(mesh.center, 1.0f);
+        float distance = glm::distance(
+            _renderer->getCameraSystem()->getActiveCamera()->getPosition(),
+            worldCenter
+        );
+
+        // 存入待渲染列表
+        _transparentMeshes.emplace_back(transform, mesh, wireframe, space, distance);
+    }
+
+    switchBatchDraw(
+        space,
+        wireframe ? PrimitiveType::Lines : PrimitiveType::Triangles,
+        true,  
+        !wireframe ? mat.type : STMaterial::Type::Wireframe,
+        mat.id       // 可给个默认 materialID 或从材质管理器获取
+    );
+
+    auto* group = findOrCreateInstanceGroup(
+        InstanceType::Mesh,
+        wireframe ? 8 : mesh.vertices.size(), // 顶点数
+        wireframe ? 24 : mesh.indices.size(), // 索引数
+        transform.getTransformMatrix()
+    );
+
+    if (group->vertexCount == -1 && mat.type != STMaterial::Type::Transparent)
+    {
+        std::vector<VertexInfo> tmp;
+        tmp.reserve(mesh.vertices.size());
+
+        for (size_t i = 0; i < mesh.vertices.size(); i++)
+        {
+            glm::vec3 pos = mesh.vertices[i];
+            glm::vec3 normal = (i < mesh.normals.size()) ? mesh.normals[i] : glm::vec3(0.0f, 1.0f, 0.0f);
+            glm::vec2 uv = (i < mesh.texCoords.size()) ? mesh.texCoords[i] : glm::vec2(0.0f, 0.0f);
+
+            tmp.emplace_back(pos, normal, uv);
+        }
+        addVertexData(tmp, group);
+
+        addIndexData(mesh.indices, group);
+    }
+}
+
 //void AYCoreRenderer::drawSphere3D(const STTransform& transform, float radius, const glm::vec4& color, int segments)
 //{
 //}
@@ -399,46 +453,64 @@ void AYCoreRenderer::endDraw()
 }
 
 
-glm::mat4 AYCoreRenderer::getCurrentProjection(Space space)
-{
-    glm::mat4 projection;
-    auto& context = _renderer->getRenderContext();
-    switch (space)
-    {
-    case AYCoreRenderer::Space::Screen:
-        projection = glm::ortho(
-            0.0f,
-            context.currentCamera->getViewport().z,
-            context.currentCamera->getViewport().w,
-            0.0f,
-            -1.0f,
-            1.0f);
-        break;
-    case AYCoreRenderer::Space::World:
-        projection = context.currentCamera->getProjectionMatrix();
-        break;
-    default:
-        break;
-    }
-    return projection;
-}
+//glm::mat4 AYCoreRenderer::getCurrentProjection(Space space)
+//{
+//    glm::mat4 projection;
+//    auto& context = _renderer->getRenderContext();
+//    switch (space)
+//    {
+//    case AYCoreRenderer::Space::Screen:
+//        projection = glm::ortho(
+//            0.0f,
+//            context.currentCamera->getViewport().z,
+//            context.currentCamera->getViewport().w,
+//            0.0f,
+//            -1.0f,
+//            1.0f);
+//        break;
+//    case AYCoreRenderer::Space::World:
+//        projection = context.currentCamera->getProjectionMatrix();
+//        break;
+//    default:
+//        break;
+//    }
+//    return projection;
+//}
+//
+//glm::mat4 AYCoreRenderer::getCurrentView(Space space)
+//{
+//    glm::mat4 view;
+//    auto& context = _renderer->getRenderContext();
+//    switch (space)
+//    {
+//    case AYCoreRenderer::Space::Screen:
+//        view = glm::mat4(1.f);
+//        break;
+//    case AYCoreRenderer::Space::World:
+//        view = context.currentCamera->getViewMatrix();
+//        break;
+//    default:
+//        break;
+//    }
+//    return view;
+//}
 
-glm::mat4 AYCoreRenderer::getCurrentView(Space space)
+uint32_t AYCoreRenderer::getCurrentCameraID(Space space)
 {
-    glm::mat4 view;
+    uint32_t id = 0;
     auto& context = _renderer->getRenderContext();
     switch (space)
     {
     case AYCoreRenderer::Space::Screen:
-        view = glm::mat4(1.f);
+        id = _renderer->getCameraSystem()->getCameraID(AYCameraSystem::SCREEN_SPACE_CAMERA);
         break;
     case AYCoreRenderer::Space::World:
-        view = context.currentCamera->getViewMatrix();
+        id = context.currentCameraID;
         break;
     default:
         break;
     }
-    return view;
+    return id;
 }
 
 void AYCoreRenderer::switchBatchDraw(Space space,
@@ -450,8 +522,7 @@ void AYCoreRenderer::switchBatchDraw(Space space,
     BatchKey key;
     key.space = space;
     key.primitiveType = (p_type == PrimitiveType::Lines) ? GL_LINES : GL_TRIANGLES;
-    key.projectionMatrix = getCurrentProjection(space);
-    key.viewMatrix = getCurrentView(space);
+    key.cameraID = getCurrentCameraID(space);
     key.depthTestEnabled = true;
 
     if (space == Space::Screen) {
@@ -488,25 +559,29 @@ void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batc
     _device->saveGLState();
     auto stateManager = _device->getGLStateManager();
 
-    auto shader = _getInstanceShader();
+    auto shader = _getInstanceShader(false);
 
     // 状态设置
-
+    stateManager->setCullFace(true);
     stateManager->bindVertexArray(_vao);
     stateManager->useProgram(shader);
     stateManager->setDepthTest(true);
     stateManager->setDepthMask(true);
     stateManager->setDepthFunc(GL_LESS);
     stateManager->setLineWidth(_lineWidth);
+    stateManager->setBlend(false);
     if (mat.type == STMaterial::Type::Transparent) {
         stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         stateManager->setDepthMask(false);
+        stateManager->setDepthFunc(GL_LEQUAL);  // 允许等于当前深度的像素通过
     }
     // 设置矩阵
+    auto cameraSystem = _renderer->getCameraSystem();
+    auto camera = cameraSystem->getCamera(key.cameraID);
     glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"),
-        1, GL_FALSE, glm::value_ptr(key.projectionMatrix));
+        1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"),
-        1, GL_FALSE, glm::value_ptr(key.viewMatrix));
+        1, GL_FALSE, glm::value_ptr(camera->getViewMatrix()));
     // 提交光照
     auto& pos = _renderer->getCameraSystem()->getActiveCamera()->getPosition();
     glUniform3fv(glGetUniformLocation(shader, "u_ViewPos"),
@@ -521,6 +596,29 @@ void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batc
         1, glm::value_ptr(mat.baseColor));
     glUniform1f(glGetUniformLocation(shader, "u_Metallic"), mat.metallic);
     glUniform1f(glGetUniformLocation(shader, "u_Roughness"), mat.roughness);
+    glUniform1i(glGetUniformLocation(shader, "u_DebugMode"), 0);
+
+    auto texMana = _device->getTextureManager();
+    if (!mat.albedoTexture.empty()) {
+        auto albedoTextureID = texMana->getTexture(mat.albedoTexture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, albedoTextureID);
+        glUniform1i(glGetUniformLocation(shader, "u_AlbedoTexture"), 0);
+        glUniform1i(glGetUniformLocation(shader, "u_UseAlbedoTexture"), 1);
+    }
+    else {
+        glUniform1i(glGetUniformLocation(shader, "u_UseAlbedoTexture"), 0);
+    }
+
+    if (!mat.opacityTexture.empty()) {
+        glActiveTexture(GL_TEXTURE1);  // 使用不同的纹理单元
+        glBindTexture(GL_TEXTURE_2D, texMana->getTexture(mat.opacityTexture));
+        glUniform1i(glGetUniformLocation(shader, "u_OpacityTexture"), 1);
+        glUniform1i(glGetUniformLocation(shader, "u_UseOpacityTexture"), 1);
+    }
+    else {
+        glUniform1i(glGetUniformLocation(shader, "u_UseOpacityTexture"), 0);
+    }
 
     // 提交顶点数据
     uploadVertexData(batch.vertices);
@@ -573,17 +671,12 @@ void AYCoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batc
     _device->getGLStateManager()->setDepthTest(key.depthTestEnabled);
     _device->getGLStateManager()->setLineWidth(_lineWidth);
 
-    // 矩阵计算延迟到GPU
-    glUniformMatrix4fv(
-        glGetUniformLocation(shader, "projection"),
-        1,
-        GL_FALSE,
-        glm::value_ptr(key.projectionMatrix));
-    glUniformMatrix4fv(
-        glGetUniformLocation(shader, "view"),
-        1,
-        GL_FALSE,
-        glm::value_ptr(key.viewMatrix));
+    auto cameraSystem = _renderer->getCameraSystem();
+    auto camera = cameraSystem->getCamera(key.cameraID);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"),
+        1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"),
+        1, GL_FALSE, glm::value_ptr(camera->getViewMatrix()));
 
     // 提交数据
     uploadVertexData(batch.vertices);
@@ -604,14 +697,116 @@ void AYCoreRenderer::flushWithRecover()
         }
     }
 
-    // 再渲染透明物体
-    for (auto& [key, batch] : _renderBatches) {
-        const auto& mat = _renderer->getMaterialManager()->getMaterial(key.materialID);
-        if (mat.type == STMaterial::Type::Transparent) {
-            if (key.useInstanced) flushInstanced(key, batch);
-            else flushImmediate(key, batch);
-        }
-    }
+    // 2. 对透明网格按距离排序（从远到近）
+    //std::sort(_transparentMeshes.begin(), _transparentMeshes.end(),
+    //    [this](const auto& a, const auto& b) {
+    //        return a.distanceToCamera < b.distanceToCamera;  // 从远到近
+    //    });
+
+    //// 3. 渲染透明网格
+    //for (const auto& instance : _transparentMeshes) {
+    //    renderTransparentMesh(instance);
+    //}
+    //_transparentMeshes.clear();  // 清空容器
+}
+
+void AYCoreRenderer::renderTransparentMesh(const TransparentMeshInstance& transMesh)
+{
+//    const auto& mat = _renderer->getMaterialManager()->getMaterial(transMesh.mesh.materialName);
+//
+//    _device->saveGLState();
+//    auto stateManager = _device->getGLStateManager();
+//
+//    auto shader = _getInstanceShader(false);
+//
+//    // 状态设置
+//;
+//    stateManager->setCullFace(true);
+//    stateManager->bindVertexArray(_vao);
+//    stateManager->useProgram(shader);
+//    stateManager->setDepthTest(true);
+//    stateManager->setDepthMask(true);
+//    stateManager->setDepthFunc(GL_LESS);
+//    stateManager->setLineWidth(_lineWidth);
+//    stateManager->setBlend(false);
+//    //stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//    //stateManager->setDepthMask(false);
+//    //stateManager->setDepthFunc(GL_LEQUAL);  // 允许等于当前深度的像素通过
+//
+//    // 设置矩阵
+//    glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"),
+//        1, GL_FALSE, glm::value_ptr(getCurrentProjection(transMesh.space)));
+//    glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"),
+//        1, GL_FALSE, glm::value_ptr(getCurrentView(transMesh.space)));
+//    // 提交光照
+//    auto& pos = _renderer->getCameraSystem()->getActiveCamera()->getPosition();
+//    glUniform3fv(glGetUniformLocation(shader, "u_ViewPos"),
+//        1, glm::value_ptr(pos));
+//
+//    auto lightManager = _renderer->getLightManager();
+//    lightManager->updateLightData();
+//    lightManager->bindLightData(0); // 绑定到binding point 0
+//
+//    // 设置材质
+//    glUniform4fv(glGetUniformLocation(shader, "u_BaseColor"),
+//        1, glm::value_ptr(mat.baseColor));
+//    glUniform1f(glGetUniformLocation(shader, "u_Metallic"), mat.metallic);
+//    glUniform1f(glGetUniformLocation(shader, "u_Roughness"), mat.roughness);
+//    glUniform1i(glGetUniformLocation(shader, "u_DebugMode"), 0);
+//
+//    auto texMana = _device->getTextureManager();
+//    if (!mat.albedoTexture.empty()) {
+//        auto albedoTextureID = texMana->getTexture(mat.albedoTexture);
+//        glActiveTexture(GL_TEXTURE0);
+//        glBindTexture(GL_TEXTURE_2D, albedoTextureID);
+//        glUniform1i(glGetUniformLocation(shader, "u_AlbedoTexture"), 0);
+//        glUniform1i(glGetUniformLocation(shader, "u_UseAlbedoTexture"), 1);
+//    }
+//    else {
+//        glUniform1i(glGetUniformLocation(shader, "u_UseAlbedoTexture"), 0);
+//    }
+//
+//    if (!mat.opacityTexture.empty()) {
+//        glActiveTexture(GL_TEXTURE1);  // 使用不同的纹理单元
+//        glBindTexture(GL_TEXTURE_2D, texMana->getTexture(mat.opacityTexture));
+//        glUniform1i(glGetUniformLocation(shader, "u_OpacityTexture"), 1);
+//        glUniform1i(glGetUniformLocation(shader, "u_UseOpacityTexture"), 0);
+//    }
+//    else {
+//        glUniform1i(glGetUniformLocation(shader, "u_UseOpacityTexture"), 0);
+//    }
+//
+//    // 提交顶点数据
+//    std::vector<VertexInfo> tmp;
+//    tmp.reserve(transMesh.mesh.vertices.size());
+//
+//    for (size_t i = 0; i < transMesh.mesh.vertices.size(); i++)
+//    {
+//        glm::vec3 pos = transMesh.mesh.vertices[i];
+//        glm::vec3 normal = (i < transMesh.mesh.normals.size()) ? transMesh.mesh.normals[i] : glm::vec3(0.0f, 1.0f, 0.0f);
+//        glm::vec2 uv = (i < transMesh.mesh.texCoords.size()) ? transMesh.mesh.texCoords[i] : glm::vec2(0.0f, 0.0f);
+//
+//        tmp.emplace_back(pos, normal, uv);
+//    }
+//    uploadVertexData(tmp);
+//
+//    // 提交索引数据（如果需要）
+//    if (!transMesh.mesh.indices.empty()) {
+//        uploadIndexData(transMesh.mesh.indices);
+//    }
+//
+//    int curVertex = 0;
+//
+//    //提交实例化模型矩阵
+//    uploadInstanceData({ transMesh.transform.getTransformMatrix() });
+//
+//    glDrawElementsInstanced(GL_TRIANGLES,//图元类型
+//        transMesh.mesh.indices.size(),                       //索引数量，以1个三角形为例，需要三个索引
+//        GL_UNSIGNED_INT,                        //索引数据类型
+//        (void*)(0 * sizeof(GL_UNSIGNED_INT)),  // 索引偏移量，如果nullptr直接从当前绑定IBO开始
+//        1);
+//
+//    _device->restoreGLState();
 }
 
 void AYCoreRenderer::_loadCoreRendererConfigINI()
@@ -621,9 +816,9 @@ void AYCoreRenderer::_loadCoreRendererConfigINI()
     _instance = _config.get<std::string>("shader name.instance", std::string("CoreInstanceShader"));
     _base = _config.get<std::string>("shader name.base", std::string("CoreBaseShader"));
     _instanceVertexPath = _config.get<std::string>("shader path.instance_vertex",
-        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.vert"));
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/pbr_instance.vert"));
     _instanceFragmentPath = _config.get<std::string>("shader path.instance_fragment",
-        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.frag"));
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/pbr_instance.frag"));
     _baseVertexPath = _config.get<std::string>("shader path.base_vertex",
         AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.vert"));
     _baseFragmentPath = _config.get<std::string>("shader path.base_fragment",
@@ -730,8 +925,6 @@ size_t AYCoreRenderer::_computeBatchKeyHash(const BatchKey& key)
         return matrixSeed;
         };
 
-    seed ^= hashMatrix(key.projectionMatrix) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-    seed ^= hashMatrix(key.viewMatrix) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-
+    seed ^= hashMatrix(key.cameraID) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     return seed;
 }

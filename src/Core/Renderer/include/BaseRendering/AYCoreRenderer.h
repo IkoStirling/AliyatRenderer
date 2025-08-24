@@ -2,11 +2,24 @@
 #include "AYRenderDevice.h"
 #include "AYConfigWrapper.h"
 #include "STTransform.h"
-#include "BaseRendering/Material/STMaterial.h"
+#include "STMaterial.h"
+#include "STMesh.h"
 #include "BaseRendering/Graphic/AYGraphicGenerator.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <array>
+
+
+/*
+ * 1、移除矩阵比较，使用相机id判断批次，需要CameraSystem支持
+ * 2、使用glmap buffer 替代缓冲区管理操作
+ * 3、合并所有需要上传的实例组
+ * 4、使用着色器缓存，类似当前的batchkey操作 (已支持），考虑使用ubo传递相机位置矩阵等共享信息
+ * 5、透明物体排序
+ * 6、使用不同vao进行渲染，而非相同vao然后切换属性
+ * 7、使用内存池替代频繁的vector拷贝操作
+ * 
+*/
 
 class AYRenderer;
 class AYCoreRenderer
@@ -37,6 +50,7 @@ private:
         Rectangle,
         Circle,
         Box,
+        Mesh
     };
 
     struct InstanceGroup 
@@ -60,12 +74,13 @@ private:
     {
         Space space;
         GLenum primitiveType;
-        glm::mat4 projectionMatrix;
-        glm::mat4 viewMatrix;
+        //glm::mat4 projectionMatrix;
+        //glm::mat4 viewMatrix;
         bool useInstanced;
         bool depthTestEnabled;
         STMaterial::Type materialType;  // 材质类型
-        uint32_t materialID;          // 材质唯一标识
+        uint32_t materialID;            // 材质唯一标识
+        uint32_t cameraID;              // 相机唯一标识
 
         bool operator==(const BatchKey& other) const 
         {
@@ -73,8 +88,9 @@ private:
                 space == other.space &&
                 useInstanced == other.useInstanced &&
                 depthTestEnabled == other.depthTestEnabled &&
-                projectionMatrix == other.projectionMatrix &&
-                viewMatrix == other.viewMatrix &&
+                cameraID == other.cameraID &&
+                //projectionMatrix == other.projectionMatrix &&
+                //viewMatrix == other.viewMatrix &&
                 materialType == other.materialType &&
                 materialID == other.materialID
                 ;
@@ -113,7 +129,7 @@ public:
 
     void addVertexData(const std::vector<VertexInfo>& vertices, InstanceGroup* group);
 
-    void addIndexData(std::vector<uint32_t>& indices, InstanceGroup* group);
+    void addIndexData(const std::vector<uint32_t>& indices, InstanceGroup* group) const;
 
     // 基础图形
     void drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space);
@@ -157,6 +173,11 @@ public:
         uint32_t materialID,
         bool wireframe = true,
         Space space = Space::World);
+
+    void drawMesh(const STTransform& transform,
+        const STMesh& mesh,
+        bool wireframe,
+        Space space);
 
     //void drawSphere3D(const STTransform& transform,
     //    float radius, const glm::vec4& color,
@@ -209,10 +230,21 @@ private:
     void flushInstanced(const BatchKey& key, const RenderBatch& batch);
     void flushImmediate(const BatchKey& key, const RenderBatch& batch);
     void flushWithRecover();
-    
-    glm::mat4 getCurrentProjection(Space type);
-    glm::mat4 getCurrentView(Space type);
 
+    //glm::mat4 getCurrentProjection(Space type);
+    //glm::mat4 getCurrentView(Space type);
+    uint32_t getCurrentCameraID(Space space);
+
+    struct TransparentMeshInstance {
+        STTransform transform;  // 网格的世界变换
+        STMesh mesh;           // 网格数据
+        bool wireframe;        // 是否线框模式
+        Space space;           // 空间类型（World/Screen）
+        float distanceToCamera;// 到摄像机的距离（用于排序）
+    };
+
+    void renderTransparentMesh(const TransparentMeshInstance& transMesh);
+    std::vector<TransparentMeshInstance> _transparentMeshes;  // 存储透明网格的容器
 
 private:
     //---------------Configs----------------

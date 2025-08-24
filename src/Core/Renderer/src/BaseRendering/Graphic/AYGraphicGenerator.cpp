@@ -1,70 +1,70 @@
-#include "BaseRendering/Graphic/AYGraphicGenerator.h"
+ï»¿#include "BaseRendering/Graphic/AYGraphicGenerator.h"
 #define M_PI 3.141592659f
 
 std::vector<VertexInfo> AYGraphicGenerator::createBox(const glm::vec3& half_extents, bool wireframe)
 {
 	std::vector<VertexInfo> vertices;
 
-	// ¶¨ÒåÁ¢·½Ìå6¸öÃæµÄ·¨Ïß·½Ïò
+	// å®šä¹‰ç«‹æ–¹ä½“6ä¸ªé¢çš„æ³•çº¿æ–¹å‘
 	const glm::vec3 normals[6] = {
-		{ 0.0f,  0.0f,  1.0f},  // Ç°Ãæ (Z+)
-		{ 0.0f,  0.0f, -1.0f},  // ºóÃæ (Z-)
-		{ 0.0f,  1.0f,  0.0f},  // ÉÏÃæ (Y+)
-		{ 0.0f, -1.0f,  0.0f},  // ÏÂÃæ (Y-)
-		{-1.0f,  0.0f,  0.0f},  // ×óÃæ (X-)
-		{ 1.0f,  0.0f,  0.0f}   // ÓÒÃæ (X+)
+		{ 0.0f,  0.0f,  0.5f},  // å‰é¢ (Z+)
+		{ 0.0f,  0.0f, -0.5f},  // åé¢ (Z-)
+		{ 0.0f,  0.5f,  0.0f},  // ä¸Šé¢ (Y+)
+		{ 0.0f, -0.5f,  0.0f},  // ä¸‹é¢ (Y-)
+		{-0.5f,  0.0f,  0.0f},  // å·¦é¢ (X-)
+		{ 0.5f,  0.0f,  0.0f}   // å³é¢ (X+)
 	};
 
-	// ¶¨ÒåÁ¢·½Ìå6¸öÃæµÄÎÆÀí×ø±ê£¨Ã¿¸öÃæ4¸ö¶¥µã£©
+	// å®šä¹‰ç«‹æ–¹ä½“6ä¸ªé¢çš„çº¹ç†åæ ‡ï¼ˆæ¯ä¸ªé¢4ä¸ªé¡¶ç‚¹ï¼‰
 	const glm::vec2 uvCoords[4] = {
-		{0.0f, 0.0f},  // ×óÏÂ
-		{1.0f, 0.0f},  // ÓÒÏÂ
-		{1.0f, 1.0f},  // ÓÒÉÏ
-		{0.0f, 1.0f}   // ×óÉÏ
+		{0.0f, 0.0f},  // å·¦ä¸‹
+		{1.0f, 0.0f},  // å³ä¸‹
+		{1.0f, 1.0f},  // å³ä¸Š
+		{0.0f, 1.0f}   // å·¦ä¸Š
 	};
 
-	// ÎªÃ¿¸öÃæÉú³É4¸ö¶¥µã£¨¹²24¸ö¶¥µã£¬ÊÊºÏÓ²±íÃæäÖÈ¾£©
+	// ä¸ºæ¯ä¸ªé¢ç”Ÿæˆ4ä¸ªé¡¶ç‚¹ï¼ˆå…±24ä¸ªé¡¶ç‚¹ï¼Œé€‚åˆç¡¬è¡¨é¢æ¸²æŸ“ï¼‰
 	for (int face = 0; face < 6; ++face) {
 		glm::vec3 normal = normals[face];
 
-		// ¸ù¾İÃæÀàĞÍÈ·¶¨¶¥µãÎ»ÖÃ
+		// æ ¹æ®é¢ç±»å‹ç¡®å®šé¡¶ç‚¹ä½ç½®
 		switch (face) {
-		case 0: // Ç°Ãæ (Z+)
+		case 0: // å‰é¢ (Z+)
 			vertices.push_back({ {-half_extents.x, -half_extents.y,  half_extents.z}, normal, uvCoords[0] });
 			vertices.push_back({ { half_extents.x, -half_extents.y,  half_extents.z}, normal, uvCoords[1] });
 			vertices.push_back({ { half_extents.x,  half_extents.y,  half_extents.z}, normal, uvCoords[2] });
 			vertices.push_back({ {-half_extents.x,  half_extents.y,  half_extents.z}, normal, uvCoords[3] });
 			break;
 
-		case 1: // ºóÃæ (Z-)
+		case 1: // åé¢ (Z-)
 			vertices.push_back({ { half_extents.x, -half_extents.y, -half_extents.z}, normal, uvCoords[0] });
 			vertices.push_back({ {-half_extents.x, -half_extents.y, -half_extents.z}, normal, uvCoords[1] });
 			vertices.push_back({ {-half_extents.x,  half_extents.y, -half_extents.z}, normal, uvCoords[2] });
 			vertices.push_back({ { half_extents.x,  half_extents.y, -half_extents.z}, normal, uvCoords[3] });
 			break;
 
-		case 2: // ÉÏÃæ (Y+)
+		case 2: // ä¸Šé¢ (Y+)
 			vertices.push_back({ {-half_extents.x,  half_extents.y,  half_extents.z}, normal, uvCoords[0] });
 			vertices.push_back({ { half_extents.x,  half_extents.y,  half_extents.z}, normal, uvCoords[1] });
 			vertices.push_back({ { half_extents.x,  half_extents.y, -half_extents.z}, normal, uvCoords[2] });
 			vertices.push_back({ {-half_extents.x,  half_extents.y, -half_extents.z}, normal, uvCoords[3] });
 			break;
 
-		case 3: // ÏÂÃæ (Y-)
+		case 3: // ä¸‹é¢ (Y-)
 			vertices.push_back({ {-half_extents.x, -half_extents.y, -half_extents.z}, normal, uvCoords[0] });
 			vertices.push_back({ { half_extents.x, -half_extents.y, -half_extents.z}, normal, uvCoords[1] });
 			vertices.push_back({ { half_extents.x, -half_extents.y,  half_extents.z}, normal, uvCoords[2] });
 			vertices.push_back({ {-half_extents.x, -half_extents.y,  half_extents.z}, normal, uvCoords[3] });
 			break;
 
-		case 4: // ×óÃæ (X-)
+		case 4: // å·¦é¢ (X-)
 			vertices.push_back({ {-half_extents.x, -half_extents.y, -half_extents.z}, normal, uvCoords[0] });
 			vertices.push_back({ {-half_extents.x, -half_extents.y,  half_extents.z}, normal, uvCoords[1] });
 			vertices.push_back({ {-half_extents.x,  half_extents.y,  half_extents.z}, normal, uvCoords[2] });
 			vertices.push_back({ {-half_extents.x,  half_extents.y, -half_extents.z}, normal, uvCoords[3] });
 			break;
 
-		case 5: // ÓÒÃæ (X+)
+		case 5: // å³é¢ (X+)
 			vertices.push_back({ { half_extents.x, -half_extents.y,  half_extents.z}, normal, uvCoords[0] });
 			vertices.push_back({ { half_extents.x, -half_extents.y, -half_extents.z}, normal, uvCoords[1] });
 			vertices.push_back({ { half_extents.x,  half_extents.y, -half_extents.z}, normal, uvCoords[2] });
@@ -99,7 +99,7 @@ std::vector<glm::vec3> AYGraphicGenerator::createBoxV(const glm::vec3& half_exte
 		 { half_extents.x, half_extents.y, half_extents.z },
 		 { -half_extents.x, half_extents.y, half_extents.z },
 
-		 // ºóÃæ£¨z=-half_extents.z£©
+		 // åé¢ï¼ˆz=-half_extents.zï¼‰
 		 { -half_extents.x, -half_extents.y, -half_extents.z },
 		 { half_extents.x, -half_extents.y, -half_extents.z },
 		 { half_extents.x, half_extents.y, -half_extents.z },
@@ -112,10 +112,10 @@ std::vector<glm::vec3> AYGraphicGenerator::createRectV()
 {
 	std::vector<glm::vec3> rectVertices;
 	rectVertices = {
-			{-0.5f, -0.5f, 0.f}, // ×óÏÂ
-			{ 0.5f, -0.5f, 0.f}, // ÓÒÏÂ
-			{ 0.5f,  0.5f, 0.f}, // ÓÒÉÏ
-			{-0.5f,  0.5f, 0.f}, // ×óÉÏ
+			{-0.5f, -0.5f, 0.f}, // å·¦ä¸‹
+			{ 0.5f, -0.5f, 0.f}, // å³ä¸‹
+			{ 0.5f,  0.5f, 0.f}, // å³ä¸Š
+			{-0.5f,  0.5f, 0.f}, // å·¦ä¸Š
 	};
 	return rectVertices;
 }
@@ -140,20 +140,20 @@ std::vector<uint32_t> AYGraphicGenerator::createBoxI(bool wireframe)
 {
 	if (wireframe) 
 	{
-		// Ïß¿òÄ£Ê½Ë÷Òı£¨Ê¹ÓÃ8¸ö¶¥µã£©
+		// çº¿æ¡†æ¨¡å¼ç´¢å¼•ï¼ˆä½¿ç”¨8ä¸ªé¡¶ç‚¹ï¼‰
 		return {
-			0,1,1,2,2,3,3,0,    // Ç°Ãæ
-			4,5,5,6,6,7,7,4,    // ºóÃæ
-			0,4,1,5,2,6,3,7     // Á¬½ÓÏß
+			0,1,1,2,2,3,3,0,    // å‰é¢
+			4,5,5,6,6,7,7,4,    // åé¢
+			0,4,1,5,2,6,3,7     // è¿æ¥çº¿
 		};
 	}
 	else 
 	{
-		// ÊµÌåÄ£Ê½Ë÷Òı£¨Ê¹ÓÃ24¸ö¶¥µã£¬Ã¿Ãæ4¸ö£©
+		// å®ä½“æ¨¡å¼ç´¢å¼•ï¼ˆä½¿ç”¨24ä¸ªé¡¶ç‚¹ï¼Œæ¯é¢4ä¸ªï¼‰
 		std::vector<uint32_t> indices;
 		for (uint32_t face = 0; face < 6; ++face) {
 			uint32_t baseIndex = face * 4;
-			// Ã¿¸öÃæÁ½¸öÈı½ÇĞÎ
+			// æ¯ä¸ªé¢ä¸¤ä¸ªä¸‰è§’å½¢
 			indices.push_back(baseIndex);
 			indices.push_back(baseIndex + 1);
 			indices.push_back(baseIndex + 2);
@@ -202,10 +202,10 @@ std::vector<glm::vec2> AYGraphicGenerator::createBoxV()
 {
 	std::vector<glm::vec2> texCoord;
 	texCoord = {
-		{0.0f, 0.0f},  // ×óÏÂ
-		{1.0f, 0.0f},  // ÓÒÏÂ
-		{1.0f, 1.0f},  // ÓÒÉÏ
-		{0.0f, 1.0f}   // ×óÉÏ
+		{0.0f, 0.0f},  // å·¦ä¸‹
+		{1.0f, 0.0f},  // å³ä¸‹
+		{1.0f, 1.0f},  // å³ä¸Š
+		{0.0f, 1.0f}   // å·¦ä¸Š
 	};
 	return texCoord;
 }

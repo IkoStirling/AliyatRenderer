@@ -14,11 +14,13 @@ const std::string AYPath::Engine::PresetConfigPath = AYPath::Engine::PresetPath 
 const std::string AYPath::Engine::PresetAudioPath = AYPath::Engine::PresetPath + "audios/";
 const std::string AYPath::Engine::PresetVideoPath = AYPath::Engine::PresetPath + "videos/";
 const std::string AYPath::Engine::PresetWebPath = AYPath::Engine::PresetPath + "web/";
+const std::string AYPath::Engine::PresetModelPath = AYPath::Engine::PresetPath + "models/";
 
 
 std::string AYPath::Engine::getAssetsPath() { return AssetsPath; }
 std::string AYPath::Engine::getPresetPath() { return PresetPath; }
 std::string AYPath::Engine::getUserPath() { return UserPath; }
+std::string AYPath::Engine::getPresetModelPath() { return PresetModelPath; }
 std::string AYPath::Engine::getPresetTexturePath() { return PresetTexturePath; }
 std::string AYPath::Engine::getPresetCachePath() { return PresetCachePath; }
 std::string AYPath::Engine::getPresetShaderPath() { return PresetShaderPath; }

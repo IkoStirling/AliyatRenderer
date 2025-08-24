@@ -6,69 +6,112 @@ void AY2DCamera::update(float delta_time)
 {
     _lastTransform = _transform;
 
-    float scaleWidth = _viewport.z / _zoom;  
-    float scaleHeight = _viewport.w / _zoom; 
+    // 计算实际视口大小(世界单位/米)
+    float ppm = getPixelPerMeter();
+    float viewWidth = _viewport.z / (ppm * _zoom);  // 视口宽度(米)
+    float viewHeight = _viewport.w / (ppm * _zoom); // 视口高度(米)
 
-    // 1. 计算目标点在屏幕空间的位置
-    glm::vec2 screenPos = glm::vec2(_targetPosition - _transform.position) + getScreenCenter();
-    // 2. 计算死区边界（像素坐标）
+    // 2. 计算死区边界（物理单位-米）
     glm::vec2 deadzoneMin(
-        scaleWidth * _deadzone.x,
-        scaleHeight * _deadzone.z);
+        -viewWidth * 0.5f + viewWidth * _deadzone.x,  // 左边界
+        -viewHeight * 0.5f + viewHeight * _deadzone.z // 下边界
+    );
     glm::vec2 deadzoneMax(
-        scaleWidth * _deadzone.y,
-        scaleHeight * _deadzone.w);
+        viewWidth * 0.5f - viewWidth * (1 - _deadzone.y),   // 右边界
+        viewHeight * 0.5f - viewHeight * (1 - _deadzone.w)  // 上边界
+    );
 
-    // 3. 计算移动偏移
+    // 计算目标点相对于摄像机中心的偏移(世界单位)
+    glm::vec2 targetOffset = glm::vec2(_targetPosition) - glm::vec2(_transform.position);
+
+    // 3. 计算移动偏移（物理单位-米）
     glm::vec2 moveOffset(0.0f);
-    if (screenPos.x < deadzoneMin.x) moveOffset.x = screenPos.x - deadzoneMin.x;
-    else if (screenPos.x > deadzoneMax.x) moveOffset.x = screenPos.x - deadzoneMax.x;
 
-    if (screenPos.y < deadzoneMin.y) moveOffset.y = screenPos.y - deadzoneMin.y;
-    else if (screenPos.y > deadzoneMax.y) moveOffset.y = screenPos.y - deadzoneMax.y;
+    if (targetOffset.x < deadzoneMin.x) {
+        moveOffset.x = targetOffset.x - deadzoneMin.x;
+    }
+    else if (targetOffset.x > deadzoneMax.x) {
+        moveOffset.x = targetOffset.x - deadzoneMax.x;
+    }
 
-    // 应用移动
-    glm::vec2 newPos = glm::vec2(_transform.position) + moveOffset * delta_time * _moveSpeed;
+    if (targetOffset.y < deadzoneMin.y) {
+        moveOffset.y = targetOffset.y - deadzoneMin.y;
+    }
+    else if (targetOffset.y > deadzoneMax.y) {
+        moveOffset.y = targetOffset.y - deadzoneMax.y;
+    }
 
-    // 地图边界约束
+    // 应用移动（物理单位-米）
+    if (glm::length(moveOffset) > 0) _dirtyView = true;
+
+    glm::vec2 newPos = glm::vec2(_transform.position) + moveOffset * _moveSpeed * delta_time;
+
+    // 地图边界约束（物理单位-米）
     newPos.x = glm::clamp(newPos.x,
-        _mapBounds.x + scaleWidth * _deadzone.x,
-        _mapBounds.y - scaleWidth * (1 - _deadzone.y));
-
+        _mapBounds.x + viewWidth * 0.5f,
+        _mapBounds.y - viewWidth * 0.5f);
     newPos.y = glm::clamp(newPos.y,
-        _mapBounds.z + scaleHeight * _deadzone.z,
-        _mapBounds.w - scaleHeight * (1 - _deadzone.w));
-    //std::cout << "screenPos: (" << screenPos.x << ", " << screenPos.y << ")\n";
+        _mapBounds.z + viewHeight * 0.5f,
+        _mapBounds.w - viewHeight * 0.5f);
 
-    _transform.position = glm::vec3(newPos,1.f);
-
+    _transform.position = glm::vec3(newPos, _transform.position.z);
 }
 
 glm::mat4 AY2DCamera::getViewMatrix() const
 {
-    // 将屏幕中心定义为(0,0), 正常是在左上角, 不进行缩放
-    return glm::translate(glm::mat4(1.0f),
-        -glm::vec3(
-            glm::vec2(_transform.position) + _additionalOffset,
-            0.0f));
+    if (_dirtyView)
+    {
+        // 将屏幕中心定义为(0,0), 正常是在左上角, 不进行缩放
+        _cachedView = glm::translate(glm::mat4(1.0f),
+            -glm::vec3(
+                glm::vec2(_transform.position) + _additionalOffset,
+                0.0f));
+        _dirtyView = false;
+    }
+    return _cachedView;
 }
 
 glm::mat4 AY2DCamera::getProjectionMatrix() const
 {
-    float zoomedWidth = _viewport.z / _zoom;  // 视口宽度（物理单位）
-    float zoomedHeight = _viewport.w / _zoom; // 视口高度（物理单位）
-    return glm::ortho(
-        -zoomedWidth * 0.5f,  // left
-        zoomedWidth * 0.5f,   // right
-        -zoomedHeight * 0.5f,  // bottom 
-        zoomedHeight * 0.5f,   // top
-        _near,                
-        _far                  
-    );
+    if (_dirtyProjection)
+    {
+        // 返回物理比例下的投影矩阵
+        float ppm = getPixelPerMeter();
+        float zoomedWidth = _viewport.z / (_zoom * ppm);
+        float zoomedHeight = _viewport.w / (_zoom * ppm);
+
+        _cachedProjection = glm::ortho(
+            -zoomedWidth * 0.5f,  // left
+            zoomedWidth * 0.5f,   // right
+            -zoomedHeight * 0.5f,  // bottom 
+            zoomedHeight * 0.5f,   // top
+            _near,
+            _far
+        );
+        _dirtyProjection = false;
+    }
+    return _cachedProjection;
 }
 
 void AY2DCamera::setViewBox(float near, float far)
 {
+    _dirtyProjection = true;
     _near = near;
     _far = far;
 }
+
+void AY2DCamera::setDeadzone(const glm::vec4& zone)
+{
+    _deadzone = zone;
+} 
+
+void AY2DCamera::setTargetPosition(const glm::vec2& targetPos)
+{
+    _targetPosition = glm::vec3(targetPos, 0.f);
+}
+
+void AY2DCamera::setCurrentPosition(const glm::vec2& currentPos)
+{
+    _transform.position = glm::vec3(currentPos, 0.f);
+}
+

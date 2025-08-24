@@ -9,27 +9,52 @@ public:
     virtual ~IAYCamera() = default;
 
     // 获取视图矩阵（View Matrix）
-    virtual glm::mat4 getViewMatrix() const = 0;
+    virtual glm::mat4 getViewMatrix() const
+    {
+        return glm::mat4(1.f);
+    }
 
     // 获取投影矩阵（Projection Matrix）
-    virtual glm::mat4 getProjectionMatrix() const = 0;
+    virtual glm::mat4 getProjectionMatrix() const
+    {
+        return glm::ortho(
+            0.0f,
+            _viewport.z,
+            _viewport.w,
+            0.0f,
+            -1.0f,
+            1.0f);
+    }
 
     // 每帧更新（参数可扩展）
-    virtual void update(float delta_time) = 0;
+    virtual void update(float delta_time)
+    {
+
+    }
 
     // 相机类型标识
-    enum class Type { PERSPECTIVE_3D, ORTHOGRAPHIC_2D, CUSTOM };
-    virtual Type getType() const = 0;
+    enum class Type { DEFAULT_SCREEN, PERSPECTIVE_3D, ORTHOGRAPHIC_2D, CUSTOM };
+    virtual Type getType() const
+    {
+        return Type::DEFAULT_SCREEN;
+    }
 
     // 视口控制
-    virtual void setViewport(const glm::vec4& viewport) { _viewport = viewport; }   //由摄像机决定渲染视口
+    virtual void setViewport(const glm::vec4& viewport) 
+    { 
+        _dirtyView = true;
+        _dirtyProjection = true;
+        _viewport = viewport; 
+    }   //由摄像机决定渲染视口
     glm::vec4 getViewport() const { return _viewport; }
 
     virtual void setZoom(float zoom) { 
-        _zoom = glm::clamp(zoom, 0.5f, 3.0f);
+        _dirtyView = true;
+        _dirtyProjection = true;
+        _zoom = glm::clamp(zoom, 0.1f, 10.0f);
         std::cout << "[IAYCamera] zoom: " << _zoom << std::endl;
     }
-    virtual float getPixelPerMeter() const { return 1.f; }
+    virtual float getPixelPerMeter() const { return 66.7f; }
 
     virtual void setAdditionalOffset(const glm::vec2& offset) { _additionalOffset = offset; }
 
@@ -53,4 +78,9 @@ protected:
     glm::vec2 _additionalOffset{ 0.0f };
 
     float _zoom = 1.f;
+
+    mutable bool _dirtyView = true;
+    mutable bool _dirtyProjection = true;
+    mutable glm::mat4 _cachedView = glm::mat4(1.0);
+    mutable glm::mat4 _cachedProjection = glm::mat4(1.0);
 };

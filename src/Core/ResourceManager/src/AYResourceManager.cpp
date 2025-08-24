@@ -261,4 +261,5 @@ void AYResourceManager::_listenEvents()
     registerResourceType<AYAudio>();
     registerResourceType<AYAudioStream>();
     registerResourceType<AYVideo>();
+    registerResourceType<AYModel>();
 }

@@ -46,6 +46,9 @@ bool AYRenderDevice::init(int width, int height)
     _stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     _shaderManager = std::make_unique<AYShaderManager>();
+
+    _textureManager = std::make_unique<AYTextureManager>(this);
+
     return true;
 }
 
@@ -180,21 +183,6 @@ GLuint AYRenderDevice::createVertexArray()
 
 GLuint AYRenderDevice::createTexture2D(const uint8_t* pixels, int width, int height, int channels)
 {
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // 设置纹理参数
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    GLenum format = GL_RGBA;
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
-    //glGenerateMipmap(GL_TEXTURE_2D);
-    return texture;
     return createTexture(TextureType::Standard, pixels, width, height, channels);
 }
 

@@ -13,6 +13,7 @@ void AYRendererManager::init()
 
 	_animeMana = std::make_unique<AYAnimationManager>(getRenderDevice());
 
+
 	_device->setViewportCallback([this](int width, int height) {
 		getCameraSystem()->setViewportAll(glm::vec4(0, 0, width, height));
 		});
@@ -30,12 +31,22 @@ void AYRendererManager::init()
 	//	[this](std::shared_ptr<AYVideo> video) {
 	//		videos = video;
 	//	});
+
+	AYResourceManager::getInstance().loadAsync<AYModel>("@models/sour-Miku-Creamy/sour.fbx",
+		[this](std::shared_ptr<AYModel> model) {
+			modelPmx = model;
+		});
+
 	videos = AYResourceManager::getInstance().load<AYVideo>("@videos/test_video.mp4");
+	
+	auto model2 = AYResourceManager::getInstance().load<AYModel>("@models/cube.fbx");
 	tex_ID = loadTexture("@textures/500_497.png");
 	tex_ID2 = loadTexture("@textures/1918_1100.png");
+	tex_ID2 = loadTexture("@textures/checkerboard.png");
 
 	_renderer->getMaterialManager()->createMaterial(
 		{
+			.name = "1",
 			.baseColor = glm::vec4(.2f, 0.5f, 0.1f, 1.0f),
 			.metallic = 1.f,
 			.roughness = 0.3f,
@@ -44,6 +55,7 @@ void AYRendererManager::init()
 		);
 	_renderer->getMaterialManager()->createMaterial(
 		{
+			.name = "2",
 			.baseColor = glm::vec4(.6f, 0.2f, 0.5f, 1.0f),
 			.metallic = 0.3f,
 			.roughness = 0.6f,
@@ -52,6 +64,7 @@ void AYRendererManager::init()
 		);
 	_renderer->getMaterialManager()->createMaterial(
 		{
+			.name = "3",
 			.baseColor = glm::vec4(.1f, 0.7f, 0.2f, 1.0f),
 			.metallic = 0.8f,
 			.roughness = 0.1f,
@@ -116,16 +129,19 @@ void AYRendererManager::_renderAll(float delta_time)
 {
 	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
-	_renderer->getCoreRenderer()->beginDraw();
-	_displayDebugInfo();
-	_renderer->getCoreRenderer()->endDraw();
+	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
 
 	for (auto renderable : _renderables)
 	{
 		if (renderable)
 			renderable->render(_renderer->getRenderContext());
 	}
+
+	_renderer->getCoreRenderer()->beginDraw();
+	_displayDebugInfo();
+	_renderer->getCoreRenderer()->endDraw();
+
+
 
 
 }
@@ -134,14 +150,16 @@ void AYRendererManager::_updateCameraActive(float delta_time)
 {
 	auto* cameraSystem = getCameraSystem();
 	auto* camera = cameraSystem->getActiveCamera();
-	auto& context = _renderer->getRenderContext();
-	context.currentCamera = camera;
-	context.validate();
-	cameraSystem->update(delta_time);
-	const auto& viewport = context.currentCamera->getViewport();
-	_device->getGLStateManager()->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
+	auto cameraID = cameraSystem->getActiveCameraID();
 
-	//.......
+	auto& context = _renderer->getRenderContext();
+	context.currentCameraID = cameraID;
+	context.validate();
+
+	cameraSystem->update(delta_time);
+
+	const auto& viewport = camera->getViewport();
+	_device->getGLStateManager()->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
 }
 
 void AYRendererManager::registerRenderable(IAYRenderable* renderable)
@@ -210,54 +228,73 @@ void AYRendererManager::_displayDebugInfo()
 	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	auto& context = getRenderContext();
-	auto ppm = context.currentCamera->getPixelPerMeter();
+	auto cameraSystem = _renderer->getCameraSystem();
+	auto camera = cameraSystem->getCamera(context.currentCameraID);
+
+	auto ppm = camera->getPixelPerMeter();
 	auto* dr = _renderer->getCoreRenderer();
 
-	/*dr->drawLine2D({ {glm::vec2(10.f),0}, glm::vec4(0, 1, 0, 1) },
-		{ {glm::vec2(500.f),0}, glm::vec4(0, 0, 1, 1) },
-		AYCoreRenderer::Space::World);
-	dr->drawLine2D({ {glm::vec3(100.f, 100.f, 0.f)}, glm::vec4(0, 1, 0, 1) },
-		{ {glm::vec3(600.f, 500.f, 0.f)}, glm::vec4(0, 1, 0, 1) },
-		AYCoreRenderer::Space::World);
-	dr->drawLine2D({ glm::vec3(300.f, 100.f, 0.f), glm::vec4(0, 1, 0, 1) },
-		{ glm::vec3(-600.f, 500.f, 0.f),
-		glm::vec4(0, 1, 0, 1) },
-		AYCoreRenderer::Space::World);
-	dr->drawArrow2D({}, glm::vec3(100.f, 400.f, 0.f), glm::vec3(600.f, 500.f, 0.f), 20.f, glm::vec4(1.f, 0.f, 0.f, 1.f));*/
+	auto mt = _renderer->getMaterialManager();
+	auto mat1 = mt->getMaterial("1").id;
+	auto mat2 = mt->getMaterial("2").id;
+	auto mat3 = mt->getMaterial("3").id;
 	for (int i = 1; i < 100; i++) {
-		dr->drawRect2D({ glm::vec3(i * 100.f, 0, 0) }, glm::vec2(50.f), 1, true);
-		dr->drawRect2D({ glm::vec3(i * -100.f, 0, 0), glm::vec3(0, i * 10.f, 0) }, glm::vec2(30), 2, false);
+		dr->drawRect2D({ glm::vec3(i * 10.f, 0, 0) }, glm::vec2(1.f), mat1, true);
+		dr->drawRect2D({ glm::vec3(i * -10.f, 0, 0), glm::vec3(0, i * 10.f, 0) }, glm::vec2(0.5f), mat2, false);
 	}
 	for (int i = 1; i < 20; i++) {
 		for (int j = 1; j < 20; j++) {
-			dr->drawBox3D({ glm::vec3(i * -100.f + 1000.f, 0, j * -100.f + 1000.f) / ppm }, glm::vec3(20.f), 3, false, AYCoreRenderer::Space::World);
+			dr->drawBox3D({ glm::vec3(i * -10.f + 10.f, 0, j * -10.f + 10.f)}, glm::vec3(0.5f), mat3, false, AYCoreRenderer::Space::World);
 		}
 	}
 
-	dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
-	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);
-
-	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) }, glm::vec2(1920 *0.4f, 1080 * 0.4f), 2, true, AYCoreRenderer::Space::Screen);
+	// 死区框
+	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) }, glm::vec2(1920 *0.4f, 1080 * 0.4f), mat2, true, AYCoreRenderer::Space::Screen);
+	
 	_renderer->getSpriteRenderer()->drawSprite(
 		tex_ID,
-		{ glm::vec3(0/ ppm, 00/ ppm, 0) },
+		{ glm::vec3(0, 0, -0.9f) },
 		//{},
-		glm::vec2(500.0f),  // 大小
+		glm::vec2(0),
+		glm::vec2(1),
+		glm::vec2(10.0f),  // 大小
 		glm::vec4(1.0f, 1.f, 1.f, 1.f),// 颜色
 		false,
 		false,
 		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
 	);
-	_renderer->getSpriteRenderer()->drawSprite(
-		tex_ID2,
-		{ glm::vec3((0 + 500)/ ppm, (0 + 500) / ppm, 0) },
-		//{},
-		glm::vec2(500.0f),  // 大小
-		glm::vec4(1),// 颜色
-		false,
-		false,
-		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-	);
+
+	auto model = AYResourceManager::getInstance().load<AYModel>("@models/suzanne.fbx");
+	for (int i = 1; i < 100; i++) {
+		_renderer->getCoreRenderer()->drawMesh(
+			{
+				glm::vec3(i * -5 + 250, 5, 5),
+				glm::vec3(glm::radians(-90.f),0,0)
+			},
+			model->getMeshes()[0],
+			false,
+			AYCoreRenderer::Space::World
+		);
+	}
+
+
+	if (modelPmx)
+	{
+		auto& meshes = modelPmx->getMeshes();
+		for (int i = 0; i < meshes.size(); i++) {
+			_renderer->getCoreRenderer()->drawMesh(
+				{
+					glm::vec3(0, 0, 4),
+					glm::vec3(glm::radians(-90.f),0,0)
+				},
+				meshes[i],
+				false,
+				AYCoreRenderer::Space::World
+			);
+		}
+	}
+
+
 
 	if (videos && 1)
 	{
@@ -279,13 +316,17 @@ void AYRendererManager::_displayDebugInfo()
 		_device->updateTexture(videot, videos->getCurrentFramePixelData(), videos->getWidth(), videos->getHeight());
 		_renderer->getSpriteRenderer()->drawSprite(
 			videot,
-			//{ glm::vec3(x, y, 0) , glm::vec3(0,0,0) },
-			{},
-			glm::vec2(1920,1080),  // 大小
+			{ glm::vec3(0,0,-1) },
+			glm::vec2(0),
+			glm::vec2(1),
+			glm::vec2(1920,1080) / ppm,  // 大小
 			glm::vec4(1.0f, 1.f, 1.f, 0.9f),// 颜色
 			false,
 			false,
 			glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
 		);
 	}
+
+	/*dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
+	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);*/
 }

@@ -11,13 +11,16 @@ This project use the "cmake + vcpkg"
 		--ResourceManager
 		--SoundEngine
 		--Renderer
+			--CameraSystem
+			--MaterialManager(Logically belong here)
+			--TextureManager
 		--Network
 		--Physics
 		--InputSystem
 		--SceneManager
 		--ECSEngine (Not yet completed)
 		--Logger (Not yet supported, should use spdlog?)
-		//some system header files
+
 ### Project Constraints
 1. Regarding the uniformity of project naming
  
@@ -58,10 +61,12 @@ Before execute this program, preparing these packages:
 
 	11.efsw
 		FileWatch
+	12.assimp
+		
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm efsw
+	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm efsw assimp
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|
@@ -71,8 +76,11 @@ Run the following commands:
 | This effect is achieved by setting a native Windows window. If you want to implement it in other engines, you need to find a way to obtain the handle of the Windows window. There seems to be a small flaw. It should have been set as a penetrable switch, but now the default pixel free place will directly penetrate below. At least now it can make desktop pets| ![pic](assets/core/.projectProgress/no_border_window&always_on_desktop_top.png)|
 | Now ConfigResolver can correctly edit files in a multithreaded environment, handle the problem of Chinese encoding, and add file monitoring to automatically update the front page. Maybe the code logic is a bit confusing, but as a small tool, I think it is enough. To quote Todd, "It just work". It will not consider too much performance nor consume too much performance| ![pic](assets/core/.projectProgress/config_resolver.png)|
 	
-2. Core code lines: 14322
+2. Core code lines: 17167
 	
 	   Use this in powershell under "src/Core/":
 	   Get-ChildItem -Recurse -Include *.cpp,*.h,*.cxx,*.hpp | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum
-3. 
+### Problems to Solve
+1. | Description               | Picture                                                                 |
+|--------------------|----------------------------------------------------------------------|
+| The memory consumption of the 10mb fbx model loaded in the assert library reaches 3.8GB. Although my computer has 64GB of memory, most computers still stay on 16GB of memory, which is obviously unacceptable. Of course, there may be a problem with the process of exporting fbx through pmx| ![pic](assets/core/.problems/p1_model_load.png)

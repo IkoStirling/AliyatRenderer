@@ -22,7 +22,6 @@ void AYRenderer::shutdown()
     _spriteRenderer->shutdown();
     _coreRenderer->shutdown();
     _skyboxRenderer->shutdown();
-    _materialManager->shutdown();
     _cameraSystem->shutdown();
 }
 
@@ -82,7 +81,6 @@ void AYRenderer::_initSkyboxRenderer()
 
 void AYRenderer::_initMaterialManager()
 {
-    _materialManager = std::make_unique<AYMaterialManager>();
 }
 
 void AYRenderer::_initLightManager()

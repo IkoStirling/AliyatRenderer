@@ -26,6 +26,7 @@ void AYEngineCore::init()
 
     GET_MODULE("MemoryPool")->init();
     GET_MODULE("EventSystem")->init();
+    GET_MODULE("MaterialManager")->init();
     GET_MODULE("ResourceManager")->init();
     GET_MODULE("SoundEngine")->init();
     GET_MODULE("Renderer")->init();

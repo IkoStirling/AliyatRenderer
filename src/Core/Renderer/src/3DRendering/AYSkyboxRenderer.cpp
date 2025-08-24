@@ -49,56 +49,6 @@ static const float skyboxVertices[] = {
      1.0f, -1.0f,  1.0f
 };
 
-//static const float skyboxVertices[] = {
-//    // 前面
-//    -0.5f, -0.5f,  0.5f,  // 左下
-//     0.5f, -0.5f,  0.5f,  // 右下
-//     0.5f,  0.5f,  0.5f,  // 右上
-//     0.5f,  0.5f,  0.5f,  // 右上
-//    -0.5f,  0.5f,  0.5f,  // 左上
-//    -0.5f, -0.5f,  0.5f,  // 左下
-//
-//    // 后面
-//    -0.5f, -0.5f, -0.5f,
-//     0.5f, -0.5f, -0.5f,
-//     0.5f,  0.5f, -0.5f,
-//     0.5f,  0.5f, -0.5f,
-//    -0.5f,  0.5f, -0.5f,
-//    -0.5f, -0.5f, -0.5f,
-//
-//    // 左面
-//    -0.5f,  0.5f,  0.5f,
-//    -0.5f,  0.5f, -0.5f,
-//    -0.5f, -0.5f, -0.5f,
-//    -0.5f, -0.5f, -0.5f,
-//    -0.5f, -0.5f,  0.5f,
-//    -0.5f,  0.5f,  0.5f,
-//
-//    // 右面
-//     0.5f,  0.5f,  0.5f,
-//     0.5f,  0.5f, -0.5f,
-//     0.5f, -0.5f, -0.5f,
-//     0.5f, -0.5f, -0.5f,
-//     0.5f, -0.5f,  0.5f,
-//     0.5f,  0.5f,  0.5f,
-//
-//     // 上面
-//     -0.5f,  0.5f, -0.5f,
-//      0.5f,  0.5f, -0.5f,
-//      0.5f,  0.5f,  0.5f,
-//      0.5f,  0.5f,  0.5f,
-//     -0.5f,  0.5f,  0.5f,
-//     -0.5f,  0.5f, -0.5f,
-//
-//     // 下面
-//     -0.5f, -0.5f, -0.5f,
-//      0.5f, -0.5f, -0.5f,
-//      0.5f, -0.5f,  0.5f,
-//      0.5f, -0.5f,  0.5f,
-//     -0.5f, -0.5f,  0.5f,
-//     -0.5f, -0.5f, -0.5f
-//};
-
 AYSkyboxRenderer::AYSkyboxRenderer(AYRenderDevice* device, AYRenderer* renderer) :
 	_device(device),
 	_renderer(renderer),
@@ -107,7 +57,7 @@ AYSkyboxRenderer::AYSkyboxRenderer(AYRenderDevice* device, AYRenderer* renderer)
     _setupSkyboxGeometry();
 	_loadSkyboxRendererConfigINI();
 
-    loadSkybox({ "@textures/skyBox.png"},SkyboxType::Equirectangular);
+    loadSkybox({ "@textures/skyBox.png"},SkyboxType::Galaxy);
 }
 
 AYSkyboxRenderer::~AYSkyboxRenderer()
@@ -139,6 +89,10 @@ bool AYSkyboxRenderer::loadSkybox(const std::vector<std::string>& faces, SkyboxT
         // 半球天空通常不需要额外纹理
         return true;
     }
+    else if (type == SkyboxType::Galaxy) {
+        _equirectangularTexture = _loadEquirectangularMap(faces[0]);
+        return true;
+    }
 
     return false;
 }
@@ -148,7 +102,7 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
     if (_type == SkyboxType::Cube_6Faces && !_cubemapTexture) return;
     if (_type == SkyboxType::Equirectangular && !_equirectangularTexture) return;
 
-    auto shader = _getSkyboxShader();
+    auto shader = _getSkyboxShader(false);
     if (!shader) return;
 
     // 保存当前状态
@@ -167,24 +121,38 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
     }
 
     // 设置uniform
-    glm::mat4 view = glm::mat4(glm::mat3(context.currentCamera->getViewMatrix())); // 移除平移部分
+    auto cameraSystem = _renderer->getCameraSystem();
+    auto camera = cameraSystem->getCamera(context.currentCameraID);
+    if (!camera)
+        return;
+
+    glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix())); // 移除平移部分
     glUniformMatrix4fv(glGetUniformLocation(shader, "view"),
         1, GL_FALSE, glm::value_ptr(view));
 
     glm::mat4 projection;
-    if (context.currentCamera->getType() == IAYCamera::Type::ORTHOGRAPHIC_2D) {
-        auto viewport = context.currentCamera->getViewport();
+    if (camera->getType() == IAYCamera::Type::ORTHOGRAPHIC_2D) {
+        auto viewport = camera->getViewport();
         float aspect = viewport.z / viewport.w;
         projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 1000.0f);
     }
     else
     {
-        projection = context.currentCamera->getProjectionMatrix();
+        projection = camera->getProjectionMatrix();
     }
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"),
         1, GL_FALSE, glm::value_ptr(projection));
 
     glUniform1i(glGetUniformLocation(shader, "skyboxType"), static_cast<int>(_type));
+    glUniform1f(glGetUniformLocation(shader, "u_time"), glfwGetTime());
+
+    glm::mat4 inverseView = glm::inverse(view);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseView"),
+        1, GL_FALSE, glm::value_ptr(inverseView));
+
+    glm::vec3 position = camera->getPosition();
+    glUniform3f(glGetUniformLocation(shader, "u_cameraPos"),
+        position.x,position.y,position.z);
 
     // 绑定纹理
     if (_type == SkyboxType::Cube_6Faces) {

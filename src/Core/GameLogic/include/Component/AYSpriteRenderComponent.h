@@ -24,23 +24,48 @@ public:
 	virtual void endPlay() override {};
 	virtual void render(const AYRenderContext& context) override
 	{
-		if (!_sprite)
+		if (!_sprite && _isAnimated)
 			return;
 		auto ent = dynamic_cast<AYEntrant*>(getOwner());
 		if (!ent)
 			return;
 		auto& trans = ent->getTransform();
-
-
-		if(_isVisible)
-			_sprite->render(
-				trans,
-				_spriteSize,
-				_color,
-				_flipX,
-				_flipY,
-				_pivot
-			);
+		if (_isVisible)
+		{
+			auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+			auto spriteRenderer = renderManager->getRenderer()->getSpriteRenderer();
+			auto cameraSystem = renderManager->getCameraSystem();
+			float ppm = cameraSystem->getActiveCamera()->getPixelPerMeter();
+			if (_isAnimated)
+			{
+				STTransform spriteTrans = trans;
+				spriteTrans.position.y += _characterSize.y * _spriteSize.y * 0.5f / ppm;
+				_sprite->render(
+					spriteTrans,
+					_spriteSize,
+					_color,
+					_flipX,
+					_flipY,
+					_pivot
+				);
+			}
+			else
+			{
+				STTransform spriteTrans = trans;
+				spriteTrans.position.x -= _spriteSize.x * 0.5f;
+				spriteRenderer->drawSprite(
+					_texture,
+					spriteTrans,
+					_uvOffset,
+					_uvSize,
+					_spriteSize,
+					_color,
+					_flipX,
+					_flipY,
+					_pivot
+				);
+			}
+		}
 	}
 
 	void setVisible(bool visible)
@@ -48,13 +73,39 @@ public:
 		_isVisible = visible;
 	}
 
+	void setAnimated(bool animated)
+	{
+		_isAnimated = animated;
+	}
+
+	void setup_picture(GLuint texture,
+		const glm::vec2& uvOffset = glm::vec2(0.f),
+		const glm::vec2& uvSize = glm::vec2(1.f),
+		const glm::vec3& size = glm::vec3(1),
+		const glm::vec4& color = glm::vec4(1),
+		const glm::vec3& origin = glm::vec3(0)
+		)
+	{
+		_isAnimated = false;
+		_uvOffset = uvOffset;
+		_uvSize = uvSize;
+		_texture = texture;
+		_spriteSize = size;
+		_color = color;
+		_pivot = origin;
+
+	}
+
 	void setup_sprite(
 		const std::string& name,
 		const std::string& texturePath,
 		const glm::vec2& characterSize,
+		const glm::vec2& spriteSize,
 		const glm::vec2& atlasSize,
 		const std::vector<AnimationConfig>& animations
 	) {
+		_isAnimated = true;
+		_characterSize = characterSize;
 		auto renderMgr = GET_CAST_MODULE(AYRendererManager, "Renderer");
 		auto animMgr = renderMgr->get2DAnimationManager();
 
@@ -67,14 +118,13 @@ public:
 		}
 
 		// 创建动画数据
-		auto data = animMgr->makeAnimationData(characterSize, atlasSize, animeData);
-		auto atlas = animMgr->loadAtlas(name, texturePath, characterSize, data, loops);
+		auto data = animMgr->makeAnimationData(spriteSize, atlasSize, animeData);
+		auto atlas = animMgr->loadAtlas(name, texturePath, spriteSize, data, loops);
 
 		// 创建精灵
 		_sprite = std::unique_ptr<AYAnimatedSprite>(
 			renderMgr->create2DSprite(atlas)
 		);
-		_spriteSize = glm::vec3(200); // 默认大小
 	}
 
 	void playAnimation(const std::string& name) {
@@ -101,10 +151,15 @@ public:
 	
 public:
 	std::unique_ptr< AYAnimatedSprite> _sprite;
+	glm::vec2 _uvOffset = glm::vec2(0);
+	glm::vec2 _uvSize = glm::vec2(1);
 	glm::vec3 _spriteSize = glm::vec3(1.f);
+	glm::vec2 _characterSize = glm::vec2(1.f);
 	glm::vec4 _color = glm::vec4(1.0f);
 	bool _flipX = false;
 	bool _flipY = false;
 	glm::vec3 _pivot = glm::vec3(0.5f);
 	bool _isVisible = true;
+	bool _isAnimated = true;
+	GLuint _texture;
 };

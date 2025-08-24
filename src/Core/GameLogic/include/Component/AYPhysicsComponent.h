@@ -28,6 +28,8 @@ public:
     }
 
     virtual void update(float delta_time) override {
+        if (_is3D)
+            return;
         auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
         // 仅过渡前使用
         auto trans = ecsEngine->getComponent<STTransform>(entity);
@@ -66,6 +68,8 @@ public:
         }
     }
 
+    void setPhysicsMode(bool is3D) { _is3D = is3D; }
+
 
 protected:
     IAYPhysicsBody* _physicsBody = nullptr;
@@ -75,6 +79,7 @@ protected:
     float _jumpForce = 10.0f;
     bool _isGrounded = false;
     int _groundContactCount = 0;
+    bool _is3D = false;
 
     
 };

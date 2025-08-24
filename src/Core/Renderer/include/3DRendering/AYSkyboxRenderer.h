@@ -17,7 +17,8 @@ public:
     enum class SkyboxType {
         Cube_6Faces,        // 传统6面立方体贴图
         Equirectangular,    // 单张全景贴图
-        Hemisphere          // 半球天空
+        Hemisphere,          // 半球天空
+        Galaxy
     };
 
     void render(const AYRenderContext& context);

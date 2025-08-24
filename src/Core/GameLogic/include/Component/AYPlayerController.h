@@ -49,10 +49,7 @@ protected:
     }
 
     void _updateMovement(const glm::vec2& input, float deltaTime) {
-        // 转换为物理系统坐标
-        glm::vec2 physicsInput = _engineToPhysics(input);
-
-        float targetSpeedX = physicsInput.x * _moveSpeed * PIXELS_PER_METER;
+        float targetSpeedX = input.x * _moveSpeed;
 
         // 3. 平滑过渡当前速度
         float currentVelX = _physics->getPhysicsBody()->getLinearVelocity().x;
@@ -67,9 +64,9 @@ protected:
         // 5. 调试输出（临时）
         static float time = 0;
         time += deltaTime;
-        if (time > 1.f)
+        if (time > 5.f)
         {
-            time -= 1.f;
+            time -= 5.f;
             auto pos = _physics->getPhysicsBody()->getPosition();
             std::cout << std::fixed << std::setprecision(4)
                 << "[AYPlayerController]  \tInput: (" << input.x << ", " << input.y
@@ -100,13 +97,5 @@ protected:
 
     void _updateAnimation() 
     {
-    }
-    // 坐标转换函数
-    glm::vec2 _engineToPhysics(const glm::vec2& engineVec) {
-        return engineVec / PIXELS_PER_METER;
-    }
-
-    glm::vec2 _physicsToEngine(const glm::vec2& physicsVec) {
-        return physicsVec * PIXELS_PER_METER;
     }
 };

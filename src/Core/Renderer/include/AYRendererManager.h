@@ -2,12 +2,16 @@
 #include "Mod_Renderer.h"
 #include "AYRenderDevice.h"
 #include "AYRenderer.h"
+#include "AYModel.h"
 #include "BaseRendering/IAYRenderable.h"
 #include "2DRendering/AYAnimatedSprite.h"
 #include "2DRendering/AYAnimationManager.h"
 #include <vector>
 #include <AYVideo.h>
 
+/*
+	后期优化策略：深度预缓冲-》延迟渲染，前提：完善渲染管线
+*/
 class AYRendererManager : public Mod_Renderer
 {
 
@@ -29,6 +33,7 @@ public:
 	AYRenderer* getRenderer() { return _renderer.get(); };
 	AYAnimationManager* get2DAnimationManager() { return _animeMana.get(); }
 	AYCameraSystem* getCameraSystem() { return _renderer->getCameraSystem(); }
+	
 	GLuint loadTexture(const std::string& path);
 
 	AYAnimatedSprite* create2DSprite(std::shared_ptr<AYSpriteAtlas> atlas);
@@ -55,6 +60,8 @@ private:
 	class AYAnimatedSprite* _character;
 	std::shared_ptr<AYAnimatedSprite> orcSprite;
 	std::shared_ptr<AYVideo> videos;
+	std::shared_ptr<AYModel> modelPmx;
+
 	GLuint videot;
 };
 

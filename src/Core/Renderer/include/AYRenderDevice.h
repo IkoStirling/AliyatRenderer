@@ -2,6 +2,7 @@
 #include "ECRendererDependence.h"
 #include "AYGLStateManager.h"
 #include "AYShaderManager.h"
+#include "AYTextureManager.h"
 #include <Windows.h>
 #include <mutex>
 
@@ -59,6 +60,8 @@ public:
         bool generateMipmap = false;
     };
 
+    AYTextureManager* getTextureManager() { return _textureManager.get(); }
+
     TextureParams getDefaultTextureParams(TextureType type);
 
     // 纹理通用接口
@@ -111,6 +114,8 @@ private:
     // gl states
     std::unique_ptr<AYGLStateManager> _stateManager;
     std::unique_ptr<AYShaderManager> _shaderManager;
+    std::unique_ptr<AYTextureManager> _textureManager;
+
     AYGLStateTracker _previousState;
 
 };

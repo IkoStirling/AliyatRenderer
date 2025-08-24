@@ -3,6 +3,10 @@
 
 void AY3DCamera::update(float delta_time)
 {
+    if (STTransform::approximatelyEqual(_targetPosition, _transform.position))
+        return;
+    else
+        _dirtyView = true;
     _lastTransform = _transform;
     // 平滑跟随目标位置
     if (_smoothFollow)
@@ -17,22 +21,39 @@ void AY3DCamera::update(float delta_time)
 
 glm::mat4 AY3DCamera::getViewMatrix() const
 {
-    return glm::lookAt(
-        _transform.position,              // 相机位置
-        _transform.position + _cachedFront,     // 目标位置（位置+前向向量）
-        _cachedUp // 固定世界空间的上向量
-    );
-    return glm::inverse(_transform.getTransformMatrix());
+    if (_dirtyView)
+    {
+        _cachedView = glm::lookAt(
+            _transform.position,              // 相机位置
+            _transform.position + _cachedFront,     // 目标位置（位置+前向向量）
+            _cachedUp // 固定世界空间的上向量
+        );
+        _dirtyView = false;
+        //return glm::inverse(_transform.getTransformMatrix());
+    }
+    return _cachedView;
 }
 
 glm::mat4 AY3DCamera::getProjectionMatrix() const
 {
-    float aspect = _viewport.z / _viewport.w;
-    return _orthographic
-        ? glm::ortho(-_orthoSize * aspect, _orthoSize * aspect,
-            -_orthoSize, _orthoSize,
-            _nearPlane, _farPlane)
-        : glm::perspective(glm::radians(_fov), aspect, _nearPlane, _farPlane);
+    if (_dirtyProjection)
+    {
+        float aspect = _viewport.z / _viewport.w;
+        if (_orthographic) {
+            float zoomedSize = _orthoSize / _zoom;
+            _cachedProjection = glm::ortho(-zoomedSize * aspect, zoomedSize * aspect,
+                -zoomedSize, zoomedSize,
+                _nearPlane, _farPlane);
+        }
+        else {
+            // 透视投影 - 通过调整FOV实现缩放
+            float zoomedFov = glm::radians(_fov) / _zoom;
+            _cachedProjection = glm::perspective(glm::clamp(zoomedFov, glm::radians(1.0f), glm::radians(179.0f)),
+                aspect, _nearPlane, _farPlane);
+        }
+        _dirtyProjection = false;
+    }
+    return _cachedProjection;
 }
 
 void AY3DCamera::setLookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& up)
@@ -44,6 +65,7 @@ void AY3DCamera::setLookAt(const glm::vec3& eye, const glm::vec3& center, const 
 
 void AY3DCamera::setPerspective(float fov, float nearPlane, float farPlane)
 {
+    _dirtyProjection = true;
     _fov = fov;
     _nearPlane = nearPlane;
     _farPlane = farPlane;
@@ -52,6 +74,7 @@ void AY3DCamera::setPerspective(float fov, float nearPlane, float farPlane)
 
 void AY3DCamera::setOrthographic(float size, float nearPlane, float farPlane)
 {
+    _dirtyProjection = true;
     _orthoSize = size;
     _nearPlane = nearPlane;
     _farPlane = farPlane;
@@ -71,6 +94,7 @@ void AY3DCamera::setTargetPosition(const glm::vec3& target)
 
 void AY3DCamera::rotate(float yaw, float pitch)
 {
+    _dirtyView = true;
     // 更新相机的朝向
     _yaw += yaw;
     _pitch = glm::clamp(_pitch - pitch, -89.0f, 89.0f);

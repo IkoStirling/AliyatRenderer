@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "IAYCamera.h"
 #include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
@@ -32,31 +32,31 @@ public:
 
     void move(const glm::vec3& offset);
 
-    // »ñÈ¡Ïà»úÊôĞÔ
+    // è·å–ç›¸æœºå±æ€§
     const glm::vec3& getFront() const;
     const glm::vec3& getUp() const;
     const glm::vec3& getRight() const;
 
 private:
     void _updateCachedVectors();
-    // Ïà»ú²ÎÊı
+    // ç›¸æœºå‚æ•°
     glm::vec3 _cachedFront;
     glm::vec3 _cachedRight;
     glm::vec3 _cachedUp;
 
-    // Ğı×ª½Ç¶È
-    float _yaw = -90.0f;   // Æ«º½½Ç
-    float _pitch = 0.0f;   // ¸©Ñö½Ç
+    // æ—‹è½¬è§’åº¦
+    float _yaw = -90.0f;   // åèˆªè§’
+    float _pitch = 0.0f;   // ä¿¯ä»°è§’
     bool _flipY = true;
 
-    // Í¶Ó°²ÎÊı
+    // æŠ•å½±å‚æ•°
     bool _orthographic = false;
-    float _fov = 80.0f;
+    float _fov = 60.0f;
     float _orthoSize = 5.0f;
     float _nearPlane = 0.1f;
     float _farPlane = 5000.f;
 
-    // ¸úËæ²ÎÊı
+    // è·Ÿéšå‚æ•°
     bool _smoothFollow = false;
     float _followSpeed = 5.0f;
 };

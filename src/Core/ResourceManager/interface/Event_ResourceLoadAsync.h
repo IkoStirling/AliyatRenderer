@@ -2,10 +2,12 @@
 #include "IAYEvent.h"
 #include "AYEventRegistry.h"
 #include "STResourceLoadRequest.h"
+
 #include "AYTexture.h"
 #include "AYAudio.h"
 #include "AYAudioStream.h"
 #include "AYVideo.h"
+#include "AYModel.h"
 
 template <typename T, typename... Args>
 class Event_ResourceLoadAsync : public IAYEvent
@@ -41,3 +43,4 @@ REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYTexture)
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYAudio)
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYAudioStream)
 REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYVideo)
+REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYModel)

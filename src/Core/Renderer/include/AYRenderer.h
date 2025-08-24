@@ -4,7 +4,7 @@
 #include "2DRendering/AYFontRenderer.h"
 #include "2DRendering/AYSpriteRenderer.h"
 #include "BaseRendering/AYCoreRenderer.h"
-#include "BaseRendering/Material/AYMaterialManager.h"
+#include "AYMaterialManager.h"
 #include "BaseRendering/Light/AYLightManager.h"
 #include "BaseRendering/Camera/AYCameraSystem.h"
 #include "3DRendering/AYSkyboxRenderer.h"
@@ -26,7 +26,7 @@ public:
     AYCoreRenderer* getCoreRenderer() { return _coreRenderer.get(); }
     AYSkyboxRenderer* getSkyboxRenderer() { return _skyboxRenderer.get(); }
 
-    AYMaterialManager* getMaterialManager() { return _materialManager.get(); }
+    AYMaterialManager* getMaterialManager() { return GET_CAST_MODULE(AYMaterialManager,"MaterialManager").get(); }
     AYLightManager* getLightManager() { return _lightManager.get(); }
     AYCameraSystem* getCameraSystem() { return _cameraSystem.get(); }
 
@@ -47,7 +47,6 @@ private:
     std::unique_ptr<AYCoreRenderer> _coreRenderer;
     std::unique_ptr<AYSkyboxRenderer> _skyboxRenderer;
 
-    std::unique_ptr<AYMaterialManager> _materialManager;
     std::unique_ptr<AYLightManager> _lightManager;
     std::unique_ptr<AYCameraSystem> _cameraSystem;
 

@@ -57,11 +57,7 @@ void AYCameraComponent::update(float delta_time)
 
 void AYCameraComponent::endPlay()
 {
-    if (_boundCamera) {
-        auto cameraSystem = GET_CAST_MODULE(AYRendererManager, "Renderer")->getCameraSystem();
 
-        cameraSystem->removeCamera(_boundCamera);
-    }
 }
 
 void AYCameraComponent::bindCamera(IAYCamera* camera)

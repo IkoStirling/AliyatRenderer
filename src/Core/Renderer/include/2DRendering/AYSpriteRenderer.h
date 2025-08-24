@@ -14,6 +14,8 @@ public:
 
     void drawSprite(GLuint texture,
         const STTransform& transform,
+        const glm::vec2& uvOffset,
+        const glm::vec2& uvSize,
         const glm::vec2& size = glm::vec2(1.0f),
         const glm::vec4& color = glm::vec4(1.0f),
         bool flipHorizontal = false,
@@ -34,6 +36,8 @@ public:
 
     void drawSprite3D(GLuint texture,
         const STTransform& transform,
+        const glm::vec2& uvOffset = glm::vec2(0.f),
+        const glm::vec2& uvSize = glm::vec2(1.f),
         const glm::vec3& size = glm::vec3(1.0f),
         const glm::vec4& color = glm::vec4(1.0f),
         bool flipHorizontal = false,
