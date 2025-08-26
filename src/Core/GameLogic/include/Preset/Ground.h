@@ -16,15 +16,16 @@ public:
 		auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
 		auto entity2 = ecsEngine->createEntity();
 		ecsEngine->addComponent<STTransform>(entity2);
-		setPosition(glm::vec2(0, -1));
+		setPosition(glm::vec2(0, 0));
 		auto ground = physicsSystem->getPhysicsWorld(WorldType::AY2D)
 			->createBody(
 				entity2,
-				glm::vec2(0, -1),
+				getPosition(),
 				0.f,
 				IAYPhysicsBody::BodyType::Static);
-		ground->addCollider(new Box2DBoxCollider(glm::vec2(500, 1)));
-	
+		auto collider = new Box2DBoxCollider(glm::vec2(500, 1));
+		collider->setOffset(glm::vec2(0, -0.5f)); 
+		ground->addCollider(collider);
 
 	}
 

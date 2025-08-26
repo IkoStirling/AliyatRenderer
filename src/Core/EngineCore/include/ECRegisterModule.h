@@ -13,3 +13,4 @@
 #include "AYSceneManager.h"
 #include "AYPhysicsSystem.h"
 #include "AYECSEngine.h"
+#include "AYCombatSystem.h"

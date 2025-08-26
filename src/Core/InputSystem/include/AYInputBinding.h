@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "AYInputAction.h"
 #include <unordered_map>
 #include <string>
@@ -23,6 +23,10 @@ public:
     std::vector<std::string> getActionNames() const;
 
     const std::unordered_map<std::string, AYInputAction>& getActions() const;
+
+    const AYInputAction& getAction(const std::string& name) const;
+
+    bool hasAction(const std::string& name) const;
 
 private:
     std::unordered_map<std::string, AYInputAction> _actions;

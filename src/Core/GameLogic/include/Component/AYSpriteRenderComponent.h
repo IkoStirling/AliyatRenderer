@@ -51,19 +51,19 @@ public:
 			}
 			else
 			{
-				STTransform spriteTrans = trans;
-				spriteTrans.position.x -= _spriteSize.x * 0.5f;
-				spriteRenderer->drawSprite(
-					_texture,
-					spriteTrans,
-					_uvOffset,
-					_uvSize,
-					_spriteSize,
-					_color,
-					_flipX,
-					_flipY,
-					_pivot
-				);
+				//STTransform spriteTrans = trans;
+				//spriteTrans.position.x -= _spriteSize.x * 0.5f;
+				//spriteRenderer->drawSprite(
+				//	_texture,
+				//	spriteTrans,
+				//	_uvOffset,
+				//	_uvSize,
+				//	_spriteSize,
+				//	_color,
+				//	_flipX,
+				//	_flipY,
+				//	_pivot
+				//);
 			}
 		}
 	}

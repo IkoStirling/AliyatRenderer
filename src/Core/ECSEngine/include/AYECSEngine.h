@@ -22,6 +22,7 @@ private:
     {
         virtual ~IComponentPool() = default;
         virtual void remove(EntityID entity) = 0;
+        virtual bool has(EntityID entity) = 0;
     };
 
     // 特定类型组件的存储
@@ -40,7 +41,7 @@ private:
 
         T& get(EntityID entity);
 
-        bool has(EntityID entity);
+        bool has(EntityID entity) override;
     };
 
     // 实体管理

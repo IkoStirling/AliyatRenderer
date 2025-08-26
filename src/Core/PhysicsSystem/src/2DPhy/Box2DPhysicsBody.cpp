@@ -12,6 +12,8 @@ Box2DPhysicsBody::Box2DPhysicsBody(b2World& world, const glm::vec2& position,
     def.angle = rotation;
     def.type = convertBodyType(type);
     _body = world.CreateBody(&def);
+
+    setB2BodyUserData(this);
 }
 
 Box2DPhysicsBody::~Box2DPhysicsBody() {
@@ -134,6 +136,16 @@ void Box2DPhysicsBody::setTrigger(bool is_trigger) {
     }
 }
 
+const std::vector<IAYCollider*> Box2DPhysicsBody::getColliders() const
+{
+    std::vector<IAYCollider*> result;
+    for (auto& [collider, fixture] : _colliderFixtures)
+    {
+        result.push_back(collider);
+    }
+    return result;
+}
+
 
 b2Fixture* Box2DPhysicsBody::_createFixture(IAYCollider* collider) {
     b2FixtureDef fixtureDef;    //配置模板，通过_body->CreateFixture(&fixtureDef)创建fixture
@@ -203,4 +215,121 @@ b2BodyType Box2DPhysicsBody::convertBodyType(BodyType type) {
     case BodyType::Kinematic: return b2_kinematicBody;
     default:                return b2_dynamicBody;
     }
+}
+
+void Box2DPhysicsBody::setB2BodyUserData(void* userData)
+{
+    if (_body) {
+        _body->GetUserData().pointer = reinterpret_cast<uintptr_t>(userData);
+    }
+}
+
+void* Box2DPhysicsBody::getB2BodyUserData() const
+{
+    if (_body) {
+        return reinterpret_cast<void*>(_body->GetUserData().pointer);
+    }
+    return nullptr;
+}
+
+glm::vec4 Box2DPhysicsBody::getAABB() const
+{
+    if (!_body) return glm::vec4(0);
+
+    b2AABB aabb;
+    aabb.lowerBound = b2Vec2(FLT_MAX, FLT_MAX);
+    aabb.upperBound = b2Vec2(-FLT_MAX, -FLT_MAX);
+
+    for (b2Fixture* fixture = _body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+    {
+        b2AABB fixtureAABB = fixture->GetAABB(0); // 0表示当前变换
+
+        aabb.lowerBound = b2Min(aabb.lowerBound, fixtureAABB.lowerBound);
+        aabb.upperBound = b2Max(aabb.upperBound, fixtureAABB.upperBound);
+    }
+
+    return glm::vec4(aabb.lowerBound.x, aabb.lowerBound.y,
+        aabb.upperBound.x, aabb.upperBound.y);
+}
+
+std::vector<glm::vec2> Box2DPhysicsBody::getColliderVertices() const
+{
+    std::vector<glm::vec2> vertices;
+
+    if (!_body) return vertices;
+
+    for (b2Fixture* fixture = _body->GetFixtureList(); fixture; fixture = fixture->GetNext())
+    {
+        b2Shape* shape = fixture->GetShape();
+
+        switch (shape->GetType())
+        {
+        case b2Shape::e_polygon:
+        {
+            b2PolygonShape* polygon = static_cast<b2PolygonShape*>(shape);
+            for (int i = 0; i < polygon->m_count; i++)
+            {
+                b2Vec2 worldVertex = _body->GetWorldPoint(polygon->m_vertices[i]);
+                vertices.emplace_back(worldVertex.x, worldVertex.y);
+            }
+            break;
+        }
+        case b2Shape::e_circle:
+        {
+            b2CircleShape* circle = static_cast<b2CircleShape*>(shape);
+            b2Vec2 center = _body->GetWorldPoint(circle->m_p);
+            // 为圆形添加底部点
+            b2Vec2 bottom = center + b2Vec2(0, -circle->m_radius);
+            vertices.emplace_back(bottom.x, bottom.y);
+            break;
+        }
+        case b2Shape::e_edge:
+        {
+            b2EdgeShape* edge = static_cast<b2EdgeShape*>(shape);
+            b2Vec2 vertex1 = _body->GetWorldPoint(edge->m_vertex1);
+            b2Vec2 vertex2 = _body->GetWorldPoint(edge->m_vertex2);
+            vertices.emplace_back(vertex1.x, vertex1.y);
+            vertices.emplace_back(vertex2.x, vertex2.y);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    return vertices;
+}
+
+glm::vec2 Box2DPhysicsBody::getLowestPoint() const
+{
+    std::vector<glm::vec2> vertices = getColliderVertices();
+    if (vertices.empty()) return glm::vec2(0);
+
+    glm::vec2 lowestPoint = vertices[0];
+    for (const auto& vertex : vertices)
+    {
+        if (vertex.y < lowestPoint.y)
+        {
+            lowestPoint = vertex;
+        }
+    }
+
+    return lowestPoint;
+}
+
+glm::vec2 Box2DPhysicsBody::getHighestPoint() const
+{
+    std::vector<glm::vec2> vertices = getColliderVertices();
+    if (vertices.empty()) return glm::vec2(0);
+
+    glm::vec2 highestPoint = vertices[0];
+    for (const auto& vertex : vertices)
+    {
+        if (vertex.y > highestPoint.y)
+        {
+            highestPoint = vertex;
+        }
+    }
+
+    return highestPoint;
 }

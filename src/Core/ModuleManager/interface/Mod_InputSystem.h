@@ -6,12 +6,12 @@
 class AYInputBinding;
 
 struct InputState {
-    bool current = false;   // 当前帧状态
-    bool previous = false;  // 上一帧状态
-    float duration = 0.0f;  // 按键持续时间(秒)
-    int pressCount = 0;     // 连续按下次数(用于双击检测)
+    bool current = false;           // 当前帧状态
+    bool previous = false;          // 上一帧状态
+    float duration = 0.0f;          // 按键持续时间(秒)
+    int pressCount = 0;             // 连续按下次数(用于双击检测)
     float lastPressTime = 0.0f;     // 最后一次按下时间
-    float value = 0.0f;     // 用于轴输入
+    float value = 0.0f;             // 用于轴输入
     float previousValue = 0.0f;     // 上一帧轴值
     glm::vec2 pressPosition{ 0 };   // 对键盘输入无效
 };

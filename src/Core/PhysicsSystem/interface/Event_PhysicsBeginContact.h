@@ -23,8 +23,8 @@ public:
 		}
 	}
 
-	IAYPhysical* entityA;
-	IAYPhysical* entityB;
+	/*IAYPhysical* entityA;
+	IAYPhysical* entityB;*/
 };
 
 REGISTER_EVENT_CLASS(Event_PhysicsBeginContact);

@@ -273,9 +273,9 @@ private:
     size_t _instanceBufferSize = 32;
     size_t _indexBufferSize = 1024;
 
-    void ensureVertexBufferCapacity(size_t requiredVertices);
-    void ensureInstanceBufferCapacity(size_t requiredInstances);
-    void ensureIndexBufferCapacity(size_t requiredIndices);
+    bool ensureVertexBufferCapacity(size_t requiredVertices);
+    bool ensureInstanceBufferCapacity(size_t requiredInstances);
+    bool ensureIndexBufferCapacity(size_t requiredIndices);
 
     void uploadVertexData(const std::vector<VertexInfo>& vertices);
     void uploadInstanceData(const std::vector<glm::mat4>& instances);

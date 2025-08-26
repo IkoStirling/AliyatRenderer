@@ -42,6 +42,8 @@ void AYInputSystem::init()
 
 void AYInputSystem::update(float delta_time)
 {
+	_lastMousePos = _currentMousePos;
+
 	// 所有状态转移处理
 	for (auto& [input, state] : _inputStates) {
 		state.previous = state.current;
@@ -56,7 +58,6 @@ void AYInputSystem::update(float delta_time)
 		state.duration = state.current ? (state.duration + delta_time) : 0.0f;
 	}
 
-	_lastMousePos = _currentMousePos;
 }
 
 void AYInputSystem::shutdown()
@@ -117,14 +118,64 @@ bool AYInputSystem::isActionActive(const std::string& bindingName, const std::st
 	return false;
 }
 
-bool AYInputSystem::isActionActive(const std::string& fullActionName) const {
-	size_t dotPos = fullActionName.find('.');
-	if (dotPos != std::string::npos) {
+bool AYInputSystem::isActionActive(const std::string& fullActionName) const 
+{
+	if (size_t dotPos = fullActionName.find('.'); dotPos != std::string::npos) {
 		std::string bindingName = fullActionName.substr(0, dotPos);
 		std::string actionName = fullActionName.substr(dotPos + 1);
 		return isActionActive(bindingName, actionName);
 	}
 	return false;
+}
+
+float AYInputSystem::getLongPressHoldTime(const std::string& bindingName, const std::string& actionName) const
+{
+	if (auto it = _keyBindings.find(bindingName); it != _keyBindings.end()) {
+		if (!it->second->hasAction(actionName))
+			return 0.0f;
+		const auto& input = it->second->getAction(actionName).getInput();
+		return getUniversalDuration(input);
+	}
+	return 0.0f;
+}
+
+float AYInputSystem::getLongPressHoldTime(const std::string& fullActionName) const
+{
+	if (size_t dotPos = fullActionName.find('.'); dotPos != std::string::npos) {
+		std::string bindingName = fullActionName.substr(0, dotPos);
+		std::string actionName = fullActionName.substr(dotPos + 1);
+		return getLongPressHoldTime(bindingName, actionName);
+	}
+	return 0.0f;
+}
+
+bool AYInputSystem::isActionJustReleased(const std::string& bindingName, const std::string& actionName) const
+{
+	if (auto it = _keyBindings.find(bindingName); it != _keyBindings.end()) {
+		if (!it->second->hasAction(actionName))
+			return false;
+		const auto& input = it->second->getAction(actionName).getInput();
+		return !getUniversalInputState(input) && getPreviousUniversalInputState(input);
+	}
+	return false;
+}
+
+bool AYInputSystem::isActionJustReleased(const std::string& fullActionName) const
+{
+	if (size_t dotPos = fullActionName.find('.'); dotPos != std::string::npos) {
+		std::string bindingName = fullActionName.substr(0, dotPos);
+		std::string actionName = fullActionName.substr(dotPos + 1);
+		return isActionJustReleased(bindingName, actionName);
+	}
+	return false;
+}
+
+float AYInputSystem::getUniversalDuration(const UniversalInput& input) const
+{
+	if (const InputState* state = findInputState(input)) {
+		return state->duration;
+	}
+	return 0.0f;
 }
 
 bool AYInputSystem::getUniversalInputState(const UniversalInput& input) const
@@ -423,7 +474,25 @@ bool AYInputSystem::isAltPressed() const
 
 void AYInputSystem::_updateUniversalInputState(float delta_time)
 {
+	GLFWwindow* window = _device->getWindow();
+	if (!window)
+		return;
 
+	// 遍历所有注册的输入，主动查询当前硬件状态并更新 state.current
+	for (auto& [input, state] : _inputStates)
+	{
+		if (auto keyInput = std::get_if<KeyboardInput>(&input))
+		{
+			int key = keyInput->key;
+			state.current = glfwGetKey(window, key) == GLFW_PRESS;
+		}
+		else if (auto mouseBtnInput = std::get_if<MouseButtonInput>(&input))
+		{
+			int button = mouseBtnInput->button;
+			bool mstate = glfwGetMouseButton(window, button) == GLFW_PRESS;
+			state.current = mstate;
+		}
+	}
 }
 
 void AYInputSystem::_updateAxisStates(float delta_time)
@@ -501,13 +570,11 @@ void AYInputSystem::handleKey(int key, int scancode, int action, int mods)
 
 	if (action == GLFW_PRESS)
 	{
-		state.current = true;
 		state.pressCount++;  
 		state.lastPressTime = (float)glfwGetTime();
 	}
-	else if (action == GLFW_RELEASE) 
+	else if (action == GLFW_RELEASE)
 	{
-		state.current = false;
 	}
 }
 
@@ -518,14 +585,9 @@ void AYInputSystem::handleMouseButton(int button, int action, int mods)
 
 	if (action == GLFW_PRESS) 
 	{
-		state.current = true;
 		state.pressCount++;  // 记录按下次数（用于双击检测）
 		state.lastPressTime = (float)glfwGetTime();
 		state.pressPosition = _currentMousePos; // 记录按下时的鼠标位置
-	}
-	else if (action == GLFW_RELEASE) 
-	{
-		state.current = false;
 	}
 }
 

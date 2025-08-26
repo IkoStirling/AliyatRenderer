@@ -41,26 +41,28 @@ void AYCoreRenderer::shutdown()
     _saveCoreRendererConfigINI();
 }
 
-void AYCoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices) 
+bool AYCoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices)
 {
     if (requiredVertices > _vertexBufferSize) {
         // 按vector类似方案扩容
-        _vertexBufferSize = std::max(_vertexBufferSize * 3 / 2, requiredVertices);
+        _vertexBufferSize = std::max(_vertexBufferSize * 2, requiredVertices);
 
         _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _vbo);
         glBufferData(GL_ARRAY_BUFFER,
             _vertexBufferSize * sizeof(VertexInfo),
             nullptr,  // 只分配空间，不初始化数据
             GL_DYNAMIC_DRAW);
+        return true;
 
         AY_CHECK_GL_ERROR("Vertex buffer resize failed");
     }
+    return false;
 }
 
-void AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances) 
+bool AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
 {
     if (requiredInstances > _instanceBufferSize) {
-        _instanceBufferSize = std::max(_instanceBufferSize * 3 / 2,
+        _instanceBufferSize = std::max(_instanceBufferSize * 2,
             requiredInstances);
 
         _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
@@ -68,15 +70,17 @@ void AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
             _instanceBufferSize * sizeof(glm::mat4),
             nullptr,
             GL_DYNAMIC_DRAW);
+        return true;
 
         AY_CHECK_GL_ERROR("Instance buffer resize failed");
     }
+    return false;
 }
 
-void AYCoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
+bool AYCoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
 {
     if (requiredIndices > _indexBufferSize) {
-        _indexBufferSize = std::max(_indexBufferSize * 3 / 2,
+        _indexBufferSize = std::max(_indexBufferSize * 2,
             _indexBufferSize);
 
         _device->getGLStateManager()->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
@@ -84,26 +88,27 @@ void AYCoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
             _indexBufferSize * sizeof(uint32_t),
             nullptr,
             GL_DYNAMIC_DRAW);
+        return true;
 
         AY_CHECK_GL_ERROR("Index buffer resize failed");
     }
+    return false;
 }
 
 void AYCoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices) 
 {
     if (vertices.empty()) return;
 
-    ensureVertexBufferCapacity(vertices.size());
-
-    _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _vbo);
-
-    // 孤儿化缓冲区（抛弃旧数据）
-    glBufferData(GL_ARRAY_BUFFER,
-        _vertexBufferSize * sizeof(VertexInfo),
-        nullptr,
-        GL_DYNAMIC_DRAW);
-
-    // 然后上传新数据
+    if (!ensureVertexBufferCapacity(vertices.size()))
+    {
+        _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _vbo);
+        // 孤儿化缓冲区（抛弃旧数据）
+        glBufferData(GL_ARRAY_BUFFER,
+            _vertexBufferSize * sizeof(VertexInfo),
+            nullptr,
+            GL_DYNAMIC_DRAW);
+    }
+    // 上传新数据
     glBufferSubData(GL_ARRAY_BUFFER,
         0,
         vertices.size() * sizeof(VertexInfo),
@@ -116,14 +121,14 @@ void AYCoreRenderer::uploadInstanceData(const std::vector<glm::mat4>& instances)
 {
     if (instances.empty()) return;
 
-    ensureInstanceBufferCapacity(instances.size());
-
-    _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
-
-    glBufferData(GL_ARRAY_BUFFER,
-        _instanceBufferSize * sizeof(glm::mat4),
-        nullptr,
-        GL_DYNAMIC_DRAW);
+    if (!ensureInstanceBufferCapacity(instances.size()))
+    {
+        _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER,
+            _instanceBufferSize * sizeof(glm::mat4),
+            nullptr,
+            GL_DYNAMIC_DRAW);
+    }
 
     glBufferSubData(GL_ARRAY_BUFFER,
         0,
@@ -137,15 +142,15 @@ void AYCoreRenderer::uploadIndexData(const std::vector<uint32_t>& indices)
 {
     if (indices.empty()) return;
 
-    ensureIndexBufferCapacity(indices.size());
-
-    _device->getGLStateManager()->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
-
-    // 孤儿化缓冲区（抛弃旧数据）
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        _indexBufferSize * sizeof(uint32_t),
-        nullptr,
-        GL_DYNAMIC_DRAW);
+    if (!ensureIndexBufferCapacity(indices.size()))
+    {
+        _device->getGLStateManager()->bindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ibo);
+        // 孤儿化缓冲区（抛弃旧数据）
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+            _indexBufferSize * sizeof(uint32_t),
+            nullptr,
+            GL_DYNAMIC_DRAW);
+    }
 
     // 然后上传新数据
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER,

@@ -2,6 +2,7 @@
 #include "AYEntrant.h"
 #include "Component/AYSpriteRenderComponent.h"
 #include "Component/AYCameraComponent.h"
+#include "Component/Combat/STCombatComponents.h"
 #include "AYPath.h"
 #include "BaseRendering/Camera/AY3DCamera.h"
 #include "Component/AYPlayerController.h"
@@ -15,7 +16,9 @@ public:
         AYEntrant(name)
     {
 		_orcSprite = addComponent<AYSpriteRenderComponent>("_orcSprite");
-		_physics->addCollider(std::make_shared<Box2DBoxCollider>());
+		auto collider = std::make_shared<Box2DBoxCollider>(glm::vec2(1, 1));
+		collider->setOffset(glm::vec2(0, 0.5f));
+		_physics->addCollider(collider);
 		_physics->setBodyType(IAYPhysicsBody::BodyType::Dynamic);
 		_controller = addComponent<AYPlayerController>("_controller");
 		_controller->setMoveSpeed(5.0f);
@@ -26,6 +29,23 @@ public:
 		_camera[1]->setupCamera(IAYCamera::Type::PERSPECTIVE_3D);
 		_camera[0]->activate();
 
+		auto binding = std::make_shared<AYInputBinding>();
+		binding->addAction("atk_base", AYInputAction::Type::Press, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
+		binding->addAction("atk_charge", AYInputAction::Type::LongPress, MouseButtonInput{ GLFW_MOUSE_BUTTON_RIGHT });
+		binding->addAction("jump", AYInputAction::Type::Press, GamepadButtonInput{ GLFW_GAMEPAD_BUTTON_X });
+		auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
+		inputSystem->addInputMapping("orc", binding);
+
+		auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
+		ecsEngine->addComponent<STAttackComponent>(_entity, STAttackComponent{
+				.damage = 10.0f,
+				.range = 2.0f,
+				.cooldown = 1.5f,
+				.cooldownTimer = 0.0f,
+				.canAttack = true
+			});
+
+		setPosition(glm::vec3(0, 0, -5));
 		_orcSprite->setup_sprite(
 			_name,
 			AYPath::Engine::getPresetTexturePath() + "Orc.png",
@@ -35,8 +55,9 @@ public:
 			{
 				{"idle01", 0, 6, true},
 				{"walk01", 8, 8, true},
-				{"atk01", 16, 6, false},
-				{"atk02", 24, 6, false},
+				{"atk_base01", 16, 6, false},
+				{"atk_charge01", 25, 2, false},
+				{"atk_charge02", 27, 3, false},
 				{"eff01", 32, 4, false},
 				{"dead01",40, 4, false}
 			}
@@ -86,11 +107,17 @@ public:
     virtual void update(float delta_time)override
     {
         AYEntrant::update(delta_time);
-		auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
+		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+
+
 
 		processMouseMovement(inputSystem->getMousePosition().x, inputSystem->getMousePosition().y);
 
-		if (_orcSprite->isCurrentAnimationDone())
+		bool baseAtk = inputSystem->isActionJustReleased("orc.atk_base");
+		bool chargeHold = inputSystem->isActionActive("orc.atk_charge");
+		bool chargeAtk = inputSystem->isActionJustReleased("orc.atk_charge");
+
+		if (_orcSprite->isCurrentAnimationDone() || chargeAtk)
 		{
 			static int switcher = 0;
 			glm::vec3 movement(0.0f);
@@ -108,16 +135,29 @@ public:
 				movement = glm::normalize(movement);
 			}
 
-
-			
-			if (inputSystem->getUniversalInputState(MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT }) ||
-				inputSystem->isActionActive("default.GamePad_X"))
+			auto ecs = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
+			// 先判断蓄力攻击
+			if (chargeHold)
 			{
-				_orcSprite->playAnimation("atk01");
+				_orcSprite->playAnimation("atk_charge01");
 			}
-			else if (inputSystem->getUniversalInputState(MouseButtonInput{ GLFW_MOUSE_BUTTON_RIGHT }))
+			else if (chargeAtk)
 			{
-				_orcSprite->playAnimation("atk02");
+				std::cout << "this" << std::endl;
+				_orcSprite->playAnimation("atk_charge02");
+			}
+			else if (baseAtk)
+			{
+				if (ecs->hasComponent<STAttackComponent>(getEntityID()))
+				{
+					auto& atkComp = ecs->getComponent<STAttackComponent>(getEntityID());
+					if (atkComp.canAttack)
+					{
+						_orcSprite->playAnimation("atk_base01");
+						atkComp.canAttack = false;
+						atkComp.cooldownTimer = atkComp.cooldown;
+					}
+				}
 			}
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_F }))
 			{
@@ -133,7 +173,7 @@ public:
 				if (flag0)
 				{
 					//GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/amb_dark_01.wav", true, true);
-					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/Evening_wanders.mp3", true, true, 0.5f);
+					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/Evening_wanders.mp3", false, true, 0.5f);
 					flag0 = false;
 				}
 			}

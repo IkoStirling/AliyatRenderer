@@ -4,20 +4,20 @@
 class IAYPhysical
 {
 public: // transform
-    const STTransform& getTransform() const { return _transform; }
-    void setTransform(const STTransform& transform) { _transform = transform; }
+    virtual const STTransform& getTransform() const = 0;
+    virtual void setTransform(const STTransform& transform) = 0;
 
-    glm::vec3 getPosition() const { return _transform.position; }
-    void setPosition(const glm::vec3& position) { _transform.position = position; }
-    void setPosition(const glm::vec2& position) { _transform.position = glm::vec3(position, _transform.position.z); }
+    virtual glm::vec3 getPosition() const = 0;
+    virtual void setPosition(const glm::vec3& position) = 0;
+    virtual void setPosition(const glm::vec2& position) = 0;
 
-    glm::vec3 getRotation() const { return _transform.rotation.getEulerAngles(); }
-    void setRotation(const glm::vec3& rotation) { _transform.rotation.setEulerAngles(rotation); }
-    //void setRotation(float rotation) { _transform.rotation = glm::vec3(glm::vec2(_transform.rotation),rotation); }
+    virtual glm::vec3 getRotation() const = 0;
+    virtual void setRotation(const glm::vec3& rotation) = 0;
+    //void setRotation(float rotation) = 0;
 
-    glm::vec3 getScale() const { return _transform.scale; }
-    void setScale(const glm::vec3& scale) { _transform.scale = scale; }
-    void setScale(const glm::vec2& scale) { _transform.scale = glm::vec3(scale, _transform.scale.z); }
+    virtual glm::vec3 getScale() const = 0;
+    virtual void setScale(const glm::vec3& scale) = 0;
+    virtual void setScale(const glm::vec2& scale) = 0;
 
 protected:
     STTransform _transform;

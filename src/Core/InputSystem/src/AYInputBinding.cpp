@@ -1,4 +1,4 @@
-#include "AYInputBinding.h"
+﻿#include "AYInputBinding.h"
 #include "AYInputSystem.h"
 
 AYInputBinding::~AYInputBinding()
@@ -42,4 +42,18 @@ std::vector<std::string> AYInputBinding::getActionNames() const
 const std::unordered_map<std::string, AYInputAction>& AYInputBinding::getActions() const
 { 
     return _actions;
+}
+
+const AYInputAction& AYInputBinding::getAction(const std::string& name) const
+{
+    if (auto it = _actions.find(name); it != _actions.end())
+    {
+        return it->second;
+    }
+    throw std::out_of_range("[InputAction] Action '" + name + "' not found");
+}
+
+bool AYInputBinding::hasAction(const std::string& name) const
+{
+    return  _actions.find(name) != _actions.end();
 }

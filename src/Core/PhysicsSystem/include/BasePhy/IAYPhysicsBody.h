@@ -37,12 +37,15 @@ public:
 
 
     //---------------碰撞管理----------------
-    //碰撞体
+    // 碰撞体
     virtual void addCollider(IAYCollider* collider) = 0;  
     virtual void removeCollider(IAYCollider* collider) = 0;    
     virtual void setTrigger(bool is_trigger) = 0;   
 
-    //碰撞查询
+    // 获取所有碰撞体
+    virtual const std::vector<IAYCollider*> getColliders() const = 0;
+
+    // 碰撞查询
     virtual void queryOverlapArea(const glm::vec4& area) = 0;
 
 

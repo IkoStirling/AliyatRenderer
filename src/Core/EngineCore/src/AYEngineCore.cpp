@@ -97,7 +97,6 @@ void AYEngineCore::_updateFPSStats(int& frameCount, std::chrono::steady_clock::t
 void AYEngineCore::update()
 {
 
-    GET_MODULE("InputSystem")->update(_invTargetFPS);
 
     // 只有当累积时间达到一帧时才更新
     _accumulatedTime += _unscaledDeltaTime * _timeScale;
@@ -106,11 +105,13 @@ void AYEngineCore::update()
         _accumulatedTime -= delta;
 
         {
+            GET_MODULE("InputSystem")->update(delta); //涉及持续按下状态，因此也放在逻辑块中
             GET_MODULE("EventSystem")->update(delta);
-            GET_MODULE("ResourceManager")->update(delta);
-            //GET_MODULE("Network")->update(delta);
             GET_MODULE("SceneManager")->update(delta);
+            //GET_MODULE("Network")->update(delta);
             GET_MODULE("PhysicsSystem")->update(delta);
+            GET_MODULE("CombatSystem")->update(delta);
+            GET_MODULE("ResourceManager")->update(delta);
             GET_MODULE("SoundEngine")->update(delta);
         }
     }

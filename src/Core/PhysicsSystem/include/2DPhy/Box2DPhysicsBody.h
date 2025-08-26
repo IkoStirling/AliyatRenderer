@@ -26,6 +26,7 @@ public:
     void removeAllColliders();
     bool hasCollider(IAYCollider* collider) const;
     void setTrigger(bool is_trigger) override;
+    const std::vector<IAYCollider*> getColliders() const override;
     void queryOverlapArea(const glm::vec4& area) override;
     void setFriction(float friction) override;
     void setBounciness(float bounciness) override;
@@ -35,6 +36,15 @@ public:
     void updateAllFixtureMaterials();
     // 获取底层Box2D body（供高级操作使用）
     b2Body* getB2Body() const { return _body; }
+    // 设置Box2D body的用户数据指针
+    void setB2BodyUserData(void* userData);
+    // 获取Box2D body的用户数据指针
+    void* getB2BodyUserData() const;
+
+    glm::vec4 getAABB() const;
+    std::vector<glm::vec2> getColliderVertices() const;
+    glm::vec2 getLowestPoint() const;
+    glm::vec2 getHighestPoint() const;
 private:
     b2Body* _body;
     std::unordered_map<IAYCollider*, b2Fixture*> _colliderFixtures;

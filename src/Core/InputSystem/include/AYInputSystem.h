@@ -31,11 +31,16 @@ public:
     void removeInputMapping(const std::string& name);
     bool isActionActive(const std::string& bindingName, const std::string& actionName) const;
     bool isActionActive(const std::string& fullActionName) const; //bindingName.actionName
+    float getLongPressHoldTime(const std::string& bindingName, const std::string& actionName) const;
+    float getLongPressHoldTime(const std::string& fullActionName) const;
+    bool isActionJustReleased(const std::string& bindingName, const std::string& actionName) const;
+    bool isActionJustReleased(const std::string& fullActionName) const;
 
     /*
         这里提供原始虚拟按键状态访问方法，！！！和上面的按键活动状态不同
         但是如果不getInputState一次，就不会生效
     */
+    float getUniversalDuration(const UniversalInput& input) const;
     bool getUniversalInputState(const UniversalInput& input) const;
     bool getPreviousUniversalInputState(const UniversalInput& input) const;
 

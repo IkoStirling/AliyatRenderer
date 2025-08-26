@@ -88,6 +88,12 @@ public:
 
     int findStream(AVCodecParameters*& codecParameters, AVMediaType type)
     {
+        if (!ctx) {
+            std::cerr << "Error: AVFormatContext is null. Did you open the file successfully?" << std::endl;
+            codecParameters = nullptr;
+            return -1;
+        }
+
         codecParameters = nullptr;
 
         if (avformat_find_stream_info(ctx, nullptr) < 0) {
