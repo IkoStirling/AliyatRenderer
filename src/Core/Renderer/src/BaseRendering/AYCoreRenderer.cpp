@@ -457,49 +457,6 @@ void AYCoreRenderer::endDraw()
     flushWithRecover();
 }
 
-
-//glm::mat4 AYCoreRenderer::getCurrentProjection(Space space)
-//{
-//    glm::mat4 projection;
-//    auto& context = _renderer->getRenderContext();
-//    switch (space)
-//    {
-//    case AYCoreRenderer::Space::Screen:
-//        projection = glm::ortho(
-//            0.0f,
-//            context.currentCamera->getViewport().z,
-//            context.currentCamera->getViewport().w,
-//            0.0f,
-//            -1.0f,
-//            1.0f);
-//        break;
-//    case AYCoreRenderer::Space::World:
-//        projection = context.currentCamera->getProjectionMatrix();
-//        break;
-//    default:
-//        break;
-//    }
-//    return projection;
-//}
-//
-//glm::mat4 AYCoreRenderer::getCurrentView(Space space)
-//{
-//    glm::mat4 view;
-//    auto& context = _renderer->getRenderContext();
-//    switch (space)
-//    {
-//    case AYCoreRenderer::Space::Screen:
-//        view = glm::mat4(1.f);
-//        break;
-//    case AYCoreRenderer::Space::World:
-//        view = context.currentCamera->getViewMatrix();
-//        break;
-//    default:
-//        break;
-//    }
-//    return view;
-//}
-
 uint32_t AYCoreRenderer::getCurrentCameraID(Space space)
 {
     uint32_t id = 0;
@@ -668,7 +625,7 @@ void AYCoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batc
     _device->saveGLState();
     auto stateManager = _device->getGLStateManager();
 
-    auto shader = _getBaseShader();
+    auto shader = _getBaseShader(true);
     stateManager->bindVertexArray(_vao);
     stateManager->useProgram(shader);
     
@@ -678,9 +635,9 @@ void AYCoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batc
 
     auto cameraSystem = _renderer->getCameraSystem();
     auto camera = cameraSystem->getCamera(key.cameraID);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"),
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_projection"),
         1, GL_FALSE, glm::value_ptr(camera->getProjectionMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"),
+    glUniformMatrix4fv(glGetUniformLocation(shader, "u_view"),
         1, GL_FALSE, glm::value_ptr(camera->getViewMatrix()));
 
     // 提交数据

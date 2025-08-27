@@ -36,6 +36,12 @@ This project use the "cmake + vcpkg"
 		Class name (without prefix) with large camel hump
 		Member functions and variables use small humps
 		Private variables use underscore prefix
+
+	Shader Style
+
+    	uniform variable like: u_projection
+		vertex layout variable like: aPos
+		fragment in variable like: v_color
 ### Project Dependence
 Before execute this program, preparing these packages:
 

@@ -231,8 +231,6 @@ private:
     void flushImmediate(const BatchKey& key, const RenderBatch& batch);
     void flushWithRecover();
 
-    //glm::mat4 getCurrentProjection(Space type);
-    //glm::mat4 getCurrentView(Space type);
     uint32_t getCurrentCameraID(Space space);
 
     struct TransparentMeshInstance {

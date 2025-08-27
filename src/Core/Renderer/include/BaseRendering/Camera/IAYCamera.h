@@ -17,13 +17,24 @@ public:
     // 获取投影矩阵（Projection Matrix）
     virtual glm::mat4 getProjectionMatrix() const
     {
-        return glm::ortho(
-            0.0f,
-            _viewport.z,
-            _viewport.w,
-            0.0f,
-            -1.0f,
-            1.0f);
+        if (_dirtyProjection)
+        {
+            // 返回物理比例下的投影矩阵
+            float ppm = getPixelPerMeter();
+            float width = _viewport.z / ppm;
+            float height = _viewport.w / ppm;
+
+            _cachedProjection = glm::ortho(
+                0.0f,  // left
+                width,   // right
+                height,  // bottom 
+                0.0f,   // top
+                -1.0f,
+                1.0f
+            );
+            _dirtyProjection = false;
+        }
+        return _cachedProjection;
     }
 
     // 每帧更新（参数可扩展）

@@ -32,7 +32,7 @@ public:
 		auto binding = std::make_shared<AYInputBinding>();
 		binding->addAction("atk_base", AYInputAction::Type::Press, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
 		binding->addAction("atk_charge", AYInputAction::Type::LongPress, MouseButtonInput{ GLFW_MOUSE_BUTTON_RIGHT });
-		binding->addAction("jump", AYInputAction::Type::Press, GamepadButtonInput{ GLFW_GAMEPAD_BUTTON_X });
+		binding->addAction("jump", AYInputAction::Type::Press, KeyboardInput{ GLFW_KEY_SPACE });
 		auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
 		inputSystem->addInputMapping("orc", binding);
 
@@ -116,6 +116,7 @@ public:
 		bool baseAtk = inputSystem->isActionJustReleased("orc.atk_base");
 		bool chargeHold = inputSystem->isActionActive("orc.atk_charge");
 		bool chargeAtk = inputSystem->isActionJustReleased("orc.atk_charge");
+		bool jump = inputSystem->isActionActive("orc.jump");
 
 		if (_orcSprite->isCurrentAnimationDone() || chargeAtk)
 		{
@@ -134,6 +135,9 @@ public:
 			if (glm::length(movement) > 0.0f) {
 				movement = glm::normalize(movement);
 			}
+
+			if (jump)
+				_controller->jump();
 
 			auto ecs = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
 			// 先判断蓄力攻击

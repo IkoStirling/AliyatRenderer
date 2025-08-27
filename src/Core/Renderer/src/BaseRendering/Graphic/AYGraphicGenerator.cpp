@@ -198,14 +198,12 @@ std::vector<glm::vec3> AYGraphicGenerator::createBoxN()
 	return normals;
 }
 
-std::vector<glm::vec2> AYGraphicGenerator::createBoxV()
+std::vector<glm::vec2> AYGraphicGenerator::createRectT()
 {
-	std::vector<glm::vec2> texCoord;
-	texCoord = {
+	return {
 		{0.0f, 0.0f},  // 左下
 		{1.0f, 0.0f},  // 右下
 		{1.0f, 1.0f},  // 右上
 		{0.0f, 1.0f}   // 左上
 	};
-	return texCoord;
 }

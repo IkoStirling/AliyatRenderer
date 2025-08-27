@@ -93,6 +93,8 @@ void AYRendererManager::init()
 		.cutOff = glm::cos(glm::radians(15.0f)),
 		.outerCutOff = glm::cos(glm::radians(25.0f))
 		});
+
+	_renderer->getUIRenderer()->createRectangle(glm::vec3(2,10,0), glm::vec3(1), glm::vec4(1));
 }
 
 void AYRendererManager::update(float delta_time)
@@ -141,9 +143,9 @@ void AYRendererManager::_renderAll(float delta_time)
 	_displayDebugInfo();
 	_renderer->getCoreRenderer()->endDraw();
 
-
-
-
+	_renderer->getUIRenderer()->beginUIFrame();
+	_renderer->getUIRenderer()->renderUI();
+	_renderer->getUIRenderer()->endUIFrame();
 }
 
 void AYRendererManager::_updateCameraActive(float delta_time)
@@ -248,8 +250,11 @@ void AYRendererManager::_displayDebugInfo()
 		}
 	}
 
+	dr->drawArrow2D({}, glm::vec3(0), glm::vec3(2,2,0), 0.3f, glm::vec4(1), AYCoreRenderer::Space::Screen);
+	//dr->drawLine2D(glm::vec2(0), glm::vec2(5,5), glm::vec4(1));
+
 	// 死区框
-	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) }, glm::vec2(1920 *0.4f, 1080 * 0.4f), mat2, true, AYCoreRenderer::Space::Screen);
+	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) / ppm }, glm::vec2(1920 *0.4f, 1080 * 0.4f) / ppm, mat2, true, AYCoreRenderer::Space::Screen);
 	
 	_renderer->getSpriteRenderer()->drawSprite(
 		tex_ID,
@@ -278,7 +283,7 @@ void AYRendererManager::_displayDebugInfo()
 	}
 
 
-	if (modelPmx)
+	if (modelPmx && 0)
 	{
 		auto& meshes = modelPmx->getMeshes();
 		for (int i = 0; i < meshes.size(); i++) {
@@ -296,7 +301,7 @@ void AYRendererManager::_displayDebugInfo()
 
 
 
-	if (videos && 1)
+	if (videos && 0)
 	{
 		if (videos->updateFrame(delta) && !videot) {
 			videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());

@@ -6,6 +6,7 @@ AYRenderer::AYRenderer(AYRenderDevice* device) :
     _initFontRenderer();
     _initSpriteRenderer();
     _initCoreRenderer();
+    _initUIRenderer();
     _initSkyboxRenderer();
     _initMaterialManager();
     _initLightManager();
@@ -21,6 +22,7 @@ void AYRenderer::shutdown()
     _fontRenderer->shutdown();
     _spriteRenderer->shutdown();
     _coreRenderer->shutdown();
+    _uiRenderer->shutdown();
     _skyboxRenderer->shutdown();
     _cameraSystem->shutdown();
 }
@@ -72,6 +74,11 @@ void AYRenderer::_initSpriteRenderer()
 void AYRenderer::_initCoreRenderer()
 {
     _coreRenderer = std::make_unique<AYCoreRenderer>(_device, this);
+}
+
+void AYRenderer::_initUIRenderer()
+{
+    _uiRenderer = std::make_unique<AYUIRenderer>(_device, this);
 }
 
 void AYRenderer::_initSkyboxRenderer()

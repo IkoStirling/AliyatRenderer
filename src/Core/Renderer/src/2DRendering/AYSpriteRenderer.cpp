@@ -139,46 +139,17 @@ void AYSpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
     const glm::vec3& origin
 )
 {
-    const auto& context = _renderer->getRenderContext();
-    auto cameraSystem = _renderer->getCameraSystem();
-    auto camera = cameraSystem->getCamera(context.currentCameraID);
-    if (!camera)
-        return;
-
-    glm::mat4 projection = camera->getProjectionMatrix();
-    glm::mat4 view = camera->getViewMatrix();
-
-    glm::mat4 model = transform.getPixelSpaceMatrix(
-        //context.currentCamera->getPixelPerMeter(),
-        1,
-        origin,
-        size
+    drawSprite3D(
+        texture,
+        transform,
+        uvOffset,
+        uvSize,
+        size,
+        color,
+        flipHorizontal,
+        flipVertical,
+        origin
     );
-
-    auto shader = _getAtlasShader();
-
-    _device->saveGLState();
-    auto stateManager = _device->getGLStateManager();
-    stateManager->useProgram(shader);
-    stateManager->setDepthTest(false);
-    stateManager->bindVertexArray(_vao);
-
-    // 设置uniform
-    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-    glUniform4fv(glGetUniformLocation(shader, "spriteColor"), 1, glm::value_ptr(color));
-    glUniform2fv(glGetUniformLocation(shader, "uvOffset"), 1, glm::value_ptr(uvOffset));
-    glUniform2fv(glGetUniformLocation(shader, "uvSize"), 1, glm::value_ptr(uvSize));
-    glUniform1f(glGetUniformLocation(shader, "flipH"), flipHorizontal ? -1.0f : 1.0f);
-    glUniform1f(glGetUniformLocation(shader, "flipW"), flipVertical ? 1.0f : -1.0f);
-
-    // 绑定纹理
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // 绘制
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    _device->restoreGLState();
 }
 
 

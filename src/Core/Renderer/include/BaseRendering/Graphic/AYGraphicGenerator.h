@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <vector>
 #include "glm/glm.hpp"
 
@@ -7,7 +7,7 @@ struct VertexInfo
 	glm::vec3 position;
 	glm::vec3 normal;
 	glm::vec2 uv;
-	//glm::vec4 color;    //¶¥µãÑÕÉ«
+	//glm::vec4 color;    //é¡¶ç‚¹é¢œè‰²
 };
 
 class AYGraphicGenerator
@@ -39,5 +39,5 @@ public:
 
 public:
 	// -----------TextureCoordinate------------
-	static std::vector<glm::vec2> createBoxV();
+	static std::vector<glm::vec2> createRectT();
 };
