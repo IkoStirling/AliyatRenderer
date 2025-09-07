@@ -2,6 +2,7 @@
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYPath.h"
+#include "AYSoundEngine.h"
 
 void AYRendererManager::init()
 {
@@ -37,7 +38,13 @@ void AYRendererManager::init()
 			modelPmx = model;
 		});
 
-	videos = AYResourceManager::getInstance().load<AYVideo>("@videos/test_video.mp4");
+	//AYResourceManager::getInstance().loadAsync<AYVideo>("@videos/bad_apple.mp4",
+	//	[this](std::shared_ptr<AYVideo> video) {
+	//		video->play();
+	//		videos = video;
+	//	});
+
+	//videos = AYResourceManager::getInstance().load<AYVideo>("@videos/test_video.mp4");
 	
 	auto model2 = AYResourceManager::getInstance().load<AYModel>("@models/cube.fbx");
 	tex_ID = loadTexture("@textures/500_497.png");
@@ -94,7 +101,36 @@ void AYRendererManager::init()
 		.outerCutOff = glm::cos(glm::radians(25.0f))
 		});
 
-	_renderer->getUIRenderer()->createRectangle(glm::vec3(2,10,0), glm::vec3(1), glm::vec4(1));
+	auto cameraSystem = _renderer->getCameraSystem();
+	auto camera = cameraSystem->getActiveCamera();
+	auto ppm = camera->getPixelPerMeter();
+
+	std::string str = "测试测字串012%￥@#@\n测试测字串012%￥@#@";
+	auto id = _renderer->getUIRenderer()->createRectangle(glm::vec3(1,1,0)* ppm, glm::vec3(3,1,0) * ppm, glm::vec4(1));
+	_renderer->getUIRenderer()->setText(id,"button");
+	_renderer->getUIRenderer()->setOnClicked(id, []() {
+		std::cout << "clicked!\n";
+		});
+	_renderer->getUIRenderer()->setOnUnhovered(id, [id, ui = _renderer->getUIRenderer()]() {
+		std::cout << "setOnUnhovered!\n";
+		ui->setColor(id, glm::vec4(1, 1, 1, 1));
+		});
+	_renderer->getUIRenderer()->setOnHovered(id, [id, ui = _renderer->getUIRenderer()]() {
+		std::cout << "OnHovered!\n";
+		ui->setColor(id, glm::vec4(0, 0, 0, 1));
+		});
+	_renderer->getUIRenderer()->createText(str, glm::vec3(1, 1, 0)* ppm, glm::vec4(1, 1, 1, 1), 1.f);
+	//_renderer->getUIRenderer()->setOnUnhovered(id, [&]() {
+	//	_renderer->getUIRenderer()->setColor(id, glm::vec4(0, 0, 0, 1));
+	//	});
+	//_renderer->getUIRenderer()->createRectangle(glm::vec3(2,2,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
+	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
+	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
+	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
+	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
+	
+	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 11, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
+	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 12, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 }
 
 void AYRendererManager::update(float delta_time)
@@ -140,10 +176,12 @@ void AYRendererManager::_renderAll(float delta_time)
 	}
 
 	_renderer->getCoreRenderer()->beginDraw();
+	_debugDraw(false);
 	_displayDebugInfo();
 	_renderer->getCoreRenderer()->endDraw();
 
 	_renderer->getUIRenderer()->beginUIFrame();
+	_debugDraw(true);
 	_renderer->getUIRenderer()->renderUI();
 	_renderer->getUIRenderer()->endUIFrame();
 }
@@ -164,6 +202,25 @@ void AYRendererManager::_updateCameraActive(float delta_time)
 	_device->getGLStateManager()->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
 }
 
+void AYRendererManager::_debugDraw(bool isUI)
+{
+	if (isUI)
+	{
+		for (auto& [_, debugs] : _debugDrawsScreen)
+		{
+			debugs(getRenderer(), getRenderDevice());
+		}
+	}
+	else
+	{
+		for (auto& [_, debugs] : _debugDrawsWorld)
+		{
+			debugs(getRenderer(), getRenderDevice());
+		}
+	}
+
+}
+
 void AYRendererManager::registerRenderable(IAYRenderable* renderable)
 {
 	_renderables.push_back(renderable);
@@ -172,6 +229,39 @@ void AYRendererManager::registerRenderable(IAYRenderable* renderable)
 void AYRendererManager::removeRenderable(IAYRenderable* renderable)
 {
 	std::erase(_renderables, renderable);
+}
+
+int AYRendererManager::addDebugDraw(bool isUI, DebugDrawFunc callback)
+{
+	int id;
+	if (!_freeDebugDraws.empty())
+	{
+		id = _freeDebugDraws.back();
+		_freeDebugDraws.pop_back();
+	}
+	else
+	{
+		id = ++_debugDrawCount;
+	}
+	if(isUI)
+		_debugDrawsScreen.try_emplace(id, callback);
+	else
+		_debugDrawsWorld.try_emplace(id, callback);
+	return id;
+}
+
+void AYRendererManager::removeDebugDraw(int callbackId)
+{
+	if (auto it = _debugDrawsScreen.find(callbackId); it != _debugDrawsScreen.end())
+	{
+		_debugDrawsScreen.erase(it);
+		_freeDebugDraws.push_back(callbackId);
+	}
+	else if (auto it = _debugDrawsWorld.find(callbackId); it != _debugDrawsWorld.end())
+	{
+		_debugDrawsWorld.erase(it);
+		_freeDebugDraws.push_back(callbackId);
+	}
 }
 
 void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClosed)
@@ -250,24 +340,24 @@ void AYRendererManager::_displayDebugInfo()
 		}
 	}
 
-	dr->drawArrow2D({}, glm::vec3(0), glm::vec3(2,2,0), 0.3f, glm::vec4(1), AYCoreRenderer::Space::Screen);
+	dr->drawArrow2D({}, glm::vec3(0), glm::vec3(2,2,0)*ppm, 0.3f * ppm, glm::vec4(1), AYCoreRenderer::Space::Screen);
 	//dr->drawLine2D(glm::vec2(0), glm::vec2(5,5), glm::vec4(1));
 
 	// 死区框
-	dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) / ppm }, glm::vec2(1920 *0.4f, 1080 * 0.4f) / ppm, mat2, true, AYCoreRenderer::Space::Screen);
+	//dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0)}, glm::vec2(1920 *0.4f, 1080 * 0.4f), mat2, true, AYCoreRenderer::Space::Screen);
 	
-	_renderer->getSpriteRenderer()->drawSprite(
-		tex_ID,
-		{ glm::vec3(0, 0, -0.9f) },
-		//{},
-		glm::vec2(0),
-		glm::vec2(1),
-		glm::vec2(10.0f),  // 大小
-		glm::vec4(1.0f, 1.f, 1.f, 1.f),// 颜色
-		false,
-		false,
-		glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-	);
+	//_renderer->getSpriteRenderer()->drawSprite(
+	//	tex_ID,
+	//	{ glm::vec3(0, 0, -0.9f) },
+	//	//{},
+	//	glm::vec2(0),
+	//	glm::vec2(1),
+	//	glm::vec2(10.0f),  // 大小
+	//	glm::vec4(1.0f, 1.f, 1.f, 1.f),// 颜色
+	//	false,
+	//	false,
+	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	//);
 
 	auto model = AYResourceManager::getInstance().load<AYModel>("@models/suzanne.fbx");
 	for (int i = 1; i < 100; i++) {
@@ -301,35 +391,35 @@ void AYRendererManager::_displayDebugInfo()
 
 
 
-	if (videos && 0)
+	if (0)
 	{
-		if (videos->updateFrame(delta) && !videot) {
-			videot = _device->createVideoTexture(videos->getWidth(), videos->getHeight());
-			// 确保图像连续存储（FFmpeg数据可能是非连续的）
-			cv::Mat continuousFrame;
-			if (!videos->getCurrentFrameData().isContinuous()) {
-				videos->getCurrentFrameData().copyTo(continuousFrame);
-			}
-			else {
-				continuousFrame = videos->getCurrentFrameData();
-			}
-
-			//// 保存为PNG格式
-			cv::imwrite("debug_frame.png", continuousFrame);
+		static bool t = true;
+		if (t)
+		{
+			t = false;
+			auto soundEngine = GET_CAST_MODULE(AYSoundEngine, "SoundEngine");
+			videos = soundEngine->playVideo("@videos/bad_apple.mp4");
+			videot = _device->createTexture2D(nullptr, videos->getWidth(), videos->getHeight());
 		}
+		//"@videos/bad_apple.mp4"
 
-		_device->updateTexture(videot, videos->getCurrentFramePixelData(), videos->getWidth(), videos->getHeight());
-		_renderer->getSpriteRenderer()->drawSprite(
-			videot,
-			{ glm::vec3(0,0,-1) },
-			glm::vec2(0),
-			glm::vec2(1),
-			glm::vec2(1920,1080) / ppm,  // 大小
-			glm::vec4(1.0f, 1.f, 1.f, 0.9f),// 颜色
-			false,
-			false,
-			glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-		);
+		if (videos)
+		{
+			const uint8_t* pixelData = videos->getCurrentFramePixelData();
+			_device->updateTexture(videot, pixelData,
+				videos->getWidth(), videos->getHeight());
+			_renderer->getSpriteRenderer()->drawSprite(
+				videot,
+				{ glm::vec3(0,0,-1) },
+				glm::vec2(0),
+				glm::vec2(1),
+				glm::vec2(videos->getWidth(), videos->getHeight()) / ppm,  // 大小
+				glm::vec4(1.0f, 1.f, 1.f, 0.9f),// 颜色
+				false,
+				false,
+				glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+			);
+		}
 	}
 
 	/*dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);

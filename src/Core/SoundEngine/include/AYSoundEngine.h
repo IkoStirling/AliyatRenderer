@@ -23,24 +23,29 @@ public:
     void update(float delta_time) override;
 
     // 音频播放控制
-    std::shared_ptr<IAYAudioSource> play2D(const std::string& path,
+    std::shared_ptr<IAYAudioSource> playSound2D(const std::string& path,
         bool isStreaming = false,
         bool loop = false,
         float volume = 1.0f,
         bool asyncload = true);
 
-    std::shared_ptr<IAYAudioSource> play3D(const std::string& path,
+    std::shared_ptr<IAYAudioSource> playSound3D(const std::string& path,
         const glm::vec3& position,
         bool isStreaming = false,
         bool loop = false,
         float volume = 1.0f,
         bool asyncload = true);
 
+    std::shared_ptr<AYVideo> playVideo(const std::string& path,
+        const std::shared_ptr<IAYAudioSource>& audio = nullptr,
+        bool loop = false);
+
     // 全局控制
     void setMasterVolume(float volume);
     void pauseAll();
     void resumeAll();
     void stopAll();
+    void seek(const std::string& path, float seconds);
 
     // 音源设置
     void setSourcePosition(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position);
@@ -69,13 +74,17 @@ private:
         float volume,
         bool is3D);
 
-
+    void _syncVideoToAudio(const std::shared_ptr<AYVideo>& video,
+        const std::shared_ptr<IAYAudioSource>& audio);
 
     const int maxAudioPlayerNum = 10;
    
     std::vector<std::shared_ptr<AYAudioPlayer>> _players;
-    std::vector<ActiveAudioSource> _activeSources;
     std::unordered_map<std::string, std::weak_ptr<IAYAudioSource>> _audioCache;
+    std::unordered_map<std::string, std::weak_ptr<AYVideo>> _videoCache;
+    std::vector<ActiveAudioSource> _activeAudios;
+    std::vector<std::shared_ptr<AYVideo>> _activeVideos;
+
     std::mutex _cacheMutex; // 专门用于缓存访问
     std::mutex _sourceMutex; // 专门用于活动源管理
     float _masterVolume = 1.0f;

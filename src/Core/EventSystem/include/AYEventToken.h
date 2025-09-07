@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <functional>
 
@@ -8,7 +8,7 @@ class IAYEvent;
 class AYEventToken
 {
 public:
-	using EventHandler = std::function<void(const IAYEvent&)>;
+	using EventHandler = std::function<void(IAYEvent&)>;
 public:
 	AYEventToken(AYEventSystem* system, const std::string& event_name, EventHandler event_callback);
 	~AYEventToken();

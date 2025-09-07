@@ -18,7 +18,7 @@ add_library(${MODULE_NAME} STATIC
 
 find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
 find_package(OpenAL REQUIRED)
-find_package(FFMPEG REQUIRED)
+find_package(FFMPEG REQUIRED) # 注意 FFMPEG是个C库，c++中必须用extern "C"去包裹头文件 
 find_package(assimp CONFIG REQUIRED)
 
 target_include_directories(${MODULE_NAME} PUBLIC 
@@ -27,11 +27,13 @@ target_include_directories(${MODULE_NAME} PUBLIC
 	PRIVATE 
 	${FFMPEG_INCLUDE_DIRS}
 )
+
 target_link_libraries(${MODULE_NAME} PUBLIC
 	${INTERFACE_NAME}
 	module_manager
 	event_system
 	material_manager
+	sound_engine
 	PRIVATE
 	${OpenCV_LIBS}
 	${FFMPEG_LIBRARIES}

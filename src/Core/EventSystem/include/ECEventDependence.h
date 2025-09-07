@@ -6,7 +6,8 @@ enum class AYEventLayer : size_t
 	RENDER = 2,
 	NETWORK = 3,
 	RESOURCE = 4,
-
+	UI = 5,
+	INPUT = 6,
 	END,
 };
 

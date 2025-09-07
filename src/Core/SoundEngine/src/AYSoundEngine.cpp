@@ -75,14 +75,31 @@ void AYSoundEngine::update(float delta_time)
     }
 
     // 清理已完成播放的源
-    _activeSources.erase(
-        std::remove_if(_activeSources.begin(), _activeSources.end(),
+    _activeAudios.erase(
+        std::remove_if(_activeAudios.begin(), _activeAudios.end(),
             [](const ActiveAudioSource& source) {
                 if (source.audio.expired()) return true;
                 if (source.player->isPlaybackFinished()) return true;
                 return false;
             }),
-        _activeSources.end());
+        _activeAudios.end());
+
+    for (auto& video : _activeVideos) {
+        if (video->isPlaying()) {
+            video->updateFrame(delta_time);
+
+            // 检查视频是否结束
+            if (video->isEndOfVideo()) {
+                // 处理循环或结束逻辑
+            }
+        }
+    }
+
+    // 移除已完成视频
+    _activeVideos.erase(std::remove_if(_activeVideos.begin(), _activeVideos.end(),
+        [](const auto& v) { return v->isEndOfVideo(); }),
+        _activeVideos.end());
+
 }
 
 void AYSoundEngine::shutdown()
@@ -100,12 +117,12 @@ void AYSoundEngine::shutdown()
 }
 
 
-std::shared_ptr<IAYAudioSource> AYSoundEngine::play2D(const std::string& path, bool isStreaming, bool loop, float volume, bool asyncload)
+std::shared_ptr<IAYAudioSource> AYSoundEngine::playSound2D(const std::string& path, bool isStreaming, bool loop, float volume, bool asyncload)
 {
-    return play3D(path, glm::vec3(0, 0, 0), isStreaming, loop, volume, asyncload);
+    return playSound3D(path, glm::vec3(0, 0, 0), isStreaming, loop, volume, asyncload);
 }
 
-std::shared_ptr<IAYAudioSource> AYSoundEngine::play3D(const std::string& path, const glm::vec3& position, bool isStreaming, bool loop, float volume, bool asyncload)
+std::shared_ptr<IAYAudioSource> AYSoundEngine::playSound3D(const std::string& path, const glm::vec3& position, bool isStreaming, bool loop, float volume, bool asyncload)
 {
     if (!_initialized) return nullptr;
 
@@ -159,9 +176,9 @@ std::shared_ptr<IAYAudioSource> AYSoundEngine::play3D(const std::string& path, c
         else {
             // 同步加载
             if (isStreaming)
-                audio = rm.load<AYAudio>(path);
-            else
                 audio = rm.load<AYAudioStream>(path);
+            else
+                audio = rm.load<AYAudio>(path);
 
             if (!audio) return nullptr;
 
@@ -172,6 +189,35 @@ std::shared_ptr<IAYAudioSource> AYSoundEngine::play3D(const std::string& path, c
 
     _playAudioImpl(audio, position, loop, volume, position != glm::vec3(0, 0, 0));
     return audio;
+}
+
+std::shared_ptr<AYVideo> AYSoundEngine::playVideo(const std::string& path, const std::shared_ptr<IAYAudioSource>& audio, bool loop)
+{
+    if (!_initialized) return nullptr;
+
+    std::shared_ptr<AYVideo> video;
+
+    auto& rm = AYResourceManager::getInstance();
+    video = rm.load<AYVideo>(path);
+
+    if (!video) return nullptr;
+
+    if (audio) {
+        _syncVideoToAudio(video, audio);
+    }
+    else
+    {
+        if (video->hasAudio())
+        {
+            auto audio = video->getAudio();
+            _syncVideoToAudio(video, audio);
+            _playAudioImpl(audio, glm::vec3(0, 0, 0), loop, 1.f, false);
+        }
+    }
+
+    video->play();
+    _activeVideos.push_back(video);
+    return video;
 }
 
 void AYSoundEngine::setMasterVolume(float volume)
@@ -188,7 +234,7 @@ void AYSoundEngine::setMasterVolume(float volume)
 void AYSoundEngine::pauseAll()
 {
     std::lock_guard<std::mutex> lock(_cacheMutex);
-    for (auto& source : _activeSources) {
+    for (auto& source : _activeAudios) {
         source.player->pause();
     }
 }
@@ -196,7 +242,7 @@ void AYSoundEngine::pauseAll()
 void AYSoundEngine::resumeAll()
 {
     std::lock_guard<std::mutex> lock(_cacheMutex);
-    for (auto& source : _activeSources) {
+    for (auto& source : _activeAudios) {
         source.player->resume();
     }
 }
@@ -204,10 +250,37 @@ void AYSoundEngine::resumeAll()
 void AYSoundEngine::stopAll()
 {
     std::lock_guard<std::mutex> lock(_cacheMutex);
-    for (auto& source : _activeSources) {
+    for (auto& source : _activeAudios) {
         source.player->stop();
     }
-    _activeSources.clear();
+    _activeAudios.clear();
+}
+
+void AYSoundEngine::seek(const std::string& path, float seconds)
+{
+    // 查找对应的音频和视频资源
+    std::shared_ptr<IAYAudioSource> audio;
+    std::shared_ptr<AYVideo> video;
+
+    {
+        std::lock_guard<std::mutex> lock(_cacheMutex);
+        if (_audioCache.find(path) != _audioCache.end()) {
+            audio = _audioCache[path].lock();
+        }
+        if (_videoCache.find(path) != _videoCache.end()) {
+            video = _videoCache[path].lock();
+        }
+    }
+
+    if (audio) {
+        if (auto player = std::dynamic_pointer_cast<AYAudioPlayer>(audio)) {
+            player->seek(seconds);
+        }
+    }
+
+    if (video) {
+        video->seekToTime(seconds);
+    }
 }
 
 void AYSoundEngine::setSourcePosition(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position)
@@ -215,10 +288,10 @@ void AYSoundEngine::setSourcePosition(std::shared_ptr<IAYAudioSource>& audio, co
     std::lock_guard<std::mutex> lock(_sourceMutex);
 
     // 查找音源
-    auto it = std::find_if(_activeSources.begin(), _activeSources.end(),
+    auto it = std::find_if(_activeAudios.begin(), _activeAudios.end(),
         [audio](const ActiveAudioSource& s) { return s.audio.lock() == audio; });
 
-    if (it != _activeSources.end()) {
+    if (it != _activeAudios.end()) {
         it->player->setPosition(position);
     }
 }
@@ -227,10 +300,10 @@ void AYSoundEngine::setSourceVelocity(std::shared_ptr<IAYAudioSource>& audio, co
 {
     std::lock_guard<std::mutex> lock(_sourceMutex);
 
-    auto it = std::find_if(_activeSources.begin(), _activeSources.end(),
+    auto it = std::find_if(_activeAudios.begin(), _activeAudios.end(),
         [audio](const ActiveAudioSource& s) { return s.audio.lock() == audio; });
 
-    if (it != _activeSources.end()) {
+    if (it != _activeAudios.end()) {
         it->player->setVelocity(velocity);
     }
 }
@@ -312,11 +385,21 @@ void AYSoundEngine::_playAudioImpl(const std::shared_ptr<IAYAudioSource>& audio,
 
     // 添加到活动源列表
     std::lock_guard<std::mutex> lock(_sourceMutex);
-    _activeSources.push_back({
+    _activeAudios.push_back({
     audio,
     splayer,
     loop, // 循环音频标记为持久
     time(nullptr)
     });
 
+}
+
+void AYSoundEngine::_syncVideoToAudio(const std::shared_ptr<AYVideo>& video, const std::shared_ptr<IAYAudioSource>& audio)
+{
+    video->setSyncCallback([audio](AYVideo& v) {
+        if (auto player = dynamic_cast<AYAudioPlayer*>(audio.get())) {
+            double audioTime = player->getCurrentTime();
+            v.syncToAudio(audioTime);
+        }
+        });
 }

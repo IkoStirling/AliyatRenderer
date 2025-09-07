@@ -156,13 +156,13 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
     for (char32_t c : utf32) {
         Character theChar;
 
-        if (_findChar(theChar, c)) {
+        if (findChar(theChar, c)) {
             _renderCharacter(theChar, x, y, scale);
         }
         else
         {
-            _loadChar(_currentFace, c);
-            _findChar(theChar, c);
+            loadChar(_currentFace, c);
+            findChar(theChar, c);
             _renderCharacter(theChar, x, y, scale);
         }
     }
@@ -177,6 +177,37 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
     }
 }
 
+void AYFontRenderer::getCharacterQuatInfo(const Character& ch, glm::vec3& render_pos, std::vector<glm::vec3>& result_pos, std::vector<glm::vec2>& result_uv, float scale)
+{
+    float xpos = render_pos.x + ch.bearing.x * scale;
+    float ypos = render_pos.y - ch.bearing.y * scale;  // 修正Y坐标计算
+
+    float w = ch.size.x * scale;
+    float h = ch.size.y * scale;
+
+    //纹理uv
+    float u1 = ch.atlasPos.x;
+    float v1 = ch.atlasPos.y + ch.atlasSize.y; // 原始V坐标
+    float u2 = u1 + ch.atlasSize.x;
+    float v2 = ch.atlasPos.y; // 原始V坐标
+
+    result_pos = {
+        { xpos,     ypos + h,   render_pos.z }, // 左下
+        { xpos + w, ypos + h,   render_pos.z }, // 右下
+        { xpos + w, ypos,       render_pos.z }, // 右上
+        { xpos,     ypos,       render_pos.z }  // 左上
+    };
+
+    result_uv = {
+        { u1, v1 }, // 左下
+        { u2, v1 }, // 右下
+        { u2, v2 }, // 右上
+        { u1, v2 }  // 左上
+    };
+
+    //使字符偏移 （水平间距/64）* 缩放
+    render_pos.x += (ch.advance >> 6) * scale;
+}
 
 void AYFontRenderer::_renderCharacter(const Character& ch, float& x, float& y, float scale) {
     float xpos = x + ch.bearing.x * scale;
@@ -244,7 +275,7 @@ void AYFontRenderer::_createNewAtlas()
 
     glGenTextures(1, &newAtlas.textureID);
     glBindTexture(GL_TEXTURE_2D, newAtlas.textureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _atlasSize, _atlasSize, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _atlasSize, _atlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -252,13 +283,13 @@ void AYFontRenderer::_createNewAtlas()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // 确保纹理正确初始化
-    std::vector<unsigned char> emptyData(_atlasSize * _atlasSize, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, _atlasSize, _atlasSize, 0, GL_RED, GL_UNSIGNED_BYTE, emptyData.data());
+    std::vector<unsigned char> emptyData(4* _atlasSize * _atlasSize, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _atlasSize, _atlasSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, emptyData.data());
 
     _atlases.push_back(newAtlas);
 }
 
-bool AYFontRenderer::_loadChar(FT_Face face, char32_t charCode)
+bool AYFontRenderer::loadChar(FT_Face face, char32_t charCode)
 {
     if (FT_Load_Char(face, charCode, FT_LOAD_RENDER)) {
         return false;
@@ -286,11 +317,11 @@ void AYFontRenderer::_reloadCharacters()
 
     // 重新加载ASCII字符
     for (char32_t c = 32; c < 128; c++) {
-        _loadChar(_currentFace, c);
+        loadChar(_currentFace, c);
     }
 }
 
-bool AYFontRenderer::_findChar(Character& theChar, char32_t charCode)
+bool AYFontRenderer::findChar(Character& theChar, char32_t charCode)
 {
     for (const auto& atlas : _atlases) {
         auto it = atlas.characters.find(charCode);
@@ -310,11 +341,13 @@ void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
         }
     }
 
+    const int padding = 1;
+
     // 尝试添加到现有图集
     for (auto& atlas : _atlases) {
-        if (face->glyph->bitmap.width + atlas.currentX > atlas.width) {
+        if (face->glyph->bitmap.width + padding + atlas.currentX > atlas.width) {
             atlas.currentX = 0;
-            atlas.currentY += atlas.nextRowHeight;
+            atlas.currentY += atlas.nextRowHeight + padding;
             atlas.nextRowHeight = 0;
         }
 
@@ -322,12 +355,32 @@ void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
             continue; // 换下一个图集
         }
 
+        FT_Bitmap& bitmap = face->glyph->bitmap;
+        int width = bitmap.width;
+        int height = bitmap.rows;
+        unsigned char* data = bitmap.buffer;
+
+        // 准备 RGBA 数据缓冲区
+        std::vector<unsigned char> rgbaData(width * height * 4, 0);
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int idx = y * width + x;
+                unsigned char gray = data[idx]; // FreeType 提供的灰度值 [0, 255]
+
+                // RGBA
+                rgbaData[idx * 4 + 0] = gray;     // R = 灰度值
+                rgbaData[idx * 4 + 1] = 0;        // G = 0
+                rgbaData[idx * 4 + 2] = 0;        // B = 0
+                rgbaData[idx * 4 + 3] = 255;      // A = 255（不透明）
+            }
+        }
         // 有足够空间
         glBindTexture(GL_TEXTURE_2D, atlas.textureID);
         glTexSubImage2D(GL_TEXTURE_2D, 0,
             atlas.currentX, atlas.currentY,
-            face->glyph->bitmap.width, face->glyph->bitmap.rows,
-            GL_RED, GL_UNSIGNED_BYTE, face->glyph->bitmap.buffer);
+            width, height,
+            GL_RGBA, GL_UNSIGNED_BYTE, rgbaData.data());
 
         Character character = {
             atlas.textureID,
@@ -345,7 +398,7 @@ void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
         };
 
         atlas.characters[charCode] = character;
-        atlas.currentX += face->glyph->bitmap.width;
+        atlas.currentX += face->glyph->bitmap.width + padding;
         atlas.nextRowHeight = std::max(atlas.nextRowHeight, (int)face->glyph->bitmap.rows);
         return;
     }

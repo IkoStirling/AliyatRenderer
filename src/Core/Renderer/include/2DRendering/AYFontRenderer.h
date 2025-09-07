@@ -39,8 +39,13 @@ public:
         加载整个字体文件
     */
     bool loadFont(const std::string& fontPath, unsigned int fontSize, const std::map<std::string, float>& axisValues = {});
+    bool loadChar(FT_Face face, char32_t charCode);
+    bool findChar(Character& theChar, char32_t charCode);
+    void getCharacterQuatInfo(const Character& ch, glm::vec3& render_pos, std::vector<glm::vec3>& result_pos, std::vector<glm::vec2>& result_uv, float scale);
+    // 废弃
     void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
 
+    FT_Face& getCurrentFace() { return _currentFace; }
     /*
         可变轴体，暂未支持
     */
@@ -81,8 +86,7 @@ private:
     void _addCharToAtlas(FT_Face face, char32_t charCode);
     void _renderCharacter(const Character& ch, float& x, float& y, float scale);
     void _createNewAtlas();
-    bool _loadChar(FT_Face face, char32_t charCode);
-    bool _findChar(Character& theChar, char32_t charCode); 
+
 
     void _reloadCharacters();   //清空所有图集，重新加载字符
 

@@ -14,6 +14,21 @@ bool AYAudioStream::open(const std::string& path) {
     return load(path);
 }
 
+bool AYAudioStream::seekToTime(double seconds)
+{
+    std::lock_guard<std::mutex> lock(_decodeMutex);
+
+    if (!_fmtCtx || !_codecCtx) return false;
+
+    // 清空解码器缓冲区
+    avcodec_flush_buffers(_codecCtx.get());
+
+    // 计算时间戳
+    int64_t ts = seconds / av_q2d(_fmtCtx->get()->streams[_streamIndex]->time_base);
+
+    return av_seek_frame(_fmtCtx->get(), _streamIndex, ts, AVSEEK_FLAG_BACKWARD) >= 0;
+}
+
 bool AYAudioStream::load(const std::string& filepath) {
     if (_fmtCtx) unload();
 
@@ -119,20 +134,6 @@ AudioFramePtr AYAudioStream::decodeNextFrame() {
     );
 
     return audioFrame;
-}
-
-bool AYAudioStream::seek(double seconds) {
-    std::lock_guard<std::mutex> lock(_decodeMutex);
-
-    if (!_fmtCtx || !_codecCtx) return false;
-
-    // 清空解码器缓冲区
-    avcodec_flush_buffers(_codecCtx.get());
-
-    // 计算时间戳
-    int64_t ts = seconds / av_q2d(_fmtCtx->get()->streams[_streamIndex]->time_base);
-
-    return av_seek_frame(_fmtCtx->get(), _streamIndex, ts, AVSEEK_FLAG_BACKWARD) >= 0;
 }
 
 

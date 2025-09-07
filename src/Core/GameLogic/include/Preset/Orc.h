@@ -5,6 +5,7 @@
 #include "Component/Combat/STCombatComponents.h"
 #include "AYPath.h"
 #include "BaseRendering/Camera/AY3DCamera.h"
+#include "BaseRendering/Camera/AY2DCamera.h"
 #include "Component/AYPlayerController.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 #include "AYSoundEngine.h"
@@ -28,6 +29,10 @@ public:
 		_camera[0]->setupCamera(IAYCamera::Type::ORTHOGRAPHIC_2D);
 		_camera[1]->setupCamera(IAYCamera::Type::PERSPECTIVE_3D);
 		_camera[0]->activate();
+		if (auto* cam2D = dynamic_cast<AY2DCamera*>(_camera[0]->getCamera()))
+		{
+			cam2D->showDeadzone(true);
+		}
 
 		auto binding = std::make_shared<AYInputBinding>();
 		binding->addAction("atk_base", AYInputAction::Type::Press, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
@@ -73,7 +78,7 @@ public:
 		AYEntrant::beginPlay();
 		auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
 		auto device = renderManager->getRenderDevice();
-		glfwSetInputMode(device->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		//glfwSetInputMode(device->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
 	void processMouseMovement(float xpos, float ypos) 
@@ -147,7 +152,6 @@ public:
 			}
 			else if (chargeAtk)
 			{
-				std::cout << "this" << std::endl;
 				_orcSprite->playAnimation("atk_charge02");
 			}
 			else if (baseAtk)
@@ -177,7 +181,7 @@ public:
 				if (flag0)
 				{
 					//GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/amb_dark_01.wav", true, true);
-					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/Evening_wanders.mp3", false, true, 0.5f);
+					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->playSound2D("@audios/ambient/Evening_wanders.mp3", false, true, 0.5f);
 					flag0 = false;
 				}
 			}

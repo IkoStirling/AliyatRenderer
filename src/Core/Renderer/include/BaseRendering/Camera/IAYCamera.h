@@ -21,6 +21,7 @@ public:
         {
             // 返回物理比例下的投影矩阵
             float ppm = getPixelPerMeter();
+            ppm = 1;
             float width = _viewport.z / ppm;
             float height = _viewport.w / ppm;
 

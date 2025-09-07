@@ -64,6 +64,7 @@ void AYRenderer::_initFontRenderer()
 {
     _fontRenderer = std::make_unique<AYFontRenderer>(_device, this);
     _fontRenderer->loadFont("C:/Windows/Fonts/msyh.ttc", 24);
+    _fontRenderer->saveAtlas();
 }
 
 void AYRenderer::_initSpriteRenderer()

@@ -1,11 +1,12 @@
 ﻿#include "AYVideo.h"
+#include "AYResourceManager.h"
+#include <libavutil/time.h>
 
 AYVideo::AYVideo() :
     _width(0),
     _height(0),
     _fps(0.0f),
-    _duration(0.0f),
-    _currentFrame(0)
+    _duration(0.0f)
 {
 }
 
@@ -14,111 +15,307 @@ AYVideo::~AYVideo()
     releaseData();
 }
 
-const uint8_t* AYVideo::getCurrentFramePixelData() const
+const cv::Mat& AYVideo::getCurrentFrameData() const
 {
-    if (_imageData.empty()) {
-        std::cerr << "[AYVideo] Current frame pixel data is empty!" << std::endl;
-        return nullptr;
-    }
-    return _imageData.ptr();
+    static cv::Mat placeholder;
+    static std::once_flag flag;
+    std::call_once(flag, [this]() {
+        // 使用实际视频尺寸创建占位符
+        int width = _width > 0 ? _width : 640;
+        int height = _height > 0 ? _height : 480;
+        placeholder.create(height, width, CV_8UC4);
+        placeholder.setTo(cv::Scalar(0, 0, 0, 255));
+        });
+
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
+
+    if (_currentFrame.empty())
+        return placeholder;
+    else
+        return _currentFrame;
 }
 
-bool AYVideo::updateFrame(float delta_time)
+const uint8_t* AYVideo::getCurrentFramePixelData() const
 {
-    if (!_loaded) return false;
+    return getCurrentFrameData().ptr();
+}
 
-    _accumulatedTime += delta_time;
-    if (_accumulatedTime < _frameInterval) {
+void AYVideo::stop()
+{
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
+    _isPlaying = false;
+    _isEndOfVideo = false;
+    _currentFrameIndex = 0;
+
+    if (_formatContext && _videoStreamIndex >= 0) {
+        av_seek_frame(_formatContext, _videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+        avcodec_flush_buffers(_codecContext);
+        decodeNextFrame();
+    }
+}
+
+
+void AYVideo::updateFrame(float delta_time)
+{
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
+
+    if (!_isPlaying || _isEndOfVideo) {
+        return;
+    }
+
+    // 更新累计时间
+    static float accumulated_time = 0.0f;
+    accumulated_time += delta_time;
+
+    // 计算当前应该显示的帧索引
+    float frame_interval = 1.0f / _fps;
+    int frames_to_advance = static_cast<int>(accumulated_time / frame_interval);
+
+    if (frames_to_advance > 0) {
+        accumulated_time -= frames_to_advance * frame_interval;
+
+        // 处理音频同步
+        //if (_audio && _audio->isPlaying()) {
+        //    double audio_time = _audio->getCurrentTime();
+        //    double video_time = _currentFrameIndex / _fps;
+
+        //    // 简单的同步策略：如果视频落后音频超过1帧，跳帧
+        //    if (video_time < audio_time - frame_interval) {
+        //        int target_frame = static_cast<int>(audio_time * _fps);
+        //        seekToFrame(target_frame);
+        //        return;
+        //    }
+        //    // 如果视频超前音频超过1帧，等待
+        //    else if (video_time > audio_time + frame_interval) {
+        //        return;
+        //    }
+        //}
+
+        // 前进帧
+        for (int i = 0; i < frames_to_advance; ++i) {
+            if (!advanceFrame()) {
+                break;
+            }
+        }
+    }
+}
+bool AYVideo::advanceFrame()
+{
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
+
+    if (_isEndOfVideo) {
         return false;
     }
-    _accumulatedTime -= _frameInterval;
 
-    // 读取下一帧
-    auto packet_deleter = [](AVPacket* p) { av_packet_free(&p); };
-    auto frame_deleter = [](AVFrame* f) { av_frame_free(&f); };
-    auto contex_deleter = [](SwsContext* s) { if (s) sws_freeContext(s); };
+    if (!decodeNextFrame()) {
+        std::cout << "decode failed or end\n";
+        return false;
+    }
 
-    std::unique_ptr<AVPacket, decltype(packet_deleter)>
-        packet(av_packet_alloc(), packet_deleter);
+    _currentFrameIndex++;
 
-    std::unique_ptr<AVFrame, decltype(frame_deleter)>
-        frame(av_frame_alloc(), frame_deleter);
+    if (_currentFrameIndex >= _totalFrames) {
+        _isEndOfVideo = true;
+    }
 
-    auto rgbFrame = std::shared_ptr<AVFrame>(av_frame_alloc(), frame_deleter);
+    return true;
+}
 
-    //rgbFrame->format = AV_PIX_FMT_RGB24;
-    rgbFrame->format = AV_PIX_FMT_RGBA; //默认转换为RGBA格式
-    rgbFrame->width = _width;
-    rgbFrame->height = _height;
-    av_frame_get_buffer(rgbFrame.get(), 0);
+bool AYVideo::seekToTime(float seconds) {
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
 
-    bool frameUpdated = false;
+    if (!_formatContext || seconds < 0 || seconds > _duration) {
+        return false;
+    }
 
-    while (av_read_frame(_formatContext, packet.get()) >= 0) {
+    // 计算时间戳
+    AVRational timeBase = _formatContext->streams[_videoStreamIndex]->time_base;
+    int64_t targetTimestamp = av_rescale_q(
+        static_cast<int64_t>(seconds * AV_TIME_BASE),
+        AV_TIME_BASE_Q,
+        timeBase);
+
+    return seekToTimestamp(targetTimestamp);
+}
+
+bool AYVideo::seekToFrame(int frameIndex) {
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
+
+    if (frameIndex < 0 || frameIndex >= _totalFrames) {
+        return false;
+    }
+
+    // 计算时间戳
+    AVRational timeBase = _formatContext->streams[_videoStreamIndex]->time_base;
+    int64_t targetTimestamp = av_rescale_q(frameIndex,
+        av_inv_q(_formatContext->streams[_videoStreamIndex]->avg_frame_rate),
+        timeBase);
+
+    return seekToTimestamp(targetTimestamp);
+}
+
+bool AYVideo::seekToTimestamp(int64_t timestamp) {
+    if (av_seek_frame(_formatContext, _videoStreamIndex,
+        timestamp, AVSEEK_FLAG_BACKWARD) < 0) {
+        return false;
+    }
+
+    avcodec_flush_buffers(_codecContext);
+    _isEndOfVideo = false;
+
+    // 解码下一帧
+    if (!decodeNextFrame()) {
+        return false;
+    }
+
+    // 更新当前帧索引 (近似计算)
+    _currentFrameIndex = static_cast<int>((timestamp * _fps *
+        _formatContext->streams[_videoStreamIndex]->time_base.num) /
+        _formatContext->streams[_videoStreamIndex]->time_base.den);
+
+    return true;
+}
+
+bool AYVideo::decodeNextFrame() 
+{
+    AVPacketPtr packet = AVCreator::createPacket();
+    AVFramePtr decodedFrame = AVCreator::createFrame();
+    bool frameDecoded = false;
+    int ret = 0;
+
+    while (!frameDecoded) {
+        // 1. 尝试从解码器获取已解码的帧
+        ret = avcodec_receive_frame(_codecContext, decodedFrame.get());
+        if (ret == 0) {
+            frameDecoded = true;
+            break;
+        }
+        else if (ret == AVERROR(EAGAIN)) {
+            // 需要更多数据，继续读取
+        }
+        else if (ret == AVERROR_EOF) {
+            // 解码器已刷新，需要seek回到开始位置
+            av_seek_frame(_formatContext, _videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+            avcodec_flush_buffers(_codecContext);
+            continue;
+        }
+        else {
+            // 其他错误，重置解码器
+            avcodec_flush_buffers(_codecContext);
+            continue;
+        }
+
+        // 2. 读取新的数据包
+        ret = av_read_frame(_formatContext, packet.get());
+        if (ret < 0) {
+            if (ret == AVERROR_EOF) {
+                // 文件结束，发送flush包
+                avcodec_send_packet(_codecContext, nullptr);
+                continue;
+            }
+            // 读取错误，重置解码器
+            avcodec_flush_buffers(_codecContext);
+            continue;
+        }
+
+        // 3. 发送数据包到解码器
         if (packet->stream_index == _videoStreamIndex) {
-            if (avcodec_send_packet(_codecContext, packet.get()) == 0) {
-                while (avcodec_receive_frame(_codecContext, frame.get()) == 0) {
-                    // 转换颜色空间
-                    std::unique_ptr<SwsContext, decltype(contex_deleter)> swsContext(
-                        sws_getContext(
-                            _width, _height, _codecContext->pix_fmt,// 输入格式（源视频的原始格式）
-                            _width, _height, AV_PIX_FMT_RGBA,       // 输出格式（目标RGBA格式）
-                            SWS_BILINEAR | SWS_ACCURATE_RND,        // 缩放算法和参数
-                            nullptr, nullptr, nullptr),
-                        contex_deleter);
-
-                    sws_setColorspaceDetails(swsContext.get(),
-                        sws_getCoefficients(SWS_CS_ITU709),  // 输入颜色空间
-                        0,                                   // 输入全范围
-                        sws_getCoefficients(SWS_CS_ITU709),  // 输出颜色空间
-                        1,                                   // 输出全范围
-                        0, 1 << 16, 1 << 16);                // 亮度/对比度参数
-
-                    // 执行实际转换
-                    int ret = sws_scale(swsContext.get(),                 // 转换上下文
-                        frame->data, frame->linesize, 0, _height,   // 输入帧数据和步长
-                        rgbFrame->data, rgbFrame->linesize);        // 输出帧数据和步长
-                    if (ret <= 0) {
-                        std::cerr << "sws_scale failed, returned: " << ret << std::endl;
-                        return false;
-                    }
-
-                    // 将帧数据复制到OpenCV Mat
-                    if (!rgbFrame->data[0]) {
-                        std::cerr << "rgbFrame->data[0] is null!" << std::endl;
-                        return false;
-                    }
-
-                    _imageData.create(_height, _width, CV_8UC4);
-
-                    if (rgbFrame->linesize[0] != _width * 4) {
-                        for (int y = 0; y < _height; y++) {
-                            memcpy(_imageData.ptr(y), rgbFrame->data[0] + y * rgbFrame->linesize[0], _width * 4);
-                        }
-                    }
-                    else {
-                        memcpy(_imageData.data, rgbFrame->data[0], _width * _height * 4);
-                    }
-
-                    frameUpdated = true;
-                    _currentFrame++;
-                    break;
-                }
+            ret = avcodec_send_packet(_codecContext, packet.get());
+            if (ret < 0 && ret != AVERROR(EAGAIN)) {
+                // 发送失败，重置解码器
+                avcodec_flush_buffers(_codecContext);
             }
         }
         av_packet_unref(packet.get());
-        if (frameUpdated) break;
     }
 
-    if (frameUpdated)
-    {
-        // 音视频同步
-        if (_audio && _audio->isStreaming()) {
+    if (!frameDecoded) {
+        return false;
+    }
 
+    // 4. 转换帧格式
+    AVFrameSPtr rgbFrame = AVCreator::createSFrame();
+    rgbFrame->format = AV_PIX_FMT_RGBA;
+    rgbFrame->width = _width;
+    rgbFrame->height = _height;
+
+    if (av_frame_get_buffer(rgbFrame.get(), 0) < 0) {
+        return false;
+    }
+
+    // 创建SWS上下文
+    auto swsContext = AVCreator::createSwsContext(
+        sws_getContext(
+            _width, _height, _codecContext->pix_fmt,
+            _width, _height, AV_PIX_FMT_RGBA,
+            SWS_BILINEAR | SWS_ACCURATE_RND,
+            nullptr, nullptr, nullptr)
+    );
+
+    if (!swsContext) {
+        return false;
+    }
+
+    // 设置颜色空间参数
+    const int* coeffs = sws_getCoefficients(SWS_CS_ITU709);
+    sws_setColorspaceDetails(swsContext.get(),
+        coeffs, _codecContext->color_range == AVCOL_RANGE_JPEG,
+        coeffs, 1, 0, 1 << 16, 1 << 16);
+
+    // 执行转换
+    if (sws_scale(swsContext.get(),
+        decodedFrame->data, decodedFrame->linesize, 0, _height,
+        rgbFrame->data, rgbFrame->linesize) <= 0) {
+        return false;
+    }
+
+    // 5. 转换为cv::Mat
+    return convertFrameToMat(rgbFrame.get());
+}
+
+bool AYVideo::convertFrameToMat(AVFrame* frame)
+{
+    if (!frame || !frame->data[0]) {
+        std::cerr << "Invalid frame data" << std::endl;
+        return false;
+    }
+
+    try {
+        _currentFrame.create(_height, _width, CV_8UC4);
+
+        if (frame->linesize[0] != _width * 4) {
+            for (int y = 0; y < _height; y++) {
+                memcpy(_currentFrame.ptr(y), frame->data[0] + y * frame->linesize[0], _width * 4);
+            }
         }
+        else {
+            memcpy(_currentFrame.data, frame->data[0], _width * _height * 4);
+        }
+        return true;
     }
+    catch (const cv::Exception& e) {
+        std::cerr << "OpenCV exception: " << e.what() << std::endl;
+        return false;
+    }
+}
 
-    return frameUpdated;
+void AYVideo::setSyncCallback(SyncCallback callback)
+{
+    _syncCallback = callback;
+}
+
+void AYVideo::syncToAudio(double sync_time)
+{
+    if (!_syncCallback) return;
+
+    double videoTime = _currentFrameIndex / _fps;
+    double diff = videoTime - sync_time;
+
+    // 如果差异超过阈值（如40ms），调整视频
+    if (std::abs(diff) > 0.04) {
+        int targetFrame = static_cast<int>(sync_time * _fps);
+        seekToFrame(targetFrame);
+    }
 }
 
 bool AYVideo::load(const std::string& filepath)
@@ -158,10 +355,6 @@ bool AYVideo::load(const std::string& filepath)
         return false;
     }
 
-    // 获取视频参数
-    _width = codecParameters->width;
-    _height = codecParameters->height;
-
     // 打开解码器
     const AVCodec* codec = avcodec_find_decoder(codecParameters->codec_id);
     if (!codec) {
@@ -171,33 +364,43 @@ bool AYVideo::load(const std::string& filepath)
     }
 
     _codecContext = avcodec_alloc_context3(codec);
-    if (avcodec_parameters_to_context(_codecContext, codecParameters) < 0) {
-        // spdlog::error("Could not copy codec parameters");
+    if (avcodec_parameters_to_context(_codecContext, codecParameters) < 0 ||
+        avcodec_open2(_codecContext, codec, nullptr) < 0)
+    {
         avcodec_free_context(&_codecContext);
         avformat_close_input(&_formatContext);
         return false;
     }
 
-    if (avcodec_open2(_codecContext, codec, nullptr) < 0) {
-        // spdlog::error("Could not open codec");
-        avcodec_free_context(&_codecContext);
-        avformat_close_input(&_formatContext);
-        return false;
-    }
-
-    // 计算FPS
-    AVRational timeBase = _formatContext->streams[_videoStreamIndex]->time_base;
-    _fps = av_q2d(AVRational{ _codecContext->framerate.num, _codecContext->framerate.den });
-    _frameInterval = 1 / _fps;
-    // 计算持续时间
+    _width = codecParameters->width;
+    _height = codecParameters->height;
+    _fps = av_q2d(_formatContext->streams[_videoStreamIndex]->avg_frame_rate);
     _duration = static_cast<float>(_formatContext->duration) / AV_TIME_BASE;
 
     // 查找音频流
     _audioStreamIndex = av_find_best_stream(_formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    //if (_audioStreamIndex >= 0) {
-    //    _audio = std::make_unique<AYAudioStream>();
-    //    _audio->load(filepath);
-    //}
+    if (_audioStreamIndex >= 0) {
+        _audio = std::make_shared<AYAudioStream>();
+        _audio->load(filepath);
+    }
+
+    if (_formatContext->streams[_videoStreamIndex]->nb_frames > 0) {
+        _totalFrames = static_cast<int>(_formatContext->streams[_videoStreamIndex]->nb_frames);
+    }
+    else {
+        // 估算帧数
+        _totalFrames = static_cast<int>(_duration * _fps);
+    }
+    _isEndOfVideo = false;
+    _currentFrameIndex = 0;
+
+    // 初始化解码器并解码第一帧
+    av_seek_frame(_formatContext, _videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+    avcodec_flush_buffers(_codecContext);
+    if (!decodeNextFrame()) {
+        releaseData();
+        return false;
+    }
 
     IAYResource::load(filepath);
     _loaded = true;
@@ -207,7 +410,8 @@ bool AYVideo::load(const std::string& filepath)
 bool AYVideo::unload()
 {
     if (!_loaded) return true;
-    std::lock_guard<std::mutex> lock(_dataMutex);
+
+    std::lock_guard<std::recursive_mutex> lock(_dataMutex);
     releaseData();
     _loaded = false;
     return true;
@@ -241,6 +445,9 @@ void AYVideo::releaseData()
         avformat_close_input(&_formatContext);
         _formatContext = nullptr;
     }
-    _imageData.release();
+    _currentFrame.release();
 }
+
+
+
 

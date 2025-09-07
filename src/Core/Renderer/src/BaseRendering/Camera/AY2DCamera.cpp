@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "BaseRendering/Camera/AY2DCamera.h"
-
+#include "AYRendererManager.h"
 
 void AY2DCamera::update(float delta_time)
 {
@@ -93,11 +93,11 @@ glm::mat4 AY2DCamera::getProjectionMatrix() const
     return _cachedProjection;
 }
 
-void AY2DCamera::setViewBox(float near, float far)
+void AY2DCamera::setViewBox(float view_near, float view_far)
 {
     _dirtyProjection = true;
-    _near = near;
-    _far = far;
+    _near = view_near;
+    _far = view_far;
 }
 
 void AY2DCamera::setDeadzone(const glm::vec4& zone)
@@ -113,5 +113,27 @@ void AY2DCamera::setTargetPosition(const glm::vec2& targetPos)
 void AY2DCamera::setCurrentPosition(const glm::vec2& currentPos)
 {
     _transform.position = glm::vec3(currentPos, 0.f);
+}
+
+void AY2DCamera::showDeadzone(bool switcher)
+{
+    auto rendererManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+    if (switcher && !_ddeadzone)
+    {
+        _ddeadzone = rendererManager->addDebugDraw(false, [](AYRenderer* renderer, AYRenderDevice* device) {
+            renderer->getCoreRenderer()
+                ->drawRect2D(
+                    { glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) },
+                    glm::vec2(1920 * 0.4f, 1080 * 0.4f),
+                    0,
+                    true,
+                    AYCoreRenderer::Space::Screen);
+            });
+    }
+    else if (!switcher && _ddeadzone)
+    {
+        rendererManager->removeDebugDraw(_ddeadzone);
+    }
+
 }
 

@@ -12,12 +12,16 @@ AYEventThreadPoolManager::AYEventThreadPoolManager()
 	size_t expectRender = 1;
 	size_t expectNetwork = 1;
 	size_t expectResource = 2;
+	size_t expectUI = 1;
+	size_t expectInput = 1;
 	std::vector<size_t> expectNumThreads;
 	expectNumThreads.push_back(expectGameLogic);
 	expectNumThreads.push_back(expectPhysics);
 	expectNumThreads.push_back(expectRender);
 	expectNumThreads.push_back(expectNetwork);
 	expectNumThreads.push_back(expectResource);
+	expectNumThreads.push_back(expectUI);
+	expectNumThreads.push_back(expectInput);
 
 	for (auto it : expectNumThreads)
 	{
@@ -86,7 +90,7 @@ void AYEventThreadPoolManager::shutdown()
 	}
 }
 
-void AYEventThreadPoolManager::execute(std::shared_ptr<const IAYEvent> in_event)
+void AYEventThreadPoolManager::execute(std::shared_ptr<IAYEvent> in_event)
 {
 	const std::string eventType = in_event->getType();
 	size_t layer = static_cast<size_t>(in_event->layer);

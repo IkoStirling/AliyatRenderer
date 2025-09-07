@@ -13,6 +13,7 @@ extern "C" {
 	#include <libavutil/opt.h> 
     #include <libswscale/swscale.h>
     #include <libswresample/swresample.h>
+    #include <libavutil/time.h>
 }
 
 #include <opencv2/opencv.hpp>

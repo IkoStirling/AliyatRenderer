@@ -28,7 +28,7 @@ class AYEventToken;
 class AYEventSystem : public Mod_EventSystem
 {
 public:
-	using EventHandler = std::function<void(const IAYEvent&)>;
+	using EventHandler = std::function<void(IAYEvent&)>;
 public:
 	AYEventSystem() = default;
 	AYEventSystem(std::unique_ptr<AYEventThreadPoolManager> in_manager);
@@ -42,7 +42,7 @@ public:
 	void publish(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 	AYEventToken* subscribe(const std::string& event_name, EventHandler event_callback);
 	void unsubscribe(const std::string& event_name, EventHandler event_callback);
-	void execute(std::shared_ptr<const IAYEvent> in_event);
+	void execute(std::shared_ptr<IAYEvent> in_event);
 	void executeJoin(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 
 private:

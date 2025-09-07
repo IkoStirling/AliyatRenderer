@@ -13,6 +13,12 @@ struct S{};
 int main()
 {
 	AYEngineCore::getInstance().init();
+
+	auto soundEngine = GET_CAST_MODULE(AYSoundEngine, "SoundEngine");
+	//soundEngine->playSound2D("@videos/bad_apple.mp4", false, false,1,false);
+	//soundEngine->playVideo("@videos/bad_apple.mp4");
+
+	//getchar();
 	AYEngineCore::getInstance().start();
 	return 0;
 }

@@ -7,7 +7,7 @@
 class AYAudioStream : public IAYResource, public IAYAudioSource
 {
     SUPPORT_MEMORY_POOL(AYAudioStream)
-        DECLARE_RESOURCE_CLASS(AYAudioStream, "audiostream")
+    DECLARE_RESOURCE_CLASS(AYAudioStream, "audiostream")
 public:
     AYAudioStream();
 
@@ -15,7 +15,6 @@ public:
 
     bool open(const std::string& path);
     AudioFramePtr decodeNextFrame();
-    bool seek(double seconds);
 
     const std::vector<uint8_t>& getPCMData() const override { return std::vector<uint8_t>(); }
     bool isStreaming() const override { return true; }
@@ -25,13 +24,14 @@ public:
     float getDuration() const override { return _duration; }
     float getSuggestedGain() const override { return 1.f; }
     ALenum getFormat() const override { return _format; }
+    double getCurrentPts() const; // 获取当前音频帧的PTS
+    bool isSeekable() const;      // 判断是否支持跳转
+    double getStartTime() const;   // 获取音频流的开始时间
+    bool seekToTime(double seconds);
 
     virtual bool load(const std::string& filepath) override;
-
     virtual bool unload() override;
-
     virtual bool reload(const std::string& filepath) override;
-
     virtual size_t sizeInBytes() override;
 
 private:
@@ -53,6 +53,9 @@ private:
 
     // 状态控制
     std::atomic<bool> _isPlaying{ false };
+    std::atomic<double> _currentPts{ 0.0 }; // 当前音频PTS（秒）
+    std::atomic<double> _startTime{ 0.0 }; // 流开始时间（秒）
+    std::atomic<bool> _seekable{ false };   // 是否支持跳转
     std::mutex _decodeMutex;
     std::queue<AudioFramePtr> _frameQueue;
 };

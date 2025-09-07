@@ -468,10 +468,6 @@ bool AYInputSystem::isAltPressed() const
 		glfwGetKey(_device->getWindow(), GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
 }
 
-
-
-
-
 void AYInputSystem::_updateUniversalInputState(float delta_time)
 {
 	GLFWwindow* window = _device->getWindow();
@@ -551,17 +547,7 @@ void AYInputSystem::_updateGamepadState(float delta_time)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+#include "Event_InputPackages.h"
 
 void AYInputSystem::handleKey(int key, int scancode, int action, int mods) 
 {
@@ -572,9 +558,22 @@ void AYInputSystem::handleKey(int key, int scancode, int action, int mods)
 	{
 		state.pressCount++;  
 		state.lastPressTime = (float)glfwGetTime();
+
+		AYEventRegistry::publish(Event_KeyDown::staticGetType(),
+			[this, key, mods](IAYEvent* event) {
+				auto e = static_cast<Event_KeyDown*>(event);
+				e->key = key;
+				e->modifiers = mods;
+			});
 	}
-	else if (action == GLFW_RELEASE)
-	{
+	else if (action == GLFW_RELEASE) {
+		// 发布鼠标释放事件
+		AYEventRegistry::publish(Event_KeyUp::staticGetType(),
+			[this, key, mods](IAYEvent* event) {
+				auto e = static_cast<Event_KeyUp*>(event);
+				e->key = key;
+				e->modifiers = mods;
+			});
 	}
 }
 
@@ -588,12 +587,37 @@ void AYInputSystem::handleMouseButton(int button, int action, int mods)
 		state.pressCount++;  // 记录按下次数（用于双击检测）
 		state.lastPressTime = (float)glfwGetTime();
 		state.pressPosition = _currentMousePos; // 记录按下时的鼠标位置
+
+		// 发布鼠标按下事件
+		AYEventRegistry::publish(Event_MouseButtonDown::staticGetType(),
+			[this, button, mods](IAYEvent* event) {
+				auto e = static_cast<Event_MouseButtonDown*>(event);
+				e->button = button;
+				e->mousePos = _currentMousePos;
+				e->modifiers = mods;
+			});
+	}
+	else if (action == GLFW_RELEASE) {
+		// 发布鼠标释放事件
+		AYEventRegistry::publish(Event_MouseButtonUp::staticGetType(),
+			[this, button, mods](IAYEvent* event) {
+				auto e = static_cast<Event_MouseButtonUp*>(event);
+				e->button = button;
+				e->mousePos = _currentMousePos;
+				e->modifiers = mods;
+			});
 	}
 }
 
 void AYInputSystem::handleMousePosition(double x, double y) 
 {
 	_currentMousePos = glm::vec2((float)x, (float)y);
+
+	AYEventRegistry::publish(Event_MouseMove::staticGetType(),
+		[this](IAYEvent* event) {
+			auto e = static_cast<Event_MouseMove*>(event);
+			e->mousePos = _currentMousePos;
+		});
 }
 
 void AYInputSystem::handleScroll(double xoffset, double yoffset) 
@@ -606,6 +630,13 @@ void AYInputSystem::handleScroll(double xoffset, double yoffset)
 
 	getInputState(xInput).value = xoffset;
 	getInputState(yInput).value = yoffset;
+
+	AYEventRegistry::publish(Event_Scroll::staticGetType(),
+		[this](IAYEvent* event) {
+			auto e = static_cast<Event_Scroll*>(event);
+			e->scrollDelta = _scrollDelta;
+			e->mousePos = _currentMousePos;
+		});
 }
 
 void AYInputSystem::keyCallbackWrapper(GLFWwindow* window, int key, int scancode, int action, int mods)

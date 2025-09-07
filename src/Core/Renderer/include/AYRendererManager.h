@@ -17,6 +17,7 @@ class AYRendererManager : public Mod_Renderer
 
 public:
 	using GLuint = unsigned int;
+	using DebugDrawFunc = std::function<void(AYRenderer*, AYRenderDevice*)>;
 public:
 	AYRendererManager() = default;
 	void init() override;
@@ -24,6 +25,8 @@ public:
 	void update(float delta_time) override;
 	void registerRenderable(IAYRenderable* renderable) override;
 	void removeRenderable(IAYRenderable* renderable) override;
+	int addDebugDraw(bool isUI, DebugDrawFunc callback);
+	void removeDebugDraw(int callbackId);
 
 	void setWindowCloseCallback(WindowCloseCallback onWindowClosed);
 	void setScreenCleanColor(const glm::vec3& color);
@@ -41,6 +44,13 @@ private:
 	void _renderAll(float delta_time);
 	void _updateCameraActive(float delta_time);
 
+private:
+	void _debugDraw(bool isUI);
+	bool _enableDebugDraws = true;
+	std::unordered_map<int, DebugDrawFunc> _debugDrawsWorld;
+	std::unordered_map<int, DebugDrawFunc> _debugDrawsScreen;
+	std::vector<int> _freeDebugDraws;
+	int _debugDrawCount = 0;
 private:
 	std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGL上下文管理
 	std::unique_ptr<AYRenderer> _renderer = nullptr;        // 具体绘制逻辑

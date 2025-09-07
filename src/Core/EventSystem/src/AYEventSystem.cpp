@@ -50,7 +50,7 @@ void AYEventSystem::unsubscribe(const std::string& event_name, EventHandler even
 	_eventManager->unsubscribe(event_name, event_callback);
 }
 
-void AYEventSystem::execute(std::shared_ptr<const IAYEvent> in_event)
+void AYEventSystem::execute(std::shared_ptr<IAYEvent> in_event)
 {
 	_eventManager->execute(std::move(in_event));
 }

@@ -94,7 +94,7 @@ void AYAudioPlayer::seek(float seconds)
         // 对于流式音频，需要清空缓冲区并重新填充
         cleanup();
         auto source = std::static_pointer_cast<AYAudioStream>(_currentSource);
-        source->seek(seconds);
+        source->seekToTime(seconds);
         refillBuffers(3);
     }
     else {
@@ -227,7 +227,7 @@ void AYAudioPlayer::update() {
         if (!refillBuffers(2)) {
             if (_loop.load()) {  // 使用原子变量
                 auto source = std::static_pointer_cast<AYAudioStream>(_currentSource);
-                source->seek(0);  // 重置到开头
+                source->seekToTime(0);  // 重置到开头
                 if (!refillBuffers(3)) {  // 重新填充缓冲区
                     stop();
                 }

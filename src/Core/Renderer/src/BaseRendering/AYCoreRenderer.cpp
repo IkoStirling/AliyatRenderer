@@ -625,7 +625,7 @@ void AYCoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batc
     _device->saveGLState();
     auto stateManager = _device->getGLStateManager();
 
-    auto shader = _getBaseShader(true);
+    auto shader = _getBaseShader(false);
     stateManager->bindVertexArray(_vao);
     stateManager->useProgram(shader);
     

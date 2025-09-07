@@ -24,7 +24,7 @@ struct PoolDeleter;
 class AYEventThreadPoolManager
 {
 public:
-	using EventHandler = std::function<void(const IAYEvent&)>;
+	using EventHandler = std::function<void(IAYEvent&)>;
 public:
 	AYEventThreadPoolManager();
 	~AYEventThreadPoolManager();
@@ -37,7 +37,7 @@ public:
 	void shutdown();
 
 	//void executeAsync();
-	void execute(std::shared_ptr<const IAYEvent> in_event);
+	void execute(std::shared_ptr<IAYEvent> in_event);
 	void executeJoin(std::unique_ptr<IAYEvent, PoolDeleter> in_event);
 
 
