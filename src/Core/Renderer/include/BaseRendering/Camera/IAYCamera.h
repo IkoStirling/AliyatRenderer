@@ -1,8 +1,9 @@
-﻿#pragma once
+#pragma once
 #include <glm/glm.hpp>
 #include "STTransform.h"
 #include "AYEventRegistry.h"
 #include "Event_CameraMove.h"
+#include <spdlog/spdlog.h>
 
 class IAYCamera {
 public:
@@ -64,7 +65,7 @@ public:
         _dirtyView = true;
         _dirtyProjection = true;
         _zoom = glm::clamp(zoom, 0.1f, 10.0f);
-        std::cout << "[IAYCamera] zoom: " << _zoom << std::endl;
+        spdlog::info("[IAYCamera] zoom: {}", _zoom);
     }
     virtual float getPixelPerMeter() const { return 66.7f; }
 

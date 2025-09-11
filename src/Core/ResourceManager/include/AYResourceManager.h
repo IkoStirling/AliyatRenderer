@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "core_event_system.h"
 #include "IAYResource.h"
 #include "STResourceLoadRequest.h"
@@ -271,7 +271,7 @@ inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, A
     }
     catch (const std::exception& e)
     {
-        std::cerr << "[AYResourceManager] Error loading resource: " << e.what() << "\n";
+        spdlog::error("[AYResourceManager] Error loading resource: {}", e.what());
         return nullptr;
     }
 }

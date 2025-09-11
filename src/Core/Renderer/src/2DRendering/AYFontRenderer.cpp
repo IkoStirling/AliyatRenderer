@@ -1,4 +1,4 @@
-﻿#include "AYRenderer.h"
+#include "AYRenderer.h"
 #include "2DRendering/AYFontRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> ​​
@@ -36,7 +36,7 @@ AYFontRenderer::AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer):
 {
     //初始化FT库
     if (FT_Init_FreeType(&_ftLibrary)) {
-        std::cerr << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+        spdlog::error("[AYFontRenderer] Could not init FreeType Library");
         return;
     }
 
@@ -78,7 +78,7 @@ bool AYFontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize
 {
     //加载字体文件到_currentFace
     if (FT_New_Face(_ftLibrary, fontPath.c_str(), 0, &_currentFace)) {
-        std::cerr << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        spdlog::error("[AYFontRenderer] Failed to load font");
         FT_Done_FreeType(_ftLibrary);
         return false;
     }
@@ -88,7 +88,7 @@ bool AYFontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize
         // 获取可变轴信息
         FT_MM_Var* mm_var = nullptr;
         if (FT_Get_MM_Var(_currentFace, &mm_var)) {
-            std::cerr << "ERROR::FREETYPE: Could not get MM Var data" << std::endl;
+            spdlog::error("[AYFontRenderer] Could not get MM Var data");
             FT_Done_Face(_currentFace);
             return false;
         }
@@ -117,7 +117,7 @@ bool AYFontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize
 
         // 设置可变轴值
         if (FT_Set_Var_Design_Coordinates(_currentFace, mm_var->num_axis, coords.data())) {
-            std::cerr << "ERROR::FREETYPE: Could not set variation coordinates" << std::endl;
+            spdlog::error("[AYFontRenderer] Could not set variation coordinates");
             FT_Done_MM_Var(_ftLibrary, mm_var);
             FT_Done_Face(_currentFace);
             return false;
@@ -152,7 +152,6 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
         1, GL_FALSE, glm::value_ptr(projection));
 
     std::u32string utf32 = utf8_to_utf32(text);
-
     for (char32_t c : utf32) {
         Character theChar;
 
@@ -171,10 +170,7 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
     glBindTexture(GL_TEXTURE_2D, 0);
 
     //状态验证
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cerr << "OpenGL Error: " << err << std::endl;
-    }
+    AY_CHECK_GL_ERROR("AYFontRenderer found somthing wrong");
 }
 
 void AYFontRenderer::getCharacterQuatInfo(const Character& ch, glm::vec3& render_pos, std::vector<glm::vec3>& result_pos, std::vector<glm::vec2>& result_uv, float scale)

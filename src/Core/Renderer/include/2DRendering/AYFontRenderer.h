@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "AYRenderDevice.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -7,14 +7,13 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <map>
-#include <codecvt>
 #include <opencv2/opencv.hpp>
-
+#include <boost/locale.hpp>
 class AYRenderer;
 
+#define ATEXT(str) std::string(reinterpret_cast<const char*>(str))
 static std::u32string utf8_to_utf32(const std::string& utf8) {
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-    return converter.from_bytes(utf8);
+    return boost::locale::conv::utf_to_utf<char32_t>(utf8);
 }
 
 struct Character {

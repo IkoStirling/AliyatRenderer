@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "AYConfigWrapper.h"
 #include "AYPath.h"
 #include <iostream>
@@ -7,6 +7,7 @@
 #include "GLFW/glfw3.h"
 #include <atomic>
 #include <functional>
+#include <spdlog/spdlog.h>
 
 #define AY_CHECK_GL_ERROR(context) \
     do { \
@@ -22,10 +23,10 @@
                 case GL_INVALID_FRAMEBUFFER_OPERATION: errStr = "GL_INVALID_FRAMEBUFFER_OPERATION"; break; \
                 default:                   errStr = "UNKNOWN_ERROR"; break; \
             } \
-            std::cerr << "[OpenGL Error] " << errStr << " (0x" << std::hex << err << ") " \
-                      << "in " << errContext << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            spdlog::debug("[OpenGL Error] {} (0x{:x}) in {} at {}:{}", \
+                errStr, err, errContext, __FILE__, __LINE__); \
             if (err == GL_OUT_OF_MEMORY) { \
-                std::cerr << "Fatal OpenGL error: Out of memory" << std::endl; \
+                spdlog::error("[AY_CHECK_GL_ERROR] Fatal OpenGL error: Out of memory"); \
                 std::terminate(); \
             } \
         } \

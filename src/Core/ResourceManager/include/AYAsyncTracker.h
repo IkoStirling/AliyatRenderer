@@ -3,6 +3,7 @@
 #include <future>
 #include <iostream>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 class AYAsyncTracker {
 public:
@@ -31,7 +32,7 @@ public:
 
         while (it != _tasks.end()) {
             if (it->future.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                // 完成回调
+                // 瀹屾垚鍥炶皟
                 try {
                     auto result = it->future.get();
                     if (it->callback) {
@@ -39,13 +40,13 @@ public:
                     }
                 }
                 catch (const std::exception& e) {
-                    std::cerr << "[AsyncTracker] Future exception: " << e.what() << "\n";
+                    spdlog::error("[AsyncTracker] Future exception: {}", e.what());
                 }
                 it = _tasks.erase(it);
             }
             else if (now - it->startTime > it->timeout) {
-                std::cerr << "[AsyncTracker] Timeout: " << it->resourcePath << "\n";
-                it = _tasks.erase(it); // 丢弃
+                spdlog::error("[AsyncTracker] Track timeout, doesn't mean the mission must fail: {}", it->resourcePath);
+                it = _tasks.erase(it); // 涓㈠純
             }
             else {
                 ++it;

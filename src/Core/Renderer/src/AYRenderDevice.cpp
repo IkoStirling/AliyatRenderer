@@ -1,4 +1,4 @@
-﻿#include "AYRenderDevice.h"
+#include "AYRenderDevice.h"
 #include "AYRendererManager.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -69,7 +69,7 @@ void AYRenderDevice::setWindowDesktopEffect(float opacity, bool clickThrough, CO
 {
     HWND hwnd = glfwGetWin32Window(_window.load());
     if (!hwnd) {
-        std::cerr << "Failed to get Win32 window handle!" << std::endl;
+        spdlog::error("[AYRenderDevice] Failed to get Win32 window handle!");
         return;
     }
 
@@ -117,7 +117,7 @@ void AYRenderDevice::setWindowAlwaysOnTop(bool topmost)
 {
     HWND hwnd = glfwGetWin32Window(_window.load());
     if (!hwnd) {
-        std::cerr << "Failed to get Win32 window handle!" << std::endl;
+        spdlog::error("[AYRenderDevice] Failed to get Win32 window handle!");
         return;
     }
 

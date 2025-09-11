@@ -1,4 +1,4 @@
-﻿#include "AYSoundEngine.h"
+#include "AYSoundEngine.h"
 #include "AYPath.h"
 #include "Event_CameraMove.h"
 
@@ -7,19 +7,19 @@ AYSoundEngine::AYSoundEngine():
 {
     ALCdevice* device = alcOpenDevice(nullptr);
     if (!device) {
-        std::cerr << "Failed to open OpenAL device" << std::endl;
+        spdlog::error("[AYSoundEngine] Failed to open OpenAL device");
         return;
     }
 
     ALCcontext* context = alcCreateContext(device, nullptr);
     if (!context) {
-        std::cerr << "Failed to create OpenAL context" << std::endl;
+        spdlog::error("[AYSoundEngine] Failed to create OpenAL context");
         alcCloseDevice(device);
         return;
     }
 
     if (!alcMakeContextCurrent(context)) {
-        std::cerr << "Failed to make OpenAL context current" << std::endl;
+        spdlog::error("[AYSoundEngine] Failed to make OpenAL context current");
         alcDestroyContext(context);
         alcCloseDevice(device);
         return;
@@ -47,7 +47,7 @@ void AYSoundEngine::init()
                 auto& event = static_cast<const Event_CameraMove&>(in_event);
                 auto& trans = event.transform;
                 auto& tp = trans.position;
-                //std::cout << "[AYSoundEngine] update sound location[" << tp.x << ", " << tp.y << ", " << tp.z << "]\n";
+                spdlog::info("[AYSoundEngine] update sound location[{},{},{}]", tp.x, tp.y, tp.z);
                 setListenerPosition(trans.position, trans.getForwardVector(), trans.getUpVector());
             });
         _tokens.push_back(std::unique_ptr<AYEventToken>(token));
@@ -113,7 +113,7 @@ void AYSoundEngine::shutdown()
     _tokens.clear();
 
     _initialized = false;
-    std::cout << "[AYSoundEngine] shutdown complete\n";
+    spdlog::info("[AYSoundEngine] shutdown complete");
 }
 
 

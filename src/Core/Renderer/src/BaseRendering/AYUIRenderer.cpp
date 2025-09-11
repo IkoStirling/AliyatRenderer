@@ -1,4 +1,4 @@
-﻿#include "BaseRendering/AYUIRenderer.h"
+#include "BaseRendering/AYUIRenderer.h"
 #include "AYRenderer.h"
 #include "BaseRendering/UI/AYUIEventHandler.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -484,7 +484,6 @@ void AYUIRenderer::updateTextVertices(uint32_t elementIndex) {
     auto fontRenderer = _renderer->getFontRenderer();
 
     for (char32_t c : utf32) {
-
         if (c == U'\n') {
             currentPos.x = startPos.x;
             currentPos.y += lineHeight;
@@ -521,7 +520,6 @@ void AYUIRenderer::updateTextVertices(uint32_t elementIndex) {
         targetBatch->vertexCount += vertices.size();
         targetBatch->indexCount += indices.size();
     }
-
 }
 
 void AYUIRenderer::uploadVertexData() {

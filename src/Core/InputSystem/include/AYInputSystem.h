@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "Mod_InputSystem.h"
 #include "AYRenderDevice.h"
 #include "AYInputBinding.h"
@@ -72,8 +72,7 @@ private:
         {
             if (auto btn = std::get_if<GamepadButtonInput>(&input))
             {
-                std::cout << "current: " << state.current << std::endl;
-                std::cout << "previous: " << state.previous << std::endl << std::endl;
+                spdlog::debug("[AYInputSystem] current: {}, previous: {}", state.current, state.previous);
             }
         }
     }

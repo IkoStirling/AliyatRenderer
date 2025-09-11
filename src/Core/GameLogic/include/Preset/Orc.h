@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "AYEntrant.h"
 #include "Component/AYSpriteRenderComponent.h"
 #include "Component/AYCameraComponent.h"
@@ -187,7 +187,7 @@ public:
 			}
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_C }))
 			{
-				std::cout << "C\n";
+				spdlog::info("[Orc] C");
 				_camera[switcher]->shake(100.f, 1.5f);
 			}
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_V }))

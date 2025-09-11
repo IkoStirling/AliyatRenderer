@@ -1,4 +1,4 @@
-﻿message(STATUS "ToolChainFile: ${CMAKE_TOOLCHAIN_FILE}")
+message(STATUS "ToolChainFile: ${CMAKE_TOOLCHAIN_FILE}")
 
 cmake_minimum_required(VERSION 3.12)
 project(AliyatRenderer)
@@ -10,8 +10,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 if (MSVC)
 	# 如不添加编译命令，会默认采用本地gbk解码硬编码字符串，程序将在字体渲染时崩溃
 	# spdlog已经添加了utf-8选项
-    add_compile_options("$<$<C_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
-    add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+    # add_compile_options("$<$<C_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+    # add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
+	add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
 endif()
 
 #--------------第三方大型库-------------#
@@ -55,7 +56,6 @@ file(GLOB ASSETS
 	"${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/*.dll"
 	)
 file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
-
 
 add_executable(TESTLIBS test.cpp)
 target_link_libraries(TESTLIBS PRIVATE engine_core)

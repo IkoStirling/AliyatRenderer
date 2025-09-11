@@ -1,4 +1,4 @@
-﻿#include "AYInputSystem.h"
+#include "AYInputSystem.h"
 #include "AYRendererManager.h"
 
 AYInputSystem::AYInputSystem() :
@@ -322,12 +322,11 @@ void AYInputSystem::initGamepad(int joystickId)
 	glfwSetJoystickCallback([](int jid, int event) {
 		if (event == GLFW_CONNECTED)
 		{
-
-			std::cout << "手柄 " << jid << " 已连接" << std::endl;
+			spdlog::info("[AYInputSystem] joystick {} connected", jid);
 		}
 		else if (event == GLFW_DISCONNECTED)
 		{
-			std::cout << "手柄 " << jid << " 已断开" << std::endl;
+			spdlog::info("[AYInputSystem] joystick {} disconnected", jid);
 		}
 		});
 

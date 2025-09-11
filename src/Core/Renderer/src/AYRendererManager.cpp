@@ -1,4 +1,4 @@
-﻿#include "AYRendererManager.h"
+#include "AYRendererManager.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYPath.h"
@@ -105,18 +105,18 @@ void AYRendererManager::init()
 	auto camera = cameraSystem->getActiveCamera();
 	auto ppm = camera->getPixelPerMeter();
 
-	std::string str = "测试测字串012%￥@#@\n测试测字串012%￥@#@";
+	std::string str = ATEXT(u8"测试测字串012%￥@#@\n测试测字串012%￥@#@");
 	auto id = _renderer->getUIRenderer()->createRectangle(glm::vec3(1,1,0)* ppm, glm::vec3(3,1,0) * ppm, glm::vec4(1));
 	_renderer->getUIRenderer()->setText(id,"button");
 	_renderer->getUIRenderer()->setOnClicked(id, []() {
-		std::cout << "clicked!\n";
+		spdlog::info("[AYRendererManager] clicked!");
 		});
 	_renderer->getUIRenderer()->setOnUnhovered(id, [id, ui = _renderer->getUIRenderer()]() {
-		std::cout << "setOnUnhovered!\n";
+		spdlog::info("[AYRendererManager] unhovered!");
 		ui->setColor(id, glm::vec4(1, 1, 1, 1));
 		});
 	_renderer->getUIRenderer()->setOnHovered(id, [id, ui = _renderer->getUIRenderer()]() {
-		std::cout << "OnHovered!\n";
+		spdlog::info("[AYRendererManager] hovered!");
 		ui->setColor(id, glm::vec4(0, 0, 0, 1));
 		});
 	_renderer->getUIRenderer()->createText(str, glm::vec3(1, 1, 0)* ppm, glm::vec4(1, 1, 1, 1), 1.f);
@@ -283,7 +283,7 @@ GLuint AYRendererManager::loadTexture(const std::string& path)
 {
 	auto tex = AYResourceManager::getInstance().load<AYTexture>(path);
 	if (!tex || !tex->isLoaded()) {
-		std::cerr << "Failed to load texture: " << path << std::endl;
+		spdlog::error("[AYRendererManager] Failed to load texture: {}", path);
 		return 0;
 	}
 	return _device->createTexture2D(
@@ -315,8 +315,7 @@ void AYRendererManager::_displayDebugInfo()
 	if (y < 0.f)
 		d = true;
 
-
-	std::string fps = "当前fps: " + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
+	std::string fps = ATEXT(u8"当前fps: ") + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
 	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
 
 	auto& context = getRenderContext();

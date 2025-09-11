@@ -1,4 +1,4 @@
-﻿#version 460 core
+#version 460 core
 in vec2 TexCoord;
 in vec4 Color;
 out vec4 FragColor;
@@ -21,24 +21,10 @@ float roundedRectSDF(vec2 p, vec2 b, float r) {
 
 void main() 
 {
-    if(u_isRect)
+    if(useTexture)
     {
-        vec4 color;
-        if(useTexture)
-        {
-            float alpha = texture(texture1, TexCoord).r;
-            color = vec4(u_fillColor.rgb * texture(texture1, TexCoord).rgb, alpha);
-        }
-        vec2 p = TexCoord * u_rectSize - u_rectSize * 0.5; // 局部坐标中心对齐
-
-        float dist = roundedRectSDF(p, u_rectSize * 0.5, u_cornerRadius);
-
-        float strokeThreshold = u_strokeWidth * 0.5;
-        float isBorder = smoothstep(strokeThreshold, -strokeThreshold, dist);
-        float isInside = smoothstep(0.0, strokeThreshold, dist);
-
-        color = mix(u_strokeColor, color, isInside);
-        FragColor = color;
+        float alpha = texture(texture1, TexCoord).r;
+        FragColor = vec4(Color.rgb * texture(texture1, TexCoord).r, alpha);
     }
     else
         FragColor = Color;

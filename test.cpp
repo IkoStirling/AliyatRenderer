@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <iostream>
 #include "AYEngineCore.h"
 #include "AYPhysicsSystem.h"
@@ -6,19 +6,68 @@
 #include "AYECSEngine.h"
 #include "AYSoundEngine.h"
 #include "AYVideo.h"
+#include <spdlog/spdlog.h>
+#include "spdlog/logger.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/rotating_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#if defined(_DEBUG) || defined(DEBUG) || !defined(NDEBUG)
+#define ENABLE_CONSOLE_LOG 1
+#else
+#define ENABLE_CONSOLE_LOG 0
+#endif
 
-struct T{};
-struct S{};
+void setLocalOption()
+{
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+}
+
+void setLogOption()
+{
+	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [thread %t] %s:%# - %v");
+	spdlog::set_level(spdlog::level::trace);
+	auto persistentSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+		"./logs/persistent.log",
+		1024 * 1024 * 10,
+		3
+	);
+	auto runtimeSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+		"./logs/runtime.log",
+		true
+	);
+	std::vector<spdlog::sink_ptr> runtime = { runtimeSink };
+	std::vector<spdlog::sink_ptr> persistent = { persistentSink };
+
+#if ENABLE_CONSOLE_LOG
+	// 控制台 sink（仅 Debug 模式启用）：带颜色输出到终端
+	runtime.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+	persistent.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+#endif
+
+	auto persistentLogger = std::make_shared<spdlog::logger>("persistent", persistent.begin(), persistent.end());
+	auto runtimeLogger = std::make_shared<spdlog::logger>("runtime", runtime.begin(), runtime.end());
+	spdlog::register_logger(persistentLogger);
+	spdlog::register_logger(runtimeLogger);
+	spdlog::set_default_logger(runtimeLogger);
+
+	persistentLogger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+	persistentLogger->set_level(spdlog::level::debug);
+	runtimeLogger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+	runtimeLogger->set_level(spdlog::level::trace);
+
+}
 
 int main()
 {
+	setLocalOption();
+	setLogOption();
+
+	auto persistentLogger = spdlog::get("persistent");
+	auto runtimeLogger = spdlog::get("runtime");
+
+
 	AYEngineCore::getInstance().init();
-
-	auto soundEngine = GET_CAST_MODULE(AYSoundEngine, "SoundEngine");
-	//soundEngine->playSound2D("@videos/bad_apple.mp4", false, false,1,false);
-	//soundEngine->playVideo("@videos/bad_apple.mp4");
-
-	//getchar();
 	AYEngineCore::getInstance().start();
 	return 0;
 }

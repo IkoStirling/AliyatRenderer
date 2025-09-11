@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "AYPhysicsComponent.h"
 
 class AYPlayerController : public IAYComponent
@@ -151,11 +151,11 @@ protected:
         {
             time -= 5.f;
             auto pos = _physics->getPhysicsBody()->getPosition();
-            std::cout << std::fixed << std::setprecision(4)
-                << "[AYPlayerController]  \tInput: (" << input.x << ", " << input.y
-                << ")  \tVelocity: (" << newVelX
-                << ", " << _physics->getPhysicsBody()->getLinearVelocity().y
-                << ")  \tPosition(" << pos.x << ", " << pos.y << ")\n";
+            spdlog::info("[AYPlayerController] \tInput:({:.4f},{:.4f})\tVelocity:({:.4f},{:.4f})\tPosition({:.4f},{:.4f})",
+                input.x, input.y,
+                newVelX,
+                _physics->getPhysicsBody()->getLinearVelocity().y,
+                pos.x, pos.y);
         }
 
 

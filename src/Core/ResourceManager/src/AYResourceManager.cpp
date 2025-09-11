@@ -1,4 +1,4 @@
-﻿#include "AYResourceManager.h"
+#include "AYResourceManager.h"
 #include "AYResourceRegistry.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -46,12 +46,16 @@ void AYResourceManager::unpinResource(const std::string& filepath)
 
 void AYResourceManager::printStats()
 {
-    std::cout << "=== Resource Cache Stats ===\n";
+    spdlog::info("[AYResourceManager] === Resource Cache Stats ===");
     for (const auto& [filepath, weak] : _weakCache) {
-        auto shared = weak.lock();
-        //此处作用域会占用一个引用计数
-        int count = shared ? shared.use_count() - 1 : 0;
-        std::cout << filepath << " - use_count: " << count << "\n";
+        if (auto shared = weak.lock()) {
+            // 减去当前 lock() 产生的引用，只统计外部持有的引用
+            int count = shared.use_count() - 1;
+            spdlog::info("{} - use_count: {}", filepath, count);
+        }
+        else {
+            spdlog::info("{} - use_count: 0", filepath);
+        }
     }
 }
 
@@ -162,9 +166,9 @@ void AYResourceManager::unloadTag(const Tag& tag)
 void AYResourceManager::printTaggedStats(const Tag& tag)
 {
     auto resources = getResourcesWithTag(tag);
-    std::cout << "Resources with tag [" << tag << "]:\n";
+    spdlog::info("[AYResourceManager] Resources with tag [{}]:", tag);
     for (auto& res : resources) {
-        std::cout << res->getPath() << " | size: " << res->sizeInBytes() << "\n";
+        spdlog::info("{} | size: {}", res->getPath(), res->sizeInBytes());
     }
 }
 
