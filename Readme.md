@@ -1,4 +1,4 @@
-﻿## AliyatRenderer
+## AliyatRenderer
 ---
 ### Project Architecture
 This project use the "cmake + vcpkg"
@@ -43,6 +43,18 @@ This project use the "cmake + vcpkg"
 		vertex layout variable like: aPos
 		fragment in variable like: v_color
 ### Project Dependence
+Large update direction:
+	
+	Use command as follow:
+		cd thirdParty
+		git clone https://github.com/bkaradzic/bgfx.cmake.git
+		cd bgfx.cmake
+		git submodule init
+		git submodule update
+
+	Some options may be beneficial to project management,
+	such as deleting all sample projects under bgfx
+
 Before execute this program, preparing these packages:
 
 	1. Boost::asio
@@ -63,12 +75,12 @@ Before execute this program, preparing these packages:
 		Physics
 	9. libarchive
 		may be Network ( use zstd when compress network msg)
-	10.glm
-
-	11.efsw
+	10.efsw
 		FileWatch
-	12.assimp
-		
+	11.assimp
+		model load
+	12.bgfx
+		multi-platform rendering
 
 Run the following commands:
 
