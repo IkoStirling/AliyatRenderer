@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ECPhysicsDependence.h"
 #include "STRaycastResult.h"
 #include "IAYPhysicsBody.h"
@@ -24,6 +24,8 @@ public:
         float rotation = 0,
         IAYPhysicsBody::BodyType type = IAYPhysicsBody::BodyType::Dynamic) = 0;
     
+    virtual std::vector<IAYPhysicsBody*> getAllBodies() = 0;
+
     virtual void setTransform(EntityID entity, const STTransform& transform) = 0;
     virtual const STTransform& getTransform(EntityID entity) = 0;
 };

@@ -6,18 +6,19 @@ class Box2DPolygonCollider : public AYPolygon2DCollider, public Box2DColliderBas
 {
 public:
     explicit Box2DPolygonCollider(const std::vector<glm::vec2>& vertices = {}) :
-        AYPolygon2DCollider(vertices) {}
+        AYPolygon2DCollider(vertices) {
+    }
 
     void setVertices(const std::vector<glm::vec2>& vertices) override
     {
         AYPolygon2DCollider::setVertices(vertices);
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
     void addVertex(const glm::vec2& vertex) override
     {
         AYPolygon2DCollider::addVertex(vertex);
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
     void removeVertex(size_t index) override
@@ -25,31 +26,96 @@ public:
         if (index < _vertices.size()) {
             _vertices.erase(_vertices.begin() + index);
             _updateConvexity();
-            if (_fixture) updateBox2DShape(_fixture->GetShape());
+            if (isValid()) updateShape(_shapeId);
         }
     }
 
     void clearVertices() override
     {
         AYPolygon2DCollider::clearVertices();
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
-    b2Shape* createBox2DShape() const override {
-        b2PolygonShape* shape = new b2PolygonShape();
-        updateBox2DShape(shape);
-        return shape;
+    void setOffset(const glm::vec2& offset) override
+    {
+        AYPolygon2DCollider::setOffset(offset);
+        if (isValid()) updateShape(_shapeId);
     }
 
-    void updateBox2DShape(b2Shape* shape) const override {
-        b2PolygonShape* polygonShape = dynamic_cast<b2PolygonShape*>(shape);
-        if (polygonShape && !_vertices.empty()) {
-            std::vector<b2Vec2> b2Vertices(_vertices.size());
-            for (size_t i = 0; i < _vertices.size(); ++i) {
-                b2Vertices[i].Set(_vertices[i].x + _offset.x,
-                    _vertices[i].y + _offset.y);
-            }
-            polygonShape->Set(b2Vertices.data(), static_cast<int32>(_vertices.size()));
+    b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) override
+    {
+        if (_vertices.empty()) return b2_nullShapeId;
+
+        b2Polygon polygon = createBox2DPolygon();
+        return b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
+    }
+
+    void updateShape(b2ShapeId shapeId) const override
+    {
+        if (B2_IS_NULL(shapeId) || _vertices.empty()) return;
+
+        b2Polygon polygon = createBox2DPolygon();
+        b2Shape_SetPolygon(shapeId, &polygon);
+    }
+
+private:
+    b2Polygon createBox2DPolygon() const
+    {
+        if (_vertices.empty()) {
+            // 返回一个默认的小多边形
+            return b2MakeBox(0.1f, 0.1f);
         }
+
+        // 计算凸包
+        b2Hull hull = computeConvexHull();
+
+        if (hull.count >= 3) {
+            // 使用凸包创建多边形
+            return b2MakePolygon(&hull, 0.0f);
+        }
+        else {
+            // 如果凸包无效，使用AABB
+            b2AABB aabb = computeAABB();
+            float halfWidth = (aabb.upperBound.x - aabb.lowerBound.x) * 0.5f;
+            float halfHeight = (aabb.upperBound.y - aabb.lowerBound.y) * 0.5f;
+            b2Vec2 center = {
+                (aabb.upperBound.x + aabb.lowerBound.x) * 0.5f + _offset.x,
+                (aabb.upperBound.y + aabb.lowerBound.y) * 0.5f + _offset.y
+            };
+            return b2MakeOffsetBox(halfWidth, halfHeight, center, b2Rot{ 0.0f });
+        }
+    }
+
+    b2Hull computeConvexHull() const
+    {
+        b2Hull hull;
+        std::vector<b2Vec2> points(_vertices.size());
+
+        // 应用偏移并转换为b2Vec2
+        for (size_t i = 0; i < _vertices.size(); ++i) {
+            points[i] = {
+                _vertices[i].x + _offset.x,
+                _vertices[i].y + _offset.y
+            };
+        }
+
+        // 计算凸包
+        hull = b2ComputeHull(points.data(), (int32_t)points.size());
+        return hull;
+    }
+
+    b2AABB computeAABB() const
+    {
+        b2AABB aabb;
+        aabb.lowerBound = { FLT_MAX, FLT_MAX };
+        aabb.upperBound = { -FLT_MAX, -FLT_MAX };
+
+        for (const auto& vertex : _vertices) {
+            b2Vec2 point = { vertex.x + _offset.x, vertex.y + _offset.y };
+            aabb.lowerBound = b2Min(aabb.lowerBound, point);
+            aabb.upperBound = b2Max(aabb.upperBound, point);
+        }
+
+        return aabb;
     }
 };

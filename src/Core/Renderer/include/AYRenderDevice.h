@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ECRendererDependence.h"
 #include "AYGLStateManager.h"
 #include "AYShaderManager.h"
@@ -42,7 +42,12 @@ public:
     GLuint createVertexBuffer(const void* data, size_t size, const std::string& type = "static");// type: "dynamic" or "static", 只传入数据
     GLuint createIndexBuffer(const void* data, size_t size);
     GLuint createVertexArray();
- 
+
+    bgfx::VertexBufferHandle createVertexBufferB(const bgfx::VertexLayout& layout,const void* data, size_t size, const std::string& type = "static");
+    bgfx::IndexBufferHandle createIndexBufferB(const void* data, size_t size);
+    bgfx::VertexLayout createVertexLayoutB();    //仅作示例，不要使用
+
+    const bgfx::Memory* createMemoryB(const void* data, size_t size);
 public:
     // 纹理
     enum class TextureType {
@@ -53,6 +58,7 @@ public:
     };
 
     struct TextureParams {
+        uint64_t flags = 0;
         GLenum wrapS = GL_REPEAT;
         GLenum wrapT = GL_REPEAT;
         GLenum minFilter = GL_LINEAR;
@@ -63,10 +69,19 @@ public:
     AYTextureManager* getTextureManager() { return _textureManager.get(); }
 
     TextureParams getDefaultTextureParams(TextureType type);
+    TextureParams getDefaultTextureParamsB(TextureType type);
 
     // 纹理通用接口
     GLuint createTexture(TextureType type, const uint8_t* pixels,
         int width, int height, int channels = 4,
+        const TextureParams* customParams = nullptr);
+
+    bgfx::TextureHandle createTextureB(
+        TextureType type,
+        const uint8_t* pixels,
+        int width,
+        int height,
+        int channels,
         const TextureParams* customParams = nullptr);
 
     void updateTexture(GLuint textureID,
@@ -74,15 +89,34 @@ public:
         int width,
         int height,
         GLenum format = GL_RGBA);
+
+    void updateTextureB(bgfx::TextureHandle texture,
+        const uint8_t* pixels,
+        int width,
+        int height,
+        bgfx::TextureFormat::Enum format);
     
     GLuint createTexture2D(const uint8_t* pixels, int width, int height, int channels = 4);
     GLuint createFontTexture(const uint8_t* pixels, int width, int height);
     GLuint createVideoTexture(int width, int height);
 
+    bgfx::TextureHandle createTexture2DB(const uint8_t* pixels, int width, int height, int channels = 4);
+    bgfx::TextureHandle createFontTextureB(const uint8_t* pixels, int width, int height);
+    bgfx::TextureHandle createVideoTextureB(int width, int height);
+
 public:
     // Shader
     GLuint createShaderProgram(const char* vtx_src, const char* frag_src);
     GLuint getShaderV(const std::string& name,
+        bool reload = false,
+        const std::string& vertex_shaderPath = "",
+        const std::string& fragment_shaderPath = "");
+
+    bgfx::ProgramHandle createShaderProgramB(const char* vtx_name,
+        const char* vtx_src,
+        const char* frag_name,
+        const char* frag_src);
+    bgfx::ProgramHandle getShaderB(const std::string& name,
         bool reload = false,
         const std::string& vertex_shaderPath = "",
         const std::string& fragment_shaderPath = "");
@@ -103,6 +137,7 @@ private:
 
     AYConfigWrapper _config;
     std::string _configPath;
+    std::string _renderBackend;
     bool _isEnableWindowEffect;
     bool _isShowBorder;
     bool _isAlwaysOnTop;

@@ -1,4 +1,8 @@
 #pragma once
+#include <bgfx/bgfx.h>
+#include <bx/bx.h>
+#include <bimg/bimg.h>
+#include <bgfx/platform.h>
 #include "AYConfigWrapper.h"
 #include "AYPath.h"
 #include <iostream>
@@ -8,6 +12,7 @@
 #include <atomic>
 #include <functional>
 #include <spdlog/spdlog.h>
+
 
 #define AY_CHECK_GL_ERROR(context) \
     do { \

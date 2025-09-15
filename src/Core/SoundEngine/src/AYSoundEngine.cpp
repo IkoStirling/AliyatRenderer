@@ -47,7 +47,7 @@ void AYSoundEngine::init()
                 auto& event = static_cast<const Event_CameraMove&>(in_event);
                 auto& trans = event.transform;
                 auto& tp = trans.position;
-                spdlog::info("[AYSoundEngine] update sound location[{},{},{}]", tp.x, tp.y, tp.z);
+                //spdlog::info("[AYSoundEngine] update sound location[{},{},{}]", tp.x, tp.y, tp.z);
                 setListenerPosition(trans.position, trans.getForwardVector(), trans.getUpVector());
             });
         _tokens.push_back(std::unique_ptr<AYEventToken>(token));

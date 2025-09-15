@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "AYRenderDevice.h"
 #include "AYConfigWrapper.h"
 #include "STTransform.h"
@@ -258,7 +258,7 @@ private:
     std::string _baseVertexPath;
     std::string _baseFragmentPath;
 
-    float _lineWidth = 5.f;
+    float _lineWidth = 1.f;
     void setLineWidth(float line_width) { _lineWidth = line_width; }
 
     GLuint _getBaseShader(bool reload = false);

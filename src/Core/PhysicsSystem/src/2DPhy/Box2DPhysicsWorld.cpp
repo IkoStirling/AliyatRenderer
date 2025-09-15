@@ -1,31 +1,44 @@
-﻿#include "2DPhy/Box2DPhysicsWorld.h"
+#include "2DPhy/Box2DPhysicsWorld.h"
+
+
+Box2DPhysicsWorld::Box2DPhysicsWorld()
+{
+    b2Vec2 gravity = { 0.0f, -9.8f };
+    b2WorldDef def = b2DefaultWorldDef();
+    def.gravity = gravity;
+    _worldId = b2CreateWorld(&def);
+}
+
+Box2DPhysicsWorld::~Box2DPhysicsWorld()
+{
+    if (B2_IS_NON_NULL(_worldId)) {
+        b2DestroyWorld(_worldId);
+    }
+}
 
 void Box2DPhysicsWorld::step(float deltaTime, int velocity_iterations, int position_iterations)
 {
-    _world.Step(deltaTime, velocity_iterations, position_iterations);
+    b2World_Step(_worldId, deltaTime, 4);
 }
 
 void Box2DPhysicsWorld::setGravity(const glm::vec3& gravity)
 {
-    _world.SetGravity(b2Vec2(gravity.x, gravity.y));
+    b2Vec2 b2Gravity = { gravity.x, gravity.y };
+    b2World_SetGravity(_worldId, b2Gravity);
 }
 
 bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, STRaycastResult& hit)
 {
-    b2Vec2 b2Start(start.x, start.y);
-    b2Vec2 b2End(end.x, end.y);
+    b2Vec2 b2Start = { start.x, start.y };
+    b2Vec2 b2End = { end.x, end.y };
+    b2Vec2 translation = { b2End.x - b2Start.x, b2End.y - b2Start.y };
 
-    // 创建射线检测回调
-    RayCastClosestCallback callback;
-    _world.RayCast(&callback, b2Start, b2End);
+    b2QueryFilter filter = getDefaultFilter();
+    b2RayResult result = b2World_CastRayClosest(_worldId, b2Start, translation, filter);
 
-    if (callback._hit)
+    if (result.hit)
     {
-        void* userData = reinterpret_cast<void*>(callback._fixture->GetBody()->GetUserData().pointer);
-        hit.body = static_cast<IAYPhysicsBody*>(userData);
-        hit.point = glm::vec3(callback._point.x, callback._point.y, 0);
-        hit.normal = glm::vec3(callback._normal.x, callback._normal.y, 0);
-        hit.fraction = callback._fraction;
+        fillRaycastResult(result, hit);
         return true;
     }
 
@@ -34,35 +47,66 @@ bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, ST
 
 bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, std::function<bool(const STRaycastResult&)> callback)
 {
-    b2Vec2 b2Start(start.x, start.y);
-    b2Vec2 b2End(end.x, end.y);
+    b2Vec2 b2Start = { start.x, start.y };
+    b2Vec2 b2End = { end.x, end.y };
+    b2Vec2 translation = { b2End.x - b2Start.x, b2End.y - b2Start.y };
 
-    // 创建射线检测回调
-    RayCastAllCallback allCallback(callback);
-    _world.RayCast(&allCallback, b2Start, b2End);
-    return true;
+    b2QueryFilter filter = getDefaultFilter();
+
+    // 对于多个命中的情况，我们需要使用更复杂的 CastRay 函数
+    // 这里简化处理，只检测最近的一个命中
+    b2RayResult result = b2World_CastRayClosest(_worldId, b2Start, translation, filter);
+
+    if (result.hit)
+    {
+        STRaycastResult hit;
+        fillRaycastResult(result, hit);
+        return callback(hit);
+    }
+
+    return false;
 }
 
 IAYPhysicsBody* Box2DPhysicsWorld::createBody(EntityID entity, const glm::vec3& position, float rotation, IAYPhysicsBody::BodyType type)
 {
     std::lock_guard<std::mutex> lock(_bbodyMutex);
-    auto [iter, inserted] = _bodies.try_emplace(entity, std::make_unique<Box2DPhysicsBody>(_world, glm::vec2(position), rotation, type));
+    auto [iter, inserted] = _bodies.try_emplace(entity, std::make_unique<Box2DPhysicsBody>(_worldId, glm::vec2(position), rotation, type));
     auto& body = iter->second;
     body->setOwningEntity(entity);
     body->setType(type);
+
     return body.get();
 }
 
 void Box2DPhysicsWorld::setTransform(EntityID entity, const STTransform& transform)
 {
-    auto& body = _bodies[entity];
-    body->setTransform(transform);
+    auto it = _bodies.find(entity);
+    if (it != _bodies.end())
+    {
+        it->second->setTransform(transform);
+    }
+}
+
+std::vector<IAYPhysicsBody*> Box2DPhysicsWorld::getAllBodies()
+{
+    std::vector<IAYPhysicsBody*> res;
+
+    for (auto& [id, body] : _bodies)
+    {
+        res.push_back(body.get());
+    }
+    return res;
 }
 
 const STTransform& Box2DPhysicsWorld::getTransform(EntityID entity)
 {
-    auto& body = _bodies[entity];
-    return body->getTransform();
+    auto it = _bodies.find(entity);
+    if (it != _bodies.end())
+    {
+        return it->second->getTransform();
+    }
+    static STTransform emptyTransform;
+    return emptyTransform;
 }
 
 Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IAYPhysicsBody* body, float maxDistance)
@@ -74,28 +118,29 @@ Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IAYPh
     if (!body) return info;
 
     Box2DPhysicsBody* box2DBody = static_cast<Box2DPhysicsBody*>(body);
-    if (!box2DBody->getB2Body()) return info;
+    b2BodyId bodyId = box2DBody->getB2BodyId();
+    if (B2_ID_EQUALS(bodyId, b2_nullBodyId)) return info;
 
     // 获取碰撞体最低点
     glm::vec2 lowestPoint = box2DBody->getLowestPoint();
 
     // 向下发射射线检测地面
-    glm::vec2 rayStart = lowestPoint;
-    glm::vec2 rayEnd = lowestPoint + glm::vec2(0, -maxDistance);
+    b2Vec2 origin = { lowestPoint.x, lowestPoint.y + 0.015f };
+    b2Vec2 translation = { 0.0f, -maxDistance };
 
-    GroundRayCastCallback callback;
-    _world.RayCast(&callback, b2Vec2(rayStart.x, rayStart.y), b2Vec2(rayEnd.x, rayEnd.y));
+    b2QueryFilter filter = getGroundFilter();
+    b2RayResult result = b2World_CastRayClosest(_worldId, origin, translation, filter);
 
-    if (callback._hit)
+    if (result.hit)
     {
         info.isGrounded = true;
-        info.distanceToGround = maxDistance * callback._fraction;
-        info.contactPoint = glm::vec2(callback._point.x, callback._point.y);
-        info.contactNormal = glm::vec2(callback._normal.x, callback._normal.y);
+        info.distanceToGround = maxDistance * result.fraction;
+        info.contactPoint = glm::vec2(result.point.x, result.point.y);
+        info.contactNormal = glm::vec2(result.normal.x, result.normal.y);
 
-        // 获取地面物体
-        void* userData = reinterpret_cast<void*>(callback._fixture->GetBody()->GetUserData().pointer);
-        info.groundBody = static_cast<IAYPhysicsBody*>(userData);
+        // 从形状获取刚体
+        b2BodyId groundBodyId = b2Shape_GetBody(result.shapeId);
+        info.groundBody = static_cast<IAYPhysicsBody*>(b2Body_GetUserData(groundBodyId));
     }
 
     return info;
@@ -106,79 +151,49 @@ STRaycastResult Box2DPhysicsWorld::raycastToGround(const glm::vec2& point, float
     STRaycastResult hit;
 
     // 向下发射射线
-    glm::vec2 rayStart = point;
-    glm::vec2 rayEnd = point + glm::vec2(0, -maxDistance);
+    b2Vec2 origin = { point.x, point.y };
+    b2Vec2 translation = { 0.0f, -maxDistance };
 
-    GroundRayCastCallback callback;
-    _world.RayCast(&callback, b2Vec2(rayStart.x, rayStart.y), b2Vec2(rayEnd.x, rayEnd.y));
+    b2QueryFilter filter = getGroundFilter();
+    b2RayResult result = b2World_CastRayClosest(_worldId, origin, translation, filter);
 
-    if (callback._hit)
+    if (result.hit)
     {
-        void* userData = reinterpret_cast<void*>(callback._fixture->GetBody()->GetUserData().pointer);
-        hit.body = static_cast<IAYPhysicsBody*>(userData);
-        hit.point = glm::vec3(callback._point.x, callback._point.y, 0);
-        hit.normal = glm::vec3(callback._normal.x, callback._normal.y, 0);
-        hit.fraction = callback._fraction;
+        fillRaycastResult(result, hit);
     }
 
     return hit;
 }
 
-float Box2DPhysicsWorld::RayCastClosestCallback::ReportFixture(b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction)
+b2QueryFilter Box2DPhysicsWorld::getDefaultFilter() const
 {
-    // 跳过传感器（触发器）
-    if (fixture->IsSensor()) {
-        return -1.0f; // 继续检测
-    }
-
-    _hit = true;
-    _fixture = fixture;
-    _point = point;
-    _normal = normal;
-    _fraction = fraction;
-
-    return fraction; // 返回分数，Box2D会继续寻找更近的命中
+    b2QueryFilter filter;
+    filter.categoryBits = 0xFFFF;
+    filter.maskBits = 0xFFFF;
+    return filter;
 }
 
-float Box2DPhysicsWorld::RayCastAllCallback::ReportFixture(b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction)
+b2QueryFilter Box2DPhysicsWorld::getGroundFilter() const
 {
-    // 跳过传感器（触发器）
-    if (fixture->IsSensor()) {
-        return -1.0f; // 继续检测
-    }
-
-    STRaycastResult hit;
-    void* userData = reinterpret_cast<void*>(fixture->GetBody()->GetUserData().pointer);
-    hit.body = static_cast<IAYPhysicsBody*>(userData);
-    hit.point = glm::vec3(point.x, point.y, 0);
-    hit.normal = glm::vec3(normal.x, normal.y, 0);
-    hit.fraction = fraction;
-
-    // 调用回调函数，如果返回false则停止检测
-    if (_callback && !_callback(hit)) {
-        return 0.0f; // 停止检测
-    }
-
-    return 1.0f; // 继续检测
+    b2QueryFilter filter;
+    filter.categoryBits = 0x0001; // 地面类别
+    filter.maskBits = 0xFFFF;     // 与所有类别碰撞
+    return filter;
 }
 
-float Box2DPhysicsWorld::GroundRayCastCallback::ReportFixture(b2Fixture* fixture, const b2Vec2& point, const b2Vec2& normal, float fraction)
+void Box2DPhysicsWorld::fillRaycastResult(const b2RayResult& result, STRaycastResult& hit)
 {
-    // 跳过传感器和自身碰撞体
-    if (fixture->IsSensor()) {
-        return -1.0f;
+    if (result.hit)
+    {
+        b2BodyId bodyId = b2Shape_GetBody(result.shapeId);
+        hit.body = static_cast<IAYPhysicsBody*>(b2Body_GetUserData(bodyId));
+        hit.point = glm::vec3(result.point.x, result.point.y, 0);
+        hit.normal = glm::vec3(result.normal.x, result.normal.y, 0);
+        hit.fraction = result.fraction;
     }
-
-    // 只检测向上的法线（地面）
-    if (normal.y < 0.7f) { // 法线朝上才认为是地面
-        return -1.0f;
+    else
+    {
+        hit.body = nullptr;
+        hit.fraction = 1.0f;
     }
-
-    _hit = true;
-    _fixture = fixture;
-    _point = point;
-    _normal = normal;
-    _fraction = fraction;
-
-    return fraction;
 }

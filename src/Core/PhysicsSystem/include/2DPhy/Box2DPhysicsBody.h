@@ -1,12 +1,13 @@
-﻿#pragma once
+#pragma once
 #include "BasePhy/IAYPhysicsBody.h"
 #include <box2d/box2d.h>
+#include <box2d/math_functions.h>
 
 // 此类中坐标系均为Box2D世界坐标系
 class Box2DPhysicsBody : public IAYPhysicsBody
 {
 public:
-    Box2DPhysicsBody(b2World& world, const glm::vec2& position, float rotation, BodyType type);
+    Box2DPhysicsBody(b2WorldId worldId, const glm::vec2& position, float rotation, BodyType type);
     ~Box2DPhysicsBody() override;
 
     // 实现IAYPhysicsBody接口
@@ -35,7 +36,7 @@ public:
     // 物理材质批量设置
     void updateAllFixtureMaterials();
     // 获取底层Box2D body（供高级操作使用）
-    b2Body* getB2Body() const { return _body; }
+    b2BodyId getB2BodyId() const { return _bodyId; }
     // 设置Box2D body的用户数据指针
     void setB2BodyUserData(void* userData);
     // 获取Box2D body的用户数据指针
@@ -46,12 +47,11 @@ public:
     glm::vec2 getLowestPoint() const;
     glm::vec2 getHighestPoint() const;
 private:
-    b2Body* _body;
-    std::unordered_map<IAYCollider*, b2Fixture*> _colliderFixtures;
+    b2BodyId _bodyId = b2_nullBodyId;
+    std::unordered_map<IAYCollider*, b2ShapeId> _colliderShapes;
     // 内部辅助方法
-    b2Fixture* _createFixture(IAYCollider* collider);
-    void _updateFixtureProperties(b2Fixture* fixture, IAYCollider* collider);
-
+    b2ShapeId _createShape(IAYCollider* collider);
+    void _updateShapeProperties(b2ShapeId shapeId, IAYCollider* collider);
 
     static b2BodyType convertBodyType(BodyType type);
 };

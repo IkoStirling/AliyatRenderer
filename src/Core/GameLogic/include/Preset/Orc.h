@@ -18,6 +18,11 @@ public:
     {
 		_orcSprite = addComponent<AYSpriteRenderComponent>("_orcSprite");
 		auto collider = std::make_shared<Box2DBoxCollider>(glm::vec2(1, 1));
+		collider->setCategoryBits(AYCategoryBits::Player);
+		collider->setMaskBits(
+			AYCategoryBits::BlockAll &
+			~AYCategoryBits::Sensor
+		);
 		collider->setOffset(glm::vec2(0, 0.5f));
 		_physics->addCollider(collider);
 		_physics->setBodyType(IAYPhysicsBody::BodyType::Dynamic);

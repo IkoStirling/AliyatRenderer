@@ -8,24 +8,25 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 if (MSVC)
-	# 如不添加编译命令，会默认采用本地gbk解码硬编码字符串，程序将在字体渲染时崩溃
-	# spdlog已经添加了utf-8选项
-    # add_compile_options("$<$<C_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
-    # add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/execution-charset:utf-8>")
 	add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
+	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>")
+	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>")
 endif()
 
-#--------------第三方大型库-------------#
-find_package(Boost CONFIG REQUIRED COMPONENTS asio)
-find_package(OpenCV REQUIRED core imgproc highgui imgcodecs)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(BX_CONFIG_DEBUG=1)
+else()
+    add_compile_definitions(BX_CONFIG_DEBUG=0)
+endif()
 
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})	#全局包含路径，将来或许可以优化
-include_directories(SYSTEM ${OpenCV_INCLUDE_DIRS})
+add_subdirectory(thirdParty/bgfx.cmake)
 
 
 #-------------第三方小型库--------------#
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/include)
 link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
+
+
 
 #-------------项目自定义库--------------#
 
@@ -60,6 +61,12 @@ file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 add_executable(TESTLIBS test.cpp)
 target_link_libraries(TESTLIBS PRIVATE engine_core)
 
+file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
+add_executable(bgfxT bgfxT.cpp)
+target_link_libraries(bgfxT PRIVATE bgfx ${RENDER_LIBS})
+target_include_directories(bgfxT PRIVATE 
+    thirdParty/bgfx.cmake/bx/include
+)
 
 find_package(httplib CONFIG REQUIRED)
 find_package(efsw CONFIG REQUIRED)

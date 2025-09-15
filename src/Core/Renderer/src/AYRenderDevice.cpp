@@ -1,6 +1,5 @@
 #include "AYRenderDevice.h"
 #include "AYRendererManager.h"
-
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
@@ -40,13 +39,31 @@ bool AYRenderDevice::init(int width, int height)
 
     glfwSwapInterval(1);
 
-    _stateManager = std::make_unique<AYGLStateManager>();
+    bgfx::PlatformData platformData;
+#if BX_PLATFORM_WINDOWS
+    platformData.nwh = glfwGetWin32Window(_window);  // Windows 平台
+#elif BX_PLATFORM_LINUX
+    platformData.ndt = glfwGetX11Display();          // Linux
+    platformData.nwh = (void*)(uintptr_t)glfwGetX11Window(_window);
+#elif BX_PLATFORM_OSX
+    platformData.nwh = glfwGetCocoaWindow(_window); // macOS
+#endif
 
+    bgfx::Init init;
+    init.platformData = platformData;
+    init.type = bgfx::RendererType::OpenGL;  // 仍用 OpenGL 后端
+    init.resolution.width = width;
+    init.resolution.height = height;
+    init.resolution.reset = BGFX_RESET_VSYNC;  // 启用垂直同步
+
+    if (!bgfx::init(init)) {
+        return false;  // bgfx 初始化失败
+    }
+
+    _stateManager = std::make_unique<AYGLStateManager>();
     _stateManager->setDepthTest(true);
     _stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     _shaderManager = std::make_unique<AYShaderManager>();
-
     _textureManager = std::make_unique<AYTextureManager>(this);
 
     return true;
@@ -181,9 +198,70 @@ GLuint AYRenderDevice::createVertexArray()
     return vao;
 }
 
+bgfx::VertexBufferHandle AYRenderDevice::createVertexBufferB(const bgfx::VertexLayout& layout,const void* data, size_t size, const std::string& type)
+{
+    const bgfx::Memory* mem = createMemoryB(data, size);
+    uint16_t flags = (type == "dynamic") ? BGFX_BUFFER_ALLOW_RESIZE : BGFX_BUFFER_NONE;
+    return bgfx::createVertexBuffer(mem, layout, flags);
+}
+
+bgfx::IndexBufferHandle AYRenderDevice::createIndexBufferB(const void* data, size_t size)
+{
+    const bgfx::Memory* mem = createMemoryB(data, size);
+    return bgfx::createIndexBuffer(mem, BGFX_BUFFER_NONE);
+}
+
+bgfx::VertexLayout AYRenderDevice::createVertexLayoutB()
+{
+    bgfx::VertexLayout layout;
+    layout.begin()
+        .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)  // 示例：位置属性
+        .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true) // 颜色属性（RGBA）
+        .end();
+    return layout;
+}
+
+const bgfx::Memory* AYRenderDevice::createMemoryB(const void* data, size_t size)
+{
+    const bgfx::Memory* mem = nullptr;
+
+    if (data != nullptr && size > 0) {
+        mem = bgfx::copy(data, static_cast<uint32_t>(size));
+    }
+    else {
+        // 创建空的内存块
+        mem = bgfx::alloc(static_cast<uint32_t>(size > 0 ? size : 1));
+        if (mem != nullptr) {
+            // 清零内存
+            bx::memSet(mem->data, 0, mem->size);
+        }
+    }
+
+    if (mem == nullptr) {
+        spdlog::error("[AYRenderDevice] Failed to allocate memory for index buffer");
+    }
+
+    return mem;
+}
+
 GLuint AYRenderDevice::createTexture2D(const uint8_t* pixels, int width, int height, int channels)
 {
     return createTexture(TextureType::Standard, pixels, width, height, channels);
+}
+
+bgfx::TextureHandle AYRenderDevice::createTexture2DB(const uint8_t* pixels, int width, int height, int channels)
+{
+    return createTextureB(TextureType::Standard, pixels, width, height, channels);
+}
+
+bgfx::TextureHandle AYRenderDevice::createFontTextureB(const uint8_t* pixels, int width, int height)
+{
+    return createTextureB(TextureType::Font, pixels, width, height, 1);
+}
+
+bgfx::TextureHandle AYRenderDevice::createVideoTextureB(int width, int height)
+{
+    return createTextureB(TextureType::Video, nullptr, width, height, 4);
 }
 
 GLuint AYRenderDevice::createFontTexture(const uint8_t* pixels, int width, int height)
@@ -204,6 +282,13 @@ void AYRenderDevice::updateTexture(GLuint textureID, const uint8_t* pixels, int 
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
         width, height,
         format, GL_UNSIGNED_BYTE, pixels);
+}
+
+void AYRenderDevice::updateTextureB(bgfx::TextureHandle texture, const uint8_t* pixels, int width, int height, bgfx::TextureFormat::Enum format)
+{
+    if (!pixels) return;
+    const bgfx::Memory* mem = bgfx::copy(pixels, width * height * 4); // 假设 4 字节/像素
+    bgfx::updateTexture2D(texture, 0, 0, 0, 0, width, height, mem);
 }
 
 GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag_src)
@@ -236,6 +321,36 @@ GLuint AYRenderDevice::getShaderV(const std::string& name, bool reload, const st
     if (reload)
         _shaderManager->reloadShader(name);
     return _shaderManager->loadShader(name, vertex_shaderPath, fragment_shaderPath);
+}
+
+bgfx::ProgramHandle AYRenderDevice::createShaderProgramB(const char* vtx_name,
+    const char* vtx_src,
+    const char* frag_name,
+    const char* frag_src)
+{
+    // 1. 编译顶点着色器
+    bgfx::ShaderHandle vsh = bgfx::createShader(
+        bgfx::copy(vtx_src, strlen(vtx_src) + 1)
+    );
+    bgfx::setName(vsh, vtx_name);
+
+    // 2. 编译片段着色器
+    bgfx::ShaderHandle fsh = bgfx::createShader(
+        bgfx::copy(frag_src, strlen(frag_src) + 1)
+    );
+    bgfx::setName(fsh, frag_name);
+
+    // 3. 创建着色器程序
+    bgfx::ProgramHandle program = bgfx::createProgram(vsh, fsh, true); // true=自动销毁着色器
+
+    return program;
+}
+
+bgfx::ProgramHandle AYRenderDevice::getShaderB(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
+{
+    if (reload)
+        _shaderManager->reloadShader(name);
+    return _shaderManager->loadShaderB(name, vertex_shaderPath, fragment_shaderPath);
 }
 
 void AYRenderDevice::restoreGLState()
@@ -306,6 +421,42 @@ AYRenderDevice::TextureParams AYRenderDevice::getDefaultTextureParams(TextureTyp
     return params;
 }
 
+AYRenderDevice::TextureParams AYRenderDevice::getDefaultTextureParamsB(TextureType type)
+{
+    TextureParams params;
+
+    switch (type) {
+    case TextureType::Font:
+        params.flags =
+            BGFX_SAMPLER_U_CLAMP |
+            BGFX_SAMPLER_V_CLAMP |
+            BGFX_SAMPLER_MIN_POINT |
+            BGFX_SAMPLER_MAG_POINT;
+        break;
+
+    case TextureType::Video:
+        params.flags =
+            BGFX_SAMPLER_U_CLAMP |
+            BGFX_SAMPLER_V_CLAMP |
+            BGFX_SAMPLER_MIN_ANISOTROPIC |
+            BGFX_SAMPLER_MAG_ANISOTROPIC;
+        break;
+
+    case TextureType::Standard:
+    default:
+        params.flags =
+            BGFX_SAMPLER_U_MIRROR |  // 或手动实现 REPEAT
+            BGFX_SAMPLER_V_MIRROR |
+            BGFX_SAMPLER_MIN_ANISOTROPIC |
+            BGFX_SAMPLER_MAG_ANISOTROPIC |
+            BGFX_SAMPLER_MIP_POINT;
+        params.generateMipmap = true;
+        break;
+    }
+
+    return params;
+}
+
 GLuint AYRenderDevice::createTexture(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
 {
     GLuint texture;
@@ -364,6 +515,45 @@ GLuint AYRenderDevice::createTexture(TextureType type, const uint8_t* pixels, in
     return texture;
 }
 
+bgfx::TextureHandle AYRenderDevice::createTextureB(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
+{
+    // 基本参数检查
+    if (width <= 0 || height <= 0) {
+        spdlog::error("Invalid texture dimensions");
+        return BGFX_INVALID_HANDLE;
+    }
+
+    // 获取参数（简化处理）
+    bool generateMipmap = customParams ? customParams->generateMipmap : false;
+
+    // 确定纹理格式
+    bgfx::TextureFormat::Enum format = bgfx::TextureFormat::RGBA8;
+    if (channels == 1) format = bgfx::TextureFormat::R8;
+    else if (channels == 2) format = bgfx::TextureFormat::RG8;
+    else if (channels == 3) format = bgfx::TextureFormat::RGB8;
+
+    // 准备纹理数据 - 只提供基础mip level的数据
+    const bgfx::Memory* mem = nullptr;
+    if (pixels) {
+        // 只拷贝原始图像数据，BGFX会自己生成mipmap
+        mem = bgfx::copy(pixels, width * height * channels);
+    }
+    else {
+        // 空纹理
+        std::vector<uint8_t> emptyData(width * height * channels, 0);
+        mem = bgfx::copy(emptyData.data(), emptyData.size());
+    }
+
+    // 设置纹理标志
+    uint64_t flags = BGFX_TEXTURE_NONE;
+    if (generateMipmap) {
+        flags |= BGFX_TEXTURE_COMPUTE_WRITE; // 让BGFX生成mipmap
+    }
+
+    // 创建纹理
+    return bgfx::createTexture2D(width, height, generateMipmap, 1, format, flags, mem);
+}
+
 void AYRenderDevice::_viewportCallbackWrapper(GLFWwindow* window, int width, int height) {
     auto* device = GET_CAST_MODULE(Mod_Renderer, "Renderer")->getRenderDevice();
     if (!device) return;
@@ -383,6 +573,8 @@ void AYRenderDevice::_loadDeviceWindowConfigINI()
 {
     _config.loadFromFile(_configPath, AYConfigWrapper::ConfigType::INI);
 
+    _renderBackend = _config.get<std::string>("render config.render backend", "d3d12");
+
     _isEnableWindowEffect = _config.get<bool>("window config.enable_window_effect", false);
     _isShowBorder = _config.get<bool>("window config.show_border", true);
     _isAlwaysOnTop = _config.get<bool>("window config.always_on_top", false);
@@ -395,6 +587,7 @@ void AYRenderDevice::_loadDeviceWindowConfigINI()
 
 void AYRenderDevice::_saveDeviceWindowConfigINI()
 {
+    _config.set<std::string>("render config.render backend", _renderBackend);
     _config.set<bool>("window config.enable_window_effect", _isEnableWindowEffect);
     _config.set<bool>("window config.show_border", _isShowBorder);
     _config.set<bool>("window config.always_on_top", _isAlwaysOnTop);

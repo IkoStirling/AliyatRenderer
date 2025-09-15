@@ -6,14 +6,17 @@ class Box2DColliderBase
 public:
     virtual ~Box2DColliderBase() = default;
 
-    // Box2DĞÎ×´´´½¨ºÍ¸üĞÂ
-    virtual b2Shape* createBox2DShape() const = 0;
-    virtual void updateBox2DShape(b2Shape* shape) const = 0;
+    // Box2Då½¢çŠ¶åˆ›å»ºå’Œæ›´æ–° - æ”¹ä¸ºä½¿ç”¨b2ShapeId
+    virtual b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) = 0;
+    virtual void updateShape(b2ShapeId shapeId) const = 0;
 
-    // ÓëBox2D fixtureµÄ¹ØÁª
-    void setFixture(b2Fixture* fixture) { _fixture = fixture; }
-    b2Fixture* getFixture() const { return _fixture; }
+    // ä¸Box2Då½¢çŠ¶çš„å…³è”
+    void setShapeId(b2ShapeId shapeId) { _shapeId = shapeId; }
+    b2ShapeId getShapeId() const { return _shapeId; }
+
+    // æ£€æŸ¥å½¢çŠ¶IDæ˜¯å¦æœ‰æ•ˆ
+    bool isValid() const { return B2_IS_NON_NULL(_shapeId); }
 
 protected:
-    b2Fixture* _fixture = nullptr;
+    b2ShapeId _shapeId = b2_nullShapeId;
 };

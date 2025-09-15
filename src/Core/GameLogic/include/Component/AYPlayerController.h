@@ -195,6 +195,7 @@ protected:
             auto vel = _physics->getPhysicsBody()->getLinearVelocity();
             vel.y = 0;
             _physics->getPhysicsBody()->setLinearVelocity(vel);
+            _physics->getPhysicsBody()->setAngularVelocity(0);
             _physics->getPhysicsBody()->applyImpulse(glm::vec2(0, _jumpForce));
             _currentJumpCount++;
             _jumpCooldownTimer = _jumpCooldownTime;

@@ -6,28 +6,42 @@ class Box2DCircleCollider : public AYCircle2DCollider, public Box2DColliderBase
 {
 public:
     explicit Box2DCircleCollider(float radius = 0.5f) :
-        AYCircle2DCollider(radius) {}
-
+        AYCircle2DCollider(radius) {
+    }
 
     void setRadius(float radius) override
     {
         _radius = radius;
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
-    b2Shape* createBox2DShape() const override
+    void setOffset(const glm::vec2& offset) override
     {
-        b2CircleShape* shape = new b2CircleShape();
-        updateBox2DShape(shape);
-        return shape;
+        _offset = offset;
+        if (isValid()) updateShape(_shapeId);
     }
 
-    void updateBox2DShape(b2Shape* shape) const override
+    b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) override
     {
-        b2CircleShape* circleShape = dynamic_cast<b2CircleShape*>(shape);
-        if (circleShape) {
-            circleShape->m_radius = _radius;
-            circleShape->m_p.Set(_offset.x, _offset.y);
-        }
+        b2Circle circle = createBox2DCircle();
+        return b2CreateCircleShape(bodyId, &shapeDef, &circle);
     }
+
+    void updateShape(b2ShapeId shapeId) const override
+    {
+        if (B2_IS_NULL(shapeId)) return;
+
+        b2Circle circle = createBox2DCircle();
+        b2Shape_SetCircle(shapeId, &circle);
+    }
+
+private:
+    b2Circle createBox2DCircle() const
+    {
+        b2Circle circle;
+        circle.center = { _offset.x, _offset.y };
+        circle.radius = _radius;
+        return circle;
+    }
+
 };

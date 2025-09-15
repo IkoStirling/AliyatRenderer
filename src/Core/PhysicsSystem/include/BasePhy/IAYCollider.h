@@ -1,7 +1,7 @@
 #pragma once
 #include "ECPhysicsDependence.h"
 
-class IAYPhysicsBody; // Ç°ÏòÉùÃ÷
+class IAYPhysicsBody; // å‰å‘å£°æ˜
 
 class IAYCollider {
 public:
@@ -14,13 +14,13 @@ public:
 
     virtual ~IAYCollider() = default;
 
-    // »ù´¡ÊôĞÔ
+    // åŸºç¡€å±æ€§
     virtual ShapeType getShapeType() const = 0;
     virtual void setOffset(const glm::vec2& offset) { _offset = offset; }
     virtual glm::vec2 getOffset() const { return _offset; }
+    virtual void setRotation(const glm::vec3& rotation) { _rotation = rotation; }
 
-
-    // ÎïÀí²ÄÖÊ
+    // ç‰©ç†æè´¨
     virtual void setFriction(float friction) { _friction = friction; }
     virtual void setRestitution(float restitution) { _restitution = restitution; }
     virtual void setDensity(float density) { _density = density; }
@@ -28,18 +28,19 @@ public:
     virtual float getRestitution() const { return _restitution; }
     virtual float getDensity() const { return _density; }
 
-    // Åö×²¹ıÂË
+    // ç¢°æ’è¿‡æ»¤
     virtual void setCategoryBits(uint16_t bits) { _categoryBits = bits; }
     virtual void setMaskBits(uint16_t bits) { _maskBits = bits; }
     virtual uint16_t getCategoryBits() const { return _categoryBits; }
     virtual uint16_t getMaskBits() const { return _maskBits; }
 
-    // ´¥·¢Ä£Ê½
+    // è§¦å‘æ¨¡å¼
     virtual void setIsTrigger(bool trigger) { _isTrigger = trigger; }
     virtual bool isTrigger() const { return _isTrigger; }
 
 protected:
     glm::vec2 _offset = { 0.0f, 0.0f };
+    glm::vec3 _rotation = { 0.0f, 0.0f, 0.0f };
     float _friction = 0.2f;
     float _restitution = 0.0f;
     float _density = 1.0f;

@@ -8,28 +8,61 @@ public:
     explicit Box2DBoxCollider(const glm::vec2& size = { 1.0f, 1.0f }) :
         AYBox2DCollider(size) {}
 
-    // ���з���
+    // 特有方法
     void setSize(const glm::vec2& size) override
-    { 
+    {
         _size = size;
-        if (_fixture)
-            updateBox2DShape(_fixture->GetShape());
+        if (isValid()) {
+            updateShape(_shapeId);
+        }
     }
 
-    b2Shape* createBox2DShape() const override
+    void setRotation(const glm::vec3& rotation) override
     {
-        b2PolygonShape* shape = new b2PolygonShape();
-        updateBox2DShape(shape);
-        return shape;
+        _rotation = rotation;
+        if (isValid()) {
+            updateShape(_shapeId);
+        }
     }
 
-    void updateBox2DShape(b2Shape* shape) const override
+    b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) override
     {
-        b2PolygonShape* boxShape = dynamic_cast<b2PolygonShape*>(shape);
-        if (boxShape) {
-            b2Vec2 boxSize(_size.x * 0.5f, _size.y * 0.5f);
-            boxShape->SetAsBox(boxSize.x, boxSize.y,
-                b2Vec2(_offset.x, _offset.y), 0.0f);
+        // 创建多边形形状
+        b2Polygon polygon = createBoxPolygon();
+        _shapeId = b2CreatePolygonShape(bodyId, &shapeDef, &polygon);
+        return _shapeId;
+    }
+
+    void updateShape(b2ShapeId shapeId) const override
+    {
+        if (B2_IS_NULL(shapeId)) return;
+
+        // 更新多边形形状
+        b2Polygon polygon = createBoxPolygon();
+        b2Shape_SetPolygon(shapeId, &polygon);
+    }
+
+private:
+    // 创建Box2D多边形
+    b2Polygon createBoxPolygon() const
+    {
+        float halfWidth = _size.x * 0.5f;
+        float halfHeight = _size.y * 0.5f;
+
+        // 如果有偏移或旋转，使用偏移版本的函数
+        if (_offset != glm::vec2(0.0f, 0.0f) || _rotation != glm::vec3(0.0f)) {
+            b2Vec2 center = { _offset.x, _offset.y };
+            b2Rot rotation = f2B2Rot(_rotation.z);
+            // 如果有圆角半径（如果需要的话）
+            // float radius = 0.1f; // 示例圆角半径
+            // return b2MakeOffsetRoundedBox(halfWidth, halfHeight, center, b2Rot{0.0f}, radius);
+
+            // 使用偏移盒子
+            return b2MakeOffsetBox(halfWidth, halfHeight, center, rotation);
+        }
+        else {
+            // 使用普通盒子
+            return b2MakeBox(halfWidth, halfHeight);
         }
     }
 };

@@ -6,64 +6,75 @@ class Box2DEdgeCollider : public AYEdge2DCollider, public Box2DColliderBase
 {
 public:
     explicit Box2DEdgeCollider(const glm::vec2& size = { 1.0f, 1.0f }) :
-        AYEdge2DCollider(size) {}
+        AYEdge2DCollider(size) {
+    }
 
     void setOffset(const glm::vec2& offset) override {
         AYEdge2DCollider::setOffset(offset);
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
     void setVertices(const glm::vec2& v1, const glm::vec2& v2) override
     {
         AYEdge2DCollider::setVertices(v1, v2);
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
     void setOneSided(bool oneSided) override
     {
         AYEdge2DCollider::setOneSided(oneSided);
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
     void setAdjacentVertices(const glm::vec2& prevVertex, const glm::vec2& nextVertex) override
     {
         AYEdge2DCollider::setAdjacentVertices(prevVertex, nextVertex);
-        if (_fixture) updateBox2DShape(_fixture->GetShape());
+        if (isValid()) updateShape(_shapeId);
     }
 
-    b2Shape* createBox2DShape()
+    b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) override
     {
-        b2EdgeShape* shape = new b2EdgeShape();
-        updateBox2DShape(shape);
-        return shape;
+        b2Segment segment = createBox2DSegment();
+        return b2CreateSegmentShape(bodyId, &shapeDef, &segment);
     }
 
-    void updateBox2DShape(b2Shape* shape)
+    void updateShape(b2ShapeId shapeId) const override
     {
-        b2EdgeShape* edgeShape = dynamic_cast<b2EdgeShape*>(shape);
-        if (!edgeShape) return;
+        if (B2_IS_NULL(shapeId)) return;
 
-        b2Vec2 v1(_vertex1.x + _offset.x, _vertex1.y + _offset.y);
-        b2Vec2 v2(_vertex2.x + _offset.x, _vertex2.y + _offset.y);
+        b2Segment segment = createBox2DSegment();
+        b2Shape_SetSegment(shapeId, &segment);
+    }
+
+private:
+    b2Segment createBox2DSegment() const
+    {
+        b2Segment segment;
+
+        // åº”ç”¨åç§»
+        segment.point1 = { _vertex1.x + _offset.x, _vertex1.y + _offset.y };
+        segment.point2 = { _vertex2.x + _offset.x, _vertex2.y + _offset.y };
 
         if (_isOneSided) {
-            // ¼ÆËãÄ¬ÈÏµÄÏàÁÚ¶¥µã£¨Èç¹ûÎ´Ã÷È·ÉèÖÃ£©
-            b2Vec2 dir = v2 - v1;
-            b2Vec2 normal(-dir.y, dir.x);
-            normal.Normalize();
+            // è®¡ç®—é»˜è®¤çš„ç›¸é‚»é¡¶ç‚¹ï¼ˆå¦‚æœæœªæ˜ç¡®è®¾ç½®ï¼‰
+            b2Vec2 dir = segment.point2 - segment.point1;
+            b2Vec2 normal = { -dir.y, dir.x };
+            normal = b2Normalize(normal);
 
-            b2Vec2 v0 = _prevVertexSet ?
-                b2Vec2(_prevVertex.x + _offset.x, _prevVertex.y + _offset.y) :
-                v1 - normal;
+            segment.point1 = _prevVertexSet ?
+                b2Vec2{ _prevVertex.x + _offset.x, _prevVertex.y + _offset.y } :
+                segment.point1 - normal;
 
-            b2Vec2 v3 = _nextVertexSet ?
-                b2Vec2(_nextVertex.x + _offset.x, _nextVertex.y + _offset.y) :
-                v2 + normal;
-
-            edgeShape->SetOneSided(v0, v1, v2, v3);
+            segment.point2 = _nextVertexSet ?
+                b2Vec2{ _nextVertex.x + _offset.x, _nextVertex.y + _offset.y } :
+                segment.point2 + normal;
         }
         else {
-            edgeShape->SetTwoSided(v1, v2);
+            // åŒè¾¹è¾¹ç¼˜ï¼Œæ¸…é™¤å¹½çµç‚¹
+            segment.point1 = segment.point1;
+            segment.point2 = segment.point2;
         }
+
+        return segment;
     }
 };

@@ -1,4 +1,4 @@
-﻿set(MODULE_NAME renderer)
+set(MODULE_NAME renderer)
 set(INTERFACE_NAME ${MODULE_NAME}_xxx)
 
 
@@ -33,7 +33,14 @@ target_link_libraries(${MODULE_NAME}
 	resource_manager
 	input_system
 	PRIVATE
+	bgfx
 	${RENDER_LIBS}
 	Freetype::Freetype
 	${OpenCV_LIBS}
 ) 
+
+target_include_directories(${MODULE_NAME}  PUBLIC 
+    ${CMAKE_SOURCE_DIR}/thirdParty/bgfx.cmake/bx/include
+    ${CMAKE_SOURCE_DIR}/thirdParty/bgfx.cmake/bgfx/include
+    ${CMAKE_SOURCE_DIR}/thirdParty/bgfx.cmake/bimg/include
+)

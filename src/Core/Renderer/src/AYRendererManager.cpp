@@ -131,6 +131,19 @@ void AYRendererManager::init()
 	
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 11, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 12, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
+
+	auto x = _device->getShaderB("testS", true, "assets/core/shaders/UIRenderer/ui.vert", "assets/core/shaders/UIRenderer/ui.frag");
+	auto y = _device->getShaderB("testS", true, "assets/core/shaders/screenSpace.vert", "assets/core/shaders/screenSpace.frag");
+	auto tex = AYResourceManager::getInstance().load<AYTexture>("@textures/500_497.png");
+	if (!tex || !tex->isLoaded()) {
+		return;
+	}
+	auto z = _device->createTexture2DB(tex->getPixelData(),
+		tex->getWidth(),
+		tex->getHeight(),
+		tex->getChannels());
+	_device->updateTextureB(z, nullptr, 4, 4, bgfx::TextureFormat::RGB8S);
+
 }
 
 void AYRendererManager::update(float delta_time)
@@ -167,7 +180,7 @@ void AYRendererManager::_renderAll(float delta_time)
 {
 	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
+	//_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
 
 	for (auto renderable : _renderables)
 	{
@@ -343,7 +356,7 @@ void AYRendererManager::_displayDebugInfo()
 	//dr->drawLine2D(glm::vec2(0), glm::vec2(5,5), glm::vec4(1));
 
 	// 死区框
-	//dr->drawRect2D({ glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0)}, glm::vec2(1920 *0.4f, 1080 * 0.4f), mat2, true, AYCoreRenderer::Space::Screen);
+	//dr->drawRect2D({ glm::vec3(0, -0.5f, 0)}, glm::vec2(500, 1), mat2, true, AYCoreRenderer::Space::World);
 	
 	//_renderer->getSpriteRenderer()->drawSprite(
 	//	tex_ID,

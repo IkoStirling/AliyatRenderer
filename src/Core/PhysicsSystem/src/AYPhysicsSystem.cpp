@@ -1,9 +1,11 @@
-﻿#include "AYPhysicsSystem.h"
+#include "AYPhysicsSystem.h"
+#include "AYRendererManager.h"
 
 void AYPhysicsSystem::init()
 {
 	createWorld(WorldType::AY2D);
 	createWorld(WorldType::AY3D);
+	setDebugDrawEnabled(true);
 }
 
 void AYPhysicsSystem::update(float delta_time)
@@ -74,7 +76,50 @@ void AYPhysicsSystem::setFixedTimeStep(float timeStep)
 
 void AYPhysicsSystem::setDebugDrawEnabled(bool enabled)
 {
-	_debugDrawEnabled = enabled;
+	auto rendererManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+	if (enabled && !_debugDrawFlags)
+	{
+		_debugDrawFlags = rendererManager->addDebugDraw(false, [this](AYRenderer* renderer, AYRenderDevice* device) {
+			for (auto& [type, world] : _worlds)
+			{
+				for (auto body : world.impl->getAllBodies())
+				{
+					if (auto bbody = dynamic_cast<Box2DPhysicsBody*>(body))
+					{
+						auto aabbVec4 = bbody->getAABB();
+						// 解包
+						float minX = aabbVec4.x;
+						float minY = aabbVec4.y;
+						float maxX = aabbVec4.z;
+						float maxY = aabbVec4.w;
+
+						// 计算中心点
+						float centerX = (minX + maxX) * 0.5f;
+						float centerY = (minY + maxY) * 0.5f;
+
+						// 计算宽高
+						float width = maxX - minX;
+						float height = maxY - minY;
+
+						// 转换为 glm::vec2
+						glm::vec3 center(centerX, centerY, 0);
+						glm::vec2 size(width, height);
+						renderer->getCoreRenderer()
+							->drawRect2D(
+								{ center },
+								size,
+								0,
+								true,
+								AYCoreRenderer::Space::World);
+					}
+				}
+			}
+			});
+	}
+	else if (!enabled && _debugDrawFlags)
+	{
+		rendererManager->removeDebugDraw(_debugDrawFlags);
+	}
 }
 
 void AYPhysicsSystem::setDebugDrawFlags(uint32_t flags)

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "AYEntrant.h"
 #include "Component/AYSpriteRenderComponent.h"
 
@@ -16,17 +16,15 @@ public:
 		auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
 		auto entity2 = ecsEngine->createEntity();
 		ecsEngine->addComponent<STTransform>(entity2);
-		setPosition(glm::vec2(0, 0));
-		auto ground = physicsSystem->getPhysicsWorld(WorldType::AY2D)
-			->createBody(
-				entity2,
-				getPosition(),
-				0.f,
-				IAYPhysicsBody::BodyType::Static);
-		auto collider = new Box2DBoxCollider(glm::vec2(500, 1));
-		collider->setOffset(glm::vec2(0, -0.5f)); 
-		ground->addCollider(collider);
 
+		auto collider = std::make_shared<Box2DBoxCollider>(glm::vec2(500, 1));
+		collider->setOffset(glm::vec2(0, -0.5f));
+		collider->setCategoryBits(AYCategoryBits::Ground); // 地面类别
+		collider->setMaskBits(AYCategoryBits::BlockAll);     // 与所有类别碰撞
+		collider->setFriction(0.7f);       // 足够的摩擦力
+		collider->setRestitution(0.1f);    // 轻微的弹性
+		_physics->addCollider(collider);
+		_physics->setBodyType(IAYPhysicsBody::BodyType::Static);
 	}
 
 	virtual void beginPlay()override
@@ -55,7 +53,8 @@ public:
 		if (time > 1.f)
 		{
 			time -= 1.f;
-			auto pos = _physics->getPhysicsBody()->getPosition();
+			//auto pos = _physics->getPhysicsBody()->getPosition();
+			auto pos = static_cast<Box2DPhysicsBody*>(_physics->getPhysicsBody())->getPosition();
 			//std::cout << std::fixed << std::setprecision(4)
 			//	<< "[Ground]"
 			//	<< ")  \tPosition(" << pos.x << ", " << pos.y << ")\n";

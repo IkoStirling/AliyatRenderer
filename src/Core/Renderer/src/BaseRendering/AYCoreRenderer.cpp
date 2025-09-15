@@ -1,4 +1,4 @@
-﻿#include "BaseRendering/AYCoreRenderer.h"
+#include "BaseRendering/AYCoreRenderer.h"
 #include "AYRenderer.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include <glm/gtc/type_ptr.hpp> ​​
@@ -521,7 +521,7 @@ void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batc
     _device->saveGLState();
     auto stateManager = _device->getGLStateManager();
 
-    auto shader = _getInstanceShader(false);
+    auto shader = _getInstanceShader(true);
 
     // 状态设置
     stateManager->setCullFace(true);
@@ -659,116 +659,11 @@ void AYCoreRenderer::flushWithRecover()
         }
     }
 
-    // 2. 对透明网格按距离排序（从远到近）
-    //std::sort(_transparentMeshes.begin(), _transparentMeshes.end(),
-    //    [this](const auto& a, const auto& b) {
-    //        return a.distanceToCamera < b.distanceToCamera;  // 从远到近
-    //    });
-
-    //// 3. 渲染透明网格
-    //for (const auto& instance : _transparentMeshes) {
-    //    renderTransparentMesh(instance);
-    //}
-    //_transparentMeshes.clear();  // 清空容器
 }
 
 void AYCoreRenderer::renderTransparentMesh(const TransparentMeshInstance& transMesh)
 {
-//    const auto& mat = _renderer->getMaterialManager()->getMaterial(transMesh.mesh.materialName);
-//
-//    _device->saveGLState();
-//    auto stateManager = _device->getGLStateManager();
-//
-//    auto shader = _getInstanceShader(false);
-//
-//    // 状态设置
-//;
-//    stateManager->setCullFace(true);
-//    stateManager->bindVertexArray(_vao);
-//    stateManager->useProgram(shader);
-//    stateManager->setDepthTest(true);
-//    stateManager->setDepthMask(true);
-//    stateManager->setDepthFunc(GL_LESS);
-//    stateManager->setLineWidth(_lineWidth);
-//    stateManager->setBlend(false);
-//    //stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//    //stateManager->setDepthMask(false);
-//    //stateManager->setDepthFunc(GL_LEQUAL);  // 允许等于当前深度的像素通过
-//
-//    // 设置矩阵
-//    glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"),
-//        1, GL_FALSE, glm::value_ptr(getCurrentProjection(transMesh.space)));
-//    glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"),
-//        1, GL_FALSE, glm::value_ptr(getCurrentView(transMesh.space)));
-//    // 提交光照
-//    auto& pos = _renderer->getCameraSystem()->getActiveCamera()->getPosition();
-//    glUniform3fv(glGetUniformLocation(shader, "u_ViewPos"),
-//        1, glm::value_ptr(pos));
-//
-//    auto lightManager = _renderer->getLightManager();
-//    lightManager->updateLightData();
-//    lightManager->bindLightData(0); // 绑定到binding point 0
-//
-//    // 设置材质
-//    glUniform4fv(glGetUniformLocation(shader, "u_BaseColor"),
-//        1, glm::value_ptr(mat.baseColor));
-//    glUniform1f(glGetUniformLocation(shader, "u_Metallic"), mat.metallic);
-//    glUniform1f(glGetUniformLocation(shader, "u_Roughness"), mat.roughness);
-//    glUniform1i(glGetUniformLocation(shader, "u_DebugMode"), 0);
-//
-//    auto texMana = _device->getTextureManager();
-//    if (!mat.albedoTexture.empty()) {
-//        auto albedoTextureID = texMana->getTexture(mat.albedoTexture);
-//        glActiveTexture(GL_TEXTURE0);
-//        glBindTexture(GL_TEXTURE_2D, albedoTextureID);
-//        glUniform1i(glGetUniformLocation(shader, "u_AlbedoTexture"), 0);
-//        glUniform1i(glGetUniformLocation(shader, "u_UseAlbedoTexture"), 1);
-//    }
-//    else {
-//        glUniform1i(glGetUniformLocation(shader, "u_UseAlbedoTexture"), 0);
-//    }
-//
-//    if (!mat.opacityTexture.empty()) {
-//        glActiveTexture(GL_TEXTURE1);  // 使用不同的纹理单元
-//        glBindTexture(GL_TEXTURE_2D, texMana->getTexture(mat.opacityTexture));
-//        glUniform1i(glGetUniformLocation(shader, "u_OpacityTexture"), 1);
-//        glUniform1i(glGetUniformLocation(shader, "u_UseOpacityTexture"), 0);
-//    }
-//    else {
-//        glUniform1i(glGetUniformLocation(shader, "u_UseOpacityTexture"), 0);
-//    }
-//
-//    // 提交顶点数据
-//    std::vector<VertexInfo> tmp;
-//    tmp.reserve(transMesh.mesh.vertices.size());
-//
-//    for (size_t i = 0; i < transMesh.mesh.vertices.size(); i++)
-//    {
-//        glm::vec3 pos = transMesh.mesh.vertices[i];
-//        glm::vec3 normal = (i < transMesh.mesh.normals.size()) ? transMesh.mesh.normals[i] : glm::vec3(0.0f, 1.0f, 0.0f);
-//        glm::vec2 uv = (i < transMesh.mesh.texCoords.size()) ? transMesh.mesh.texCoords[i] : glm::vec2(0.0f, 0.0f);
-//
-//        tmp.emplace_back(pos, normal, uv);
-//    }
-//    uploadVertexData(tmp);
-//
-//    // 提交索引数据（如果需要）
-//    if (!transMesh.mesh.indices.empty()) {
-//        uploadIndexData(transMesh.mesh.indices);
-//    }
-//
-//    int curVertex = 0;
-//
-//    //提交实例化模型矩阵
-//    uploadInstanceData({ transMesh.transform.getTransformMatrix() });
-//
-//    glDrawElementsInstanced(GL_TRIANGLES,//图元类型
-//        transMesh.mesh.indices.size(),                       //索引数量，以1个三角形为例，需要三个索引
-//        GL_UNSIGNED_INT,                        //索引数据类型
-//        (void*)(0 * sizeof(GL_UNSIGNED_INT)),  // 索引偏移量，如果nullptr直接从当前绑定IBO开始
-//        1);
-//
-//    _device->restoreGLState();
+
 }
 
 void AYCoreRenderer::_loadCoreRendererConfigINI()
@@ -778,9 +673,9 @@ void AYCoreRenderer::_loadCoreRendererConfigINI()
     _instance = _config.get<std::string>("shader name.instance", std::string("CoreInstanceShader"));
     _base = _config.get<std::string>("shader name.base", std::string("CoreBaseShader"));
     _instanceVertexPath = _config.get<std::string>("shader path.instance_vertex",
-        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/pbr_instance.vert"));
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.vert"));
     _instanceFragmentPath = _config.get<std::string>("shader path.instance_fragment",
-        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/pbr_instance.frag"));
+        AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/instance.frag"));
     _baseVertexPath = _config.get<std::string>("shader path.base_vertex",
         AYPath::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.vert"));
     _baseFragmentPath = _config.get<std::string>("shader path.base_fragment",
