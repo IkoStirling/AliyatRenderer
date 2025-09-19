@@ -69,7 +69,7 @@ using AudioFramePtr = std::shared_ptr<AudioFrame>;
 struct AudioFrame {
     std::vector<uint8_t> data;
     double pts;
-    ALuint alBuffer = 0;
+    ALuint alBuffer;
 };
 
 
@@ -110,6 +110,41 @@ public:
         }
 
         return -1;
+    }
+
+    int findBsetStream(AVCodecParameters*& codecParameters, AVMediaType type)
+    {
+        if (!ctx) {
+            std::cerr << "Error: AVFormatContext is null. Did you open the file successfully?" << std::endl;
+            codecParameters = nullptr;
+            return -1;
+        }
+
+        codecParameters = nullptr;
+
+        if (avformat_find_stream_info(ctx, nullptr) < 0) {
+            std::cerr << "Failed to find stream info" << std::endl;
+            return -1;
+        }
+
+        // 使用 av_find_best_stream 查找最佳流
+        int streamIndex = av_find_best_stream(
+            ctx,
+            type,      // 传入的流类型（如 AVMEDIA_TYPE_AUDIO）
+            -1,        // 自动选择流
+            -1,        // 不关联其他流
+            NULL,      // 不指定解码器
+            0          // 无特殊标志
+        );
+
+        if (streamIndex < 0) {
+            std::cerr << "No suitable stream found. Error: " << streamIndex << std::endl;
+            return -1;
+        }
+
+        // 获取对应流的 codecParameters
+        codecParameters = ctx->streams[streamIndex]->codecpar;
+        return streamIndex;
     }
 private:
     AVFormatContext* ctx = nullptr;

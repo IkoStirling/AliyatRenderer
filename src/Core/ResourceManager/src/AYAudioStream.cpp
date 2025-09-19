@@ -43,7 +43,7 @@ bool AYAudioStream::load(const std::string& filepath) {
 
     // 查找音频流
     AVCodecParameters* codecPar = nullptr;
-    _streamIndex = _fmtCtx->findStream(codecPar, AVMEDIA_TYPE_AUDIO);
+    _streamIndex = _fmtCtx->findBsetStream(codecPar, AVMEDIA_TYPE_AUDIO);
     if (_streamIndex < 0 || !codecPar) return false;
 
     // 初始化解码器

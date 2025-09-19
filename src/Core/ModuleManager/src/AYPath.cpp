@@ -2,6 +2,7 @@
 #include <iostream>
 
 // 初始化静态成员变量
+std::once_flag AYPath::_initFlag;
 const std::string AYPath::Windows::AppName = "AliyatRenderer";
 
 const std::string AYPath::Engine::AssetsPath = "assets/";
@@ -127,6 +128,7 @@ std::mutex AYPath::Resolver::_mutex;
 std::string AYPath::Resolver::_assetsRoot = "";
 
 void AYPath::Resolver::addSearchPath(const std::string& path) {
+    std::lock_guard<std::mutex> lock(_mutex);
     std::string normalized = _normalize(path);
     if (std::find(_searchPaths.begin(), _searchPaths.end(), normalized) == _searchPaths.end()) {
         _searchPaths.push_back(normalized);
@@ -134,14 +136,18 @@ void AYPath::Resolver::addSearchPath(const std::string& path) {
 }
 
 void AYPath::Resolver::setAlias(const std::string& alias, const std::string& path) {
+    std::lock_guard<std::mutex> lock(_mutex);
     _aliases[_normalize(alias)] = _normalize(path);
 }
 
-void AYPath::Resolver::setAssetsRoot(const std::string& rootPath) {
+void AYPath::Resolver::setAssetsRoot(const std::string& rootPath) 
+{
+    std::lock_guard<std::mutex> lock(_mutex);
     _assetsRoot = _normalize(rootPath);
 }
 
-std::string AYPath::Resolver::resolve(const std::string& inputPath) {
+std::string AYPath::Resolver::resolve(const std::string& inputPath) 
+{
     std::lock_guard<std::mutex> lock(_mutex);
     if (auto it = _resolvedCache.find(inputPath); it != _resolvedCache.end()) {
         return it->second; // 返回缓存结果

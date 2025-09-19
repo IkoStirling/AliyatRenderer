@@ -28,7 +28,7 @@ void AYEngineCore::init()
     GET_MODULE("EventSystem")->init();
     GET_MODULE("MaterialManager")->init();
     GET_MODULE("ResourceManager")->init();
-    GET_MODULE("SoundEngine")->init();
+    GET_MODULE("AVEngine")->init();
     GET_MODULE("Renderer")->init();
     GET_MODULE("InputSystem")->init();
     GET_MODULE("SceneManager")->init();
@@ -112,7 +112,7 @@ void AYEngineCore::update()
             GET_MODULE("PhysicsSystem")->update(delta);
             GET_MODULE("CombatSystem")->update(delta);
             GET_MODULE("ResourceManager")->update(delta);
-            GET_MODULE("SoundEngine")->update(delta);
+            GET_MODULE("AVEngine")->update(delta);
         }
     }
 

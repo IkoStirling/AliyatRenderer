@@ -84,7 +84,7 @@ Before execute this program, preparing these packages:
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm efsw assimp
+	vcpkg install boost-asio boost-system boost-property-tree boost-locale opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm efsw assimp spdlog cpp-httplib 
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|
@@ -102,3 +102,4 @@ Run the following commands:
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|
 | The memory consumption of the 10mb fbx model loaded in the assert library reaches 3.8GB. Although my computer has 64GB of memory, most computers still stay on 16GB of memory, which is obviously unacceptable. Of course, there may be a problem with the process of exporting fbx through pmx| ![pic](assets/core/.problems/p1_model_load.png)
+| When the device information switches to the 3060+AMD low-end CPU, it is only then that we realize the significant design flaws in the previous architecture. Afterwards, we will fully shift to a specialized multi platform rendering solution to avoid multiple repeated uploads of data| ![pic](assets/core/.problems/p2_render_thread.png)

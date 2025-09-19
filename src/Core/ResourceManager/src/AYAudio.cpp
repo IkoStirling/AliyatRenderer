@@ -83,7 +83,7 @@ bool AYAudio::decodeFullAudio(const std::string& rpath)
 
     AVCodecParameters* codecParameters = nullptr;
     int audioStreamIndex = -1;
-    audioStreamIndex = formatContext->findStream(codecParameters, AVMediaType::AVMEDIA_TYPE_AUDIO);
+    audioStreamIndex = formatContext->findBsetStream(codecParameters, AVMediaType::AVMEDIA_TYPE_AUDIO);
 
     if (audioStreamIndex == -1 || !codecParameters)
         return false;
@@ -178,11 +178,11 @@ bool AYAudio::decodeFullAudio(const std::string& rpath)
 
         if (dst_nb_samples > 0) {
             if (av_samples_alloc_array_and_samples(&dst_data, &dst_linesize,
-                out_channels.nb_channels, dst_nb_samples, out_sample_fmt, 0) < 0) {
+                out_channels.nb_channels, (int)dst_nb_samples, out_sample_fmt, 0) < 0) {
                 return -1;
             }
 
-            int nb_samples = swr_convert(swrContext.get(), dst_data, dst_nb_samples,
+            int nb_samples = swr_convert(swrContext.get(), dst_data, (int)dst_nb_samples,
                 (const uint8_t**)origin_frame->data, origin_frame->nb_samples);
 
             if (nb_samples > 0) {
@@ -206,7 +206,7 @@ bool AYAudio::decodeFullAudio(const std::string& rpath)
     // --------------------------
     // 6. 刷新重采样器（取出剩余数据）
     // --------------------------
-    int flush_samples = swr_get_delay(swrContext.get(), out_sample_rate);
+    int flush_samples = swr_get_delay(swrContext.get(), (int64_t)out_sample_rate);
     if (flush_samples > 0) {
         uint8_t* flush_data = nullptr;
         int flush_linesize = 0;

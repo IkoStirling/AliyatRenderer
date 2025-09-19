@@ -8,7 +8,7 @@
 #include "BaseRendering/Camera/AY2DCamera.h"
 #include "Component/AYPlayerController.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
-#include "AYSoundEngine.h"
+#include "AYAVEngine.h"
 
 class Orc : public AYEntrant
 {
@@ -185,8 +185,14 @@ public:
 				static bool flag0 = true;
 				if (flag0)
 				{
-					//GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->play2D("@audios/ambient/amb_dark_01.wav", true, true);
-					GET_CAST_MODULE(AYSoundEngine, "SoundEngine")->playSound2D("@audios/ambient/Evening_wanders.mp3", false, true, 0.5f);
+					auto ave = GET_CAST_MODULE(AYAVEngine, "AVEngine");
+					std::vector<std::string> lists{
+						"@audios/biteall.wav",
+						"@audios/shade6.wav",
+						"@audios/ambient/Evening_wanders.mp3",
+					};
+					ave->createPlaylist("orc", lists);
+					ave->playPlaylist("orc", true);
 					flag0 = false;
 				}
 			}

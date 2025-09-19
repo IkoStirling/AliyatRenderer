@@ -260,4 +260,5 @@ bool AYConfigWrapper::_removeEmptyParents(boost::property_tree::ptree& pt, const
 			break; // 遇到非空节点停止清理
 		}
 	}
+	return true;
 }

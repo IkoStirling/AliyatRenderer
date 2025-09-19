@@ -11,39 +11,37 @@
 
 class AYPath
 {
+    static std::once_flag _initFlag;
 public:
     static void init() {
-        static bool initialized = false;
-        if (initialized) return;
+        std::call_once(_initFlag, []() {
+            // 设置资源根目录
+            AYPath::Resolver::setAssetsRoot(AYPath::Engine::getAssetsPath());
 
-        // 设置资源根目录
-        AYPath::Resolver::setAssetsRoot(AYPath::Engine::getAssetsPath());
+            // 添加常用搜索路径
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getUserPath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetCachePath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetModelPath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetAudioPath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetVideoPath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetTexturePath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetShaderPath());
+            AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetConfigPath());
 
-        // 添加常用搜索路径
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getUserPath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetCachePath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetModelPath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetAudioPath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetVideoPath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetTexturePath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetShaderPath());
-        AYPath::Resolver::addSearchPath(AYPath::Engine::getPresetConfigPath());
+            // 设置路径别名
 
-        // 设置路径别名
-
-        AYPath::Resolver::setAlias("@models", AYPath::Engine::getPresetModelPath());
-        AYPath::Resolver::setAlias("@shaders", AYPath::Engine::getPresetShaderPath());
-        AYPath::Resolver::setAlias("@audios", AYPath::Engine::getPresetAudioPath());
-        AYPath::Resolver::setAlias("@videos", AYPath::Engine::getPresetVideoPath());
-        AYPath::Resolver::setAlias("@textures", AYPath::Engine::getPresetTexturePath());
-        AYPath::Resolver::setAlias("@web", AYPath::Engine::getPresetWebPath());
-        AYPath::Resolver::setAlias("@config", AYPath::Engine::getPresetConfigPath());
-        // 初始化代码...
-        initialized = true;
+            AYPath::Resolver::setAlias("@models", AYPath::Engine::getPresetModelPath());
+            AYPath::Resolver::setAlias("@shaders", AYPath::Engine::getPresetShaderPath());
+            AYPath::Resolver::setAlias("@audios", AYPath::Engine::getPresetAudioPath());
+            AYPath::Resolver::setAlias("@videos", AYPath::Engine::getPresetVideoPath());
+            AYPath::Resolver::setAlias("@textures", AYPath::Engine::getPresetTexturePath());
+            AYPath::Resolver::setAlias("@web", AYPath::Engine::getPresetWebPath());
+            AYPath::Resolver::setAlias("@config", AYPath::Engine::getPresetConfigPath());
+            });
     }
 
     static std::string resolve(const std::string& path) {
-        init(); // 确保已初始化
+        init();
         return Resolver::resolve(path);
     }
 public:

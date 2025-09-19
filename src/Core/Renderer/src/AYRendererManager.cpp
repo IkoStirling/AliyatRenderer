@@ -2,7 +2,7 @@
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYPath.h"
-#include "AYSoundEngine.h"
+#include "AYAVEngine.h"
 
 void AYRendererManager::init()
 {
@@ -132,8 +132,8 @@ void AYRendererManager::init()
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 11, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 12, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 
-	auto x = _device->getShaderB("testS", true, "assets/core/shaders/UIRenderer/ui.vert", "assets/core/shaders/UIRenderer/ui.frag");
-	auto y = _device->getShaderB("testS", true, "assets/core/shaders/screenSpace.vert", "assets/core/shaders/screenSpace.frag");
+	//auto x = _device->getShaderB("testS", true, "assets/core/shaders/UIRenderer/ui.vert", "assets/core/shaders/UIRenderer/ui.frag");
+	//auto y = _device->getShaderB("testS", true, "assets/core/shaders/screenSpace.vert", "assets/core/shaders/screenSpace.frag");
 	auto tex = AYResourceManager::getInstance().load<AYTexture>("@textures/500_497.png");
 	if (!tex || !tex->isLoaded()) {
 		return;
@@ -409,8 +409,8 @@ void AYRendererManager::_displayDebugInfo()
 		if (t)
 		{
 			t = false;
-			auto soundEngine = GET_CAST_MODULE(AYSoundEngine, "SoundEngine");
-			videos = soundEngine->playVideo("@videos/bad_apple.mp4");
+			auto soundEngine = GET_CAST_MODULE(AYAVEngine, "AVEngine");
+			videos = soundEngine->playVideo("@videos/bad_apple.mp4",true);
 			videot = _device->createTexture2D(nullptr, videos->getWidth(), videos->getHeight());
 		}
 		//"@videos/bad_apple.mp4"

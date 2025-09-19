@@ -4,13 +4,15 @@
 #include "AYPhysicsSystem.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 #include "AYECSEngine.h"
-#include "AYSoundEngine.h"
+#include "AYAVEngine.h"
 #include "AYVideo.h"
 #include <spdlog/spdlog.h>
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
+#include <opencv2/core/utils/logger.hpp>
+
 #if defined(_DEBUG) || defined(DEBUG) || !defined(NDEBUG)
 #define ENABLE_CONSOLE_LOG 1
 #else
@@ -58,10 +60,17 @@ void setLogOption()
 
 }
 
+void avoidThirdPartyWarnning()
+{
+	cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_ERROR);
+	av_log_set_level(AV_LOG_ERROR);
+}
+
 int main()
 {
 	setLocalOption();
 	setLogOption();
+	avoidThirdPartyWarnning();
 
 	auto persistentLogger = spdlog::get("persistent");
 	auto runtimeLogger = spdlog::get("runtime");

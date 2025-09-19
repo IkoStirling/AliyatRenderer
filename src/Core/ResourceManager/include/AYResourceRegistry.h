@@ -36,7 +36,7 @@ public:
             }
             catch (const std::bad_any_cast& e) 
             {
-                throw std::runtime_error("Argument type mismatch for " + typeName);
+                throw std::runtime_error("Argument type mismatch for " + typeName + ": " + e.what());
             }
         };
     }

@@ -17,7 +17,6 @@ AYUIRenderer::AYUIRenderer(AYRenderDevice* device, AYRenderer* renderer):
 }
 
 AYUIRenderer::~AYUIRenderer() {
-    shutdown();
 }
 
 void AYUIRenderer::init() {

@@ -11,6 +11,7 @@
 class AYAudioPlayer 
 {
 public:
+    using PlaybackFinishedCallback = std::function<void()>;
     enum class PlayState {
         Stopped,
         Playing,
@@ -26,6 +27,7 @@ public:
     void resume();
     void stop();
     void seek(float seconds); // 仅对可定位源有效
+    void setPlaybackFinishedCallback(PlaybackFinishedCallback callback);
 
     // 属性控制
     void setMasterVolume(float volume);
@@ -54,6 +56,7 @@ private:
     bool refillBuffers(size_t minFrames = 2);
     void updateSourceProperties();
 
+    PlaybackFinishedCallback _callback;
     ALuint _source = 0;
     std::queue<ALuint> _bufferQueue;
     std::shared_ptr<IAYAudioSource> _currentSource;

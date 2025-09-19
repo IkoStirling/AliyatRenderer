@@ -138,7 +138,7 @@ void AYMemoryPoolProxy::initMemoryPool()
 		getMemoryPool(i).init((i + 1) * SLOT_BASE_SIZE);
 }
 
-AYMemoryPool& AYMemoryPoolProxy::getMemoryPool(int index)
+AYMemoryPool& AYMemoryPoolProxy::getMemoryPool(uint32_t index)
 {
 	static AYMemoryPool _memoryPoolList[POOL_NUMS];
 	return _memoryPoolList[index];

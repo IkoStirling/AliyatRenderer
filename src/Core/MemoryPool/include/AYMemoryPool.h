@@ -56,8 +56,8 @@ private:
 	bool pushFreeSlot(Slot* slot);
 	Slot* popFreeSlot();
 private:
-	int _blockSize; //内存块大小
-	int _slotSize; //实际插槽大小
+	uint32_t _blockSize; //内存块大小
+	uint32_t _slotSize; //实际插槽大小
 	Slot* _firstBlock; //指向最新的内存块，链表
 	Slot* _curSlot; //当前内存块标记位置，创建内存块会被更新
 	std::atomic<Slot*> _freeSlots; //所有线程及内存块共享，空闲插槽链表
@@ -74,7 +74,7 @@ public:
 	virtual void shutdown() override {} //不做任何操作，以达到任何时候内存池总是最后析构
 	virtual void update(float delta_time) override {};
 	static void initMemoryPool();
-	static AYMemoryPool& getMemoryPool(int index);
+	static AYMemoryPool& getMemoryPool(uint32_t index);
 
 	static void* useMemoryPool(size_t size);
 	static void freeMomory(void* ptr, size_t size);

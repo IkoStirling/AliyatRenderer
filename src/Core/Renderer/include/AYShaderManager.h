@@ -186,13 +186,14 @@ public:
 		if (it == _shaders.end()) return;
 
 		ShaderInfo& info = it->second;
-		if (bgfx::isValid(info.shaderProgramB)) {
-			bgfx::destroy(info.shaderProgramB);
-			info.shaderProgramB = loadShaderB(name, info.vertexShaderPath, info.fragmentShaderPath, true);
-		}
 		if (info.shaderProgram != 0) {
 			glDeleteProgram(info.shaderProgram);
 			info.shaderProgram = loadShader(name, info.vertexShaderPath, info.fragmentShaderPath, true);
+		}
+		else
+		{
+			bgfx::destroy(info.shaderProgramB);
+			info.shaderProgramB = loadShaderB(name, info.vertexShaderPath, info.fragmentShaderPath, true);
 		}
 	}
 private:

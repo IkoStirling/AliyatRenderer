@@ -15,6 +15,7 @@ bool AYModuleManager::registerModule(const std::string& name, std::shared_ptr<IA
 		_moduleMap[name] = std::move(module);
 		return true;
 	}
+	return false;
 }
 
 std::shared_ptr<IAYModule> AYModuleManager::getModule(const std::string& name) const

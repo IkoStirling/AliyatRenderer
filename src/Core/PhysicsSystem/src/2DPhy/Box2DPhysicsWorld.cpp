@@ -12,6 +12,7 @@ Box2DPhysicsWorld::Box2DPhysicsWorld()
 Box2DPhysicsWorld::~Box2DPhysicsWorld()
 {
     if (B2_IS_NON_NULL(_worldId)) {
+        _bodies.clear();
         b2DestroyWorld(_worldId);
     }
 }

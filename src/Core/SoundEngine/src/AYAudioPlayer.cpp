@@ -1,4 +1,5 @@
 ﻿#include "AYAudioPlayer.h"
+#include "AYAudioPlayer.h"
 #include "AYAudioStream.h"
 #include <thread>
 #include <memory>
@@ -31,7 +32,7 @@ bool AYAudioPlayer::play(const std::shared_ptr<IAYAudioSource>& source, bool loo
         const float compressionFactor = 0.8f; // 轻度压缩
         alBufferData(buffer, source->getFormat(),
             source->getPCMData().data(),
-            source->getPCMData().size(),
+            (ALsizei)source->getPCMData().size(),
             source->getSampleRate());
 
         // 设置缓冲区独立增益
@@ -82,6 +83,8 @@ void AYAudioPlayer::stop() {
     alSourceStop(_source);
     cleanup();
     _state.store(PlayState::Stopped);
+
+    _callback = nullptr;
 }
 
 void AYAudioPlayer::seek(float seconds)
@@ -101,6 +104,11 @@ void AYAudioPlayer::seek(float seconds)
         // 对于静态音频，直接设置播放位置
         alSourcef(_source, AL_SEC_OFFSET, seconds);
     }
+}
+
+void AYAudioPlayer::setPlaybackFinishedCallback(PlaybackFinishedCallback callback)
+{
+    _callback = callback;
 }
 
 void AYAudioPlayer::setMasterVolume(float volume) {
@@ -164,7 +172,7 @@ bool AYAudioPlayer::isPlaybackFinished() const {
     if (!_currentSource->isStreaming()) {
         ALint state;
         alGetSourcei(_source, AL_SOURCE_STATE, &state);
-        return (state == AL_STOPPED);
+        return (state == AL_STOPPED && !_loop.load());
     }
     // 3. 流式音频检查
     else {
@@ -186,7 +194,7 @@ bool AYAudioPlayer::isPlaybackFinished() const {
 
 bool AYAudioPlayer::isAvaliableOrInterruptible() const {
     return _state == PlayState::Stopped ||
-        (_state == PlayState::Playing && !_loop.load());
+        (_state == PlayState::Playing && _loop.load());
 }
 
 AYAudioPlayer::PlayState AYAudioPlayer::getState() const
@@ -237,24 +245,36 @@ void AYAudioPlayer::update() {
             }
         }
     }
+
+    // 检查播放是否结束
+    bool state = isPlaybackFinished();
+    if (state)
+    {
+        if (_callback) {
+            _callback();
+        }
+    }
 }
 
 
 void AYAudioPlayer::cleanup() {
-    // 清空缓冲区队列
-    ALint queued;
-    alGetSourcei(_source, AL_BUFFERS_QUEUED, &queued);
+    // 清空缓冲区队列（仅对流式音频）
+    if (_currentSource && _currentSource->isStreaming()) {
+        ALint queued;
+        alGetSourcei(_source, AL_BUFFERS_QUEUED, &queued);
 
-    while (queued--) {
-        ALuint buffer;
-        alSourceUnqueueBuffers(_source, 1, &buffer);
-        alDeleteBuffers(1, &buffer);
+        while (queued--) {
+            ALuint buffer;
+            alSourceUnqueueBuffers(_source, 1, &buffer);
+            alDeleteBuffers(1, &buffer);
+        }
     }
-
-    // 对于静态音频移除缓冲区绑定
-    if (!_currentSource->isStreaming()) {
+    // 对于静态音频只需解除缓冲区绑定
+    else if (_currentSource) {
         alSourcei(_source, AL_BUFFER, 0);
     }
+
+    _currentSource.reset();
 }
 
 void AYAudioPlayer::updateSourceProperties() {
@@ -294,7 +314,7 @@ bool AYAudioPlayer::refillBuffers(size_t minFrames) {
         alGenBuffers(1, &buffer);
 
         alBufferData(buffer, _currentSource->getFormat(),
-            frame->data.data(), frame->data.size(),
+            frame->data.data(), (ALsizei)frame->data.size(),
             _currentSource->getSampleRate());
 
         alSourceQueueBuffers(_source, 1, &buffer);

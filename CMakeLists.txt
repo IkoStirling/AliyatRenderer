@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 if (MSVC)
+	add_compile_options(/wd4828)  # 忽略 C4828
 	add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
 	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>")
 	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>")
