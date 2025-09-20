@@ -41,23 +41,26 @@ bool AYRenderDevice::init(int width, int height)
 
     bgfx::PlatformData platformData;
 #if BX_PLATFORM_WINDOWS
-    platformData.nwh = glfwGetWin32Window(_window);  // Windows 平台
+    platformData.nwh = glfwGetWin32Window(_window);
+    platformData.ndt = nullptr;
 #elif BX_PLATFORM_LINUX
-    platformData.ndt = glfwGetX11Display();          // Linux
     platformData.nwh = (void*)(uintptr_t)glfwGetX11Window(_window);
+    platformData.ndt = glfwGetX11Display();          
 #elif BX_PLATFORM_OSX
-    platformData.nwh = glfwGetCocoaWindow(_window); // macOS
+    platformData.nwh = glfwGetCocoaWindow(_window);
 #endif
-
     bgfx::Init init;
     init.platformData = platformData;
-    init.type = bgfx::RendererType::OpenGL;  // 仍用 OpenGL 后端
+    init.type = bgfx::RendererType::OpenGL;
+    //init.type = bgfx::RendererType::Count; // 后续替换
+    init.vendorId = BGFX_PCI_ID_NONE;
     init.resolution.width = width;
     init.resolution.height = height;
     init.resolution.reset = BGFX_RESET_VSYNC;  // 启用垂直同步
 
     if (!bgfx::init(init)) {
-        return false;  // bgfx 初始化失败
+        spdlog::error("[AYRenderDevice] Failed to init bgfx!");
+        return false;
     }
 
     _stateManager = std::make_unique<AYGLStateManager>();
@@ -71,6 +74,7 @@ bool AYRenderDevice::init(int width, int height)
 
 void AYRenderDevice::shutdown()
 {
+    bgfx::shutdown();
     removeViewportCallback();
     _saveDeviceWindowConfigINI();
 }

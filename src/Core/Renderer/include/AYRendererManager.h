@@ -30,6 +30,7 @@ public:
 
 	void setWindowCloseCallback(WindowCloseCallback onWindowClosed);
 	void setScreenCleanColor(const glm::vec3& color);
+	void switchRenderModle(bool isBgfx);
 
 	AYRenderContext& getRenderContext();
 	AYRenderDevice* getRenderDevice() { return _device.get(); };
@@ -42,6 +43,7 @@ public:
 	AYAnimatedSprite* create2DSprite(std::shared_ptr<AYSpriteAtlas> atlas);
 private:
 	void _renderAll(float delta_time);
+	void _renderAllB(float delta_time);
 	void _updateCameraActive(float delta_time);
 
 private:
@@ -52,6 +54,7 @@ private:
 	std::vector<int> _freeDebugDraws;
 	int _debugDrawCount = 0;
 private:
+	bool _useBgfx = true;
 	std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGL上下文管理
 	std::unique_ptr<AYRenderer> _renderer = nullptr;        // 具体绘制逻辑
 	std::unique_ptr<AYAnimationManager> _animeMana = nullptr;
@@ -59,8 +62,8 @@ private:
 	WindowCloseCallback _onWindowClosed;
 	std::vector<IAYRenderable*> _renderables; //不管理可渲染对象
 
-	//glm::vec3 _color = { 0.2f,0.3f,0.3f };
-	glm::vec3 _color = { 0.f,0.f,0.f };
+	//glm::vec3 _color = { 0.f,0.f,0.f };
+	glm::vec3 _color = { 0.2f,0.3f,0.3f };
 private:
 	//******************debug**********************
 	void _displayDebugInfo();

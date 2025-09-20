@@ -6,18 +6,6 @@
 #include <Windows.h>
 #include <mutex>
 
-/*
-*
-* 
-* 
-* 
-*               OpenGL上下文与线程相关，不要在非渲染线程执行以下操作 ↓↓↓↓↓
-*                                      目前渲染线程在主线程
-* 
-* 
-* 
-* 
-*/
 class AYRenderDevice {
 public:
     AYRenderDevice();

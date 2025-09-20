@@ -46,6 +46,10 @@ public:
 		auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
 		inputSystem->addInputMapping("orc", binding);
 
+		auto defaultBinding = std::make_shared<AYInputBinding>();
+		defaultBinding->addAction("f4", AYInputAction::Type::Press, KeyboardInput{ GLFW_KEY_F4 });
+		inputSystem->addInputMapping("default", defaultBinding);
+
 		auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
 		ecsEngine->addComponent<STAttackComponent>(_entity, STAttackComponent{
 				.damage = 10.0f,
@@ -74,8 +78,6 @@ public:
 		);
 		_orcSprite->playAnimation("idle01");
 		_orcSprite->setSize(glm::vec3(1.5f));
-		//	注意渲染精灵朝向问题，
-		// _transform.rotation.y = 180.f;
     }
 
     virtual void beginPlay()override
@@ -118,9 +120,14 @@ public:
     {
         AYEntrant::update(delta_time);
 		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+		auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
 
-
-
+		if (inputSystem->isActionJustReleased("default.f4"))
+		{
+			static bool isb = false;
+			renderManager->switchRenderModle(isb);
+			isb = !isb;
+		}
 		processMouseMovement(inputSystem->getMousePosition().x, inputSystem->getMousePosition().y);
 
 		bool baseAtk = inputSystem->isActionJustReleased("orc.atk_base");

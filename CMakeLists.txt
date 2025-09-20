@@ -3,9 +3,10 @@ message(STATUS "ToolChainFile: ${CMAKE_TOOLCHAIN_FILE}")
 cmake_minimum_required(VERSION 3.12)
 project(AliyatRenderer)
 
-set(CMAKE_CXX_STANDARD 23)	#vs2022支持，vs2019只支持c++标准20及以下
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
+
 
 if (MSVC)
 	add_compile_options(/wd4828)  # 忽略 C4828

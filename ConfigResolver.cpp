@@ -195,7 +195,7 @@ std::string generateFileList(const std::vector<ConfigFile>& files) {
 	std::string items;
 	for (const auto& file : files) {
 		std::map<std::string, std::string> params = {
-			{"encoded_path", httplib::detail::encode_path(file.path)},
+			{"encoded_path", httplib::detail::encode_url(file.path)},
 			{"display_name", file.displayName},
 			{"active_class", (file.path == currentEditingFile.path) ? "active-file" : ""}
 		};
@@ -236,7 +236,7 @@ void generateConfigItems(const boost::property_tree::ptree& pt, std::ostringstre
 		oss << "<tr>"
 			<< TemplateEngine::Render("@web/ConfigResolver/templates/delete-item.html",
 				{
-					{"file_path", httplib::detail::encode_path(currentEditingFile.path)},
+					{"file_path", httplib::detail::encode_url(currentEditingFile.path)},
 					{"key", path}
 				});
 

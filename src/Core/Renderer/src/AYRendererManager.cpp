@@ -1,4 +1,6 @@
 #include "AYRendererManager.h"
+#include "AYRendererManager.h"
+#include "AYRendererManager.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYPath.h"
@@ -10,43 +12,21 @@ void AYRendererManager::init()
 	if (!_device->init(1920, 1080))
 		return;
 
+	_device->setViewportCallback([this](int width, int height) {
+		int framebufferWidth, framebufferHeight;
+		glfwGetFramebufferSize(_device->getWindow(), &framebufferWidth, &framebufferHeight);
+
+		getCameraSystem()->setViewportAll(glm::vec4(0, 0, framebufferWidth, framebufferHeight));
+		bgfx::reset(framebufferWidth, framebufferHeight, BGFX_RESET_VSYNC);
+		bgfx::setViewRect(0, 0, 0, framebufferWidth, framebufferHeight);
+		});
+
+	setScreenCleanColor(_color);
+
 	_renderer = std::make_unique<AYRenderer>(getRenderDevice());
 
 	_animeMana = std::make_unique<AYAnimationManager>(getRenderDevice());
 
-
-	_device->setViewportCallback([this](int width, int height) {
-		getCameraSystem()->setViewportAll(glm::vec4(0, 0, width, height));
-		});
-
-	AYResourceManager::getInstance().loadAsync<AYTexture>(AYPath::Engine::getPresetTexturePath()+"Arrow.png",
-		[](std::shared_ptr<AYTexture> texture) {
-			//std::cout << "Texture loaded: " << texture->getWidth() << "x" << texture->getHeight() << std::endl;
-		});
-	//AYResourceManager::getInstance().loadAsync<AYVideo>(AYPath::Engine::getPresetTexturePath()+"Arrow.png",
-	//	[this](std::shared_ptr<AYVideo> video) {
-	//		videos = video;
-	//		videot = _device->createVideoTexture(video->getWidth(), video->getHeight());
-	//	});
-	//AYResourceManager::getInstance().loadAsync<AYVideo>("@videos/test_video.mp4",
-	//	[this](std::shared_ptr<AYVideo> video) {
-	//		videos = video;
-	//	});
-
-	AYResourceManager::getInstance().loadAsync<AYModel>("@models/sour-Miku-Creamy/sour.fbx",
-		[this](std::shared_ptr<AYModel> model) {
-			modelPmx = model;
-		});
-
-	//AYResourceManager::getInstance().loadAsync<AYVideo>("@videos/bad_apple.mp4",
-	//	[this](std::shared_ptr<AYVideo> video) {
-	//		video->play();
-	//		videos = video;
-	//	});
-
-	//videos = AYResourceManager::getInstance().load<AYVideo>("@videos/test_video.mp4");
-	
-	auto model2 = AYResourceManager::getInstance().load<AYModel>("@models/cube.fbx");
 	tex_ID = loadTexture("@textures/500_497.png");
 	tex_ID2 = loadTexture("@textures/1918_1100.png");
 	tex_ID2 = loadTexture("@textures/checkerboard.png");
@@ -120,29 +100,8 @@ void AYRendererManager::init()
 		ui->setColor(id, glm::vec4(0, 0, 0, 1));
 		});
 	_renderer->getUIRenderer()->createText(str, glm::vec3(1, 1, 0)* ppm, glm::vec4(1, 1, 1, 1), 1.f);
-	//_renderer->getUIRenderer()->setOnUnhovered(id, [&]() {
-	//	_renderer->getUIRenderer()->setColor(id, glm::vec4(0, 0, 0, 1));
-	//	});
-	//_renderer->getUIRenderer()->createRectangle(glm::vec3(2,2,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
-	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
-	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
-	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
-	//_renderer->getUIRenderer()->createRectangle(glm::vec3(10,10,0)* ppm, glm::vec3(4) * ppm, glm::vec4(1));
-	
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 11, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 12, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
-
-	//auto x = _device->getShaderB("testS", true, "assets/core/shaders/UIRenderer/ui.vert", "assets/core/shaders/UIRenderer/ui.frag");
-	//auto y = _device->getShaderB("testS", true, "assets/core/shaders/screenSpace.vert", "assets/core/shaders/screenSpace.frag");
-	auto tex = AYResourceManager::getInstance().load<AYTexture>("@textures/500_497.png");
-	if (!tex || !tex->isLoaded()) {
-		return;
-	}
-	auto z = _device->createTexture2DB(tex->getPixelData(),
-		tex->getWidth(),
-		tex->getHeight(),
-		tex->getChannels());
-	_device->updateTextureB(z, nullptr, 4, 4, bgfx::TextureFormat::RGB8S);
 
 }
 
@@ -160,11 +119,18 @@ void AYRendererManager::update(float delta_time)
 	
 	_updateCameraActive(delta_time);
 
-	// 2. TODO: 执行实际渲染逻辑
-	_renderAll(delta_time);
+	if (_useBgfx)
+	{
+		_renderAllB(delta_time);
+	}
+	else
+	{
+		// 2. TODO: 执行实际渲染逻辑
+		_renderAll(delta_time);
 
-	// 3. 交换缓冲区
-	glfwSwapBuffers(_device->getWindow());
+		// 3. 交换缓冲区
+		glfwSwapBuffers(_device->getWindow());
+	}
 
 	glfwPollEvents();
 }
@@ -180,7 +146,7 @@ void AYRendererManager::_renderAll(float delta_time)
 {
 	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
+	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
 
 	for (auto renderable : _renderables)
 	{
@@ -197,6 +163,21 @@ void AYRendererManager::_renderAll(float delta_time)
 	_debugDraw(true);
 	_renderer->getUIRenderer()->renderUI();
 	_renderer->getUIRenderer()->endUIFrame();
+}
+
+void AYRendererManager::_renderAllB(float delta_time)
+{
+	bgfx::touch(0);
+
+	bgfx::dbgTextClear();
+	bgfx::dbgTextPrintf(0, 0, 0x0f, "Press F1 to toggle stats.");
+	bgfx::dbgTextPrintf(0, 1, 0x0f, "Color can be changed with ANSI \x1b[9;me\x1b[10;ms\x1b[11;mc\x1b[12;ma\x1b[13;mp\x1b[14;me\x1b[0m code too.");
+	bgfx::dbgTextPrintf(80, 1, 0x0f, "\x1b[;0m    \x1b[;1m    \x1b[; 2m    \x1b[; 3m    \x1b[; 4m    \x1b[; 5m    \x1b[; 6m    \x1b[; 7m    \x1b[0m");
+	bgfx::dbgTextPrintf(80, 2, 0x0f, "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    \x1b[;15m    \x1b[0m");
+	const bgfx::Stats* stats = bgfx::getStats();
+	bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width, stats->height, stats->textWidth, stats->textHeight);
+	bgfx::setDebug(0 ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
+	bgfx::frame();
 }
 
 void AYRendererManager::_updateCameraActive(float delta_time)
@@ -285,6 +266,26 @@ void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClose
 void AYRendererManager::setScreenCleanColor(const glm::vec3& color)
 {
 	_color = color;
+	uint8_t r = static_cast<uint8_t>(color.r * 255.0f);
+	uint8_t g = static_cast<uint8_t>(color.g * 255.0f);
+	uint8_t b = static_cast<uint8_t>(color.b * 255.0f);
+	uint8_t a = static_cast<uint8_t>(1.f * 255.0f);
+	bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, r << 24 | g << 16 | b << 8 | a, 1.f, 0);
+}
+
+void AYRendererManager::switchRenderModle(bool isBgfx)
+{
+	_useBgfx = isBgfx;
+	if (isBgfx)
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glfwSwapBuffers(_device->getWindow());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glfwSwapBuffers(_device->getWindow());
+	}
+	else
+	{
+	}
 }
 
 AYRenderContext& AYRendererManager::getRenderContext()
