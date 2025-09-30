@@ -1,0 +1,14 @@
+{
+	"interface": {
+		"welcomeMsg": "MySQL Command Line Tool",
+		"prompt": "mysql> "
+	},
+	"multiLine": {
+		"continuationChars": [ "|", "\\" ],
+		"continuationPrompt": "    -> "
+	},
+	"parsing": {
+		"defaultStrategy": "first_word",
+		"ignoreCase": true
+	}
+}

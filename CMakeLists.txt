@@ -33,6 +33,8 @@ link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 #-------------项目自定义库--------------#
 
 add_subdirectory(src/Core/ConfigWrapper)
+add_subdirectory(src/Core/SQL)
+add_subdirectory(src/Core/Command)
 add_subdirectory(src/Core/ModuleManager)
 
 add_subdirectory(src/Core/MemoryPool)
@@ -60,6 +62,21 @@ file(GLOB ASSETS
 	)
 file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 
+# 快捷数据库工具
+add_executable(aysql_tool sql.cpp)
+target_link_libraries(aysql_tool PRIVATE sql command)
+
+# 快捷配置文件工具
+find_package(httplib CONFIG REQUIRED)
+find_package(efsw CONFIG REQUIRED)
+add_executable(ayconfig_tool "ConfigResolver.cpp")
+target_link_libraries(ayconfig_tool PRIVATE module_manager httplib::httplib efsw::efsw)
+if (WIN32)
+    set_target_properties(ayconfig_tool PROPERTIES
+        LINK_OPTIONS "/SUBSYSTEM:WINDOWS"
+    )
+endif()
+
 add_executable(TESTLIBS test.cpp)
 target_link_libraries(TESTLIBS PRIVATE engine_core)
 
@@ -70,15 +87,7 @@ target_include_directories(bgfxT PRIVATE
     thirdParty/bgfx.cmake/bx/include
 )
 
-find_package(httplib CONFIG REQUIRED)
-find_package(efsw CONFIG REQUIRED)
-add_executable(ConfigResolver "ConfigResolver.cpp")
-target_link_libraries(ConfigResolver PRIVATE module_manager httplib::httplib efsw::efsw)
-if (WIN32)
-    set_target_properties(ConfigResolver PROPERTIES
-        LINK_OPTIONS "/SUBSYSTEM:WINDOWS"
-    )
-endif()
+
 
 
 #--------------Project0001-------------#
@@ -101,8 +110,8 @@ endif()
 #target_link_libraries(Client utils ${TPLIB} ${OpenCV_LIBS} Boost::asio Boost::json Boost::uuid)
 
 #--------------单元测试-------------#
-add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp)
-target_link_libraries(UnitTest_EventSystem utils event_system)
+#add_executable(UnitTest_EventSystem unitest/EventSystem/UnitTest.cpp)
+#target_link_libraries(UnitTest_EventSystem utils event_system)
 
 #add_executable(UnitTest_ResourceManager unitest/ResourceManager/UnitTest.cpp)
 #target_link_libraries(UnitTest_ResourceManager PRIVATE engine_core)
@@ -110,5 +119,5 @@ target_link_libraries(UnitTest_EventSystem utils event_system)
 #add_executable(UnitTest_Network unitest/Network/UnitTest.cpp)
 #target_link_libraries(UnitTest_Network PRIVATE engine_core)
 
-add_executable(UnitTest_MemoryPool unitest/MemoryPool/Unitest.cpp)
-target_link_libraries(UnitTest_MemoryPool PRIVATE memory_pool)
+#add_executable(UnitTest_MemoryPool unitest/MemoryPool/Unitest.cpp)
+#target_link_libraries(UnitTest_MemoryPool PRIVATE memory_pool)

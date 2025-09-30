@@ -81,10 +81,15 @@ Before execute this program, preparing these packages:
 		model load
 	12.bgfx
 		multi-platform rendering
+	13.soci
+		sql
 
 Run the following commands:
 
-	vcpkg install boost-asio boost-system boost-property-tree boost-locale opencv4 openal-soft ffmpeg nlohmann-json box2d physx libarchive glm efsw assimp spdlog cpp-httplib 
+	vcpkg install boost-asio boost-system boost-property-tree boost-locale \
+              opencv4 openal-soft ffmpeg nlohmann-json box2d physx \
+              libarchive glm efsw assimp spdlog cpp-httplib soci \
+              soci[mysql] soci[postgresql] soci[sqlite3] soci[odbc]
 ### Project Progress
 1. | Description               | Picture                                                                 |
 |--------------------|----------------------------------------------------------------------|

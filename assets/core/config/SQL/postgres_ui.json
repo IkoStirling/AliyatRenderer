@@ -1,0 +1,14 @@
+{
+	"interface": {
+		"welcomeMsg": "PostgreSQL Command Line Tool",
+		"prompt": "postgres=# "
+	},
+	"multiLine": {
+		"continuationChars": [ "|", "\\" ],
+		"continuationPrompt": "       "
+	},
+	"parsing": {
+		"defaultStrategy": "first_word",
+		"ignoreCase": true
+	}
+}

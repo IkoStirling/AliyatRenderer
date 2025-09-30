@@ -50,7 +50,7 @@ private:
     void releaseData();
     bool decodeNextFrame();
     bool seekToTimestamp(int64_t timestamp);
-    bool convertFrameToMat(AVFrame* frame);
+    bool convertFrameToMat(AVFrame* frame) const;
 
     // 视频基础信息
     std::shared_ptr<AYAudioStream> _audio;
@@ -61,21 +61,26 @@ private:
     int _totalFrames = 0;
 
     // 音视频同步
-
     SyncCallback _syncCallback;
 
     // 解码与帧管理
-    AVFormatContext* _formatContext = nullptr;
-    AVCodecContext* _codecContext = nullptr;
+    AVFormatCtxPtr _formatContext;
+    AVCodecCtxPtr _codecContext;
+    AVSwsCtxPtr _swsContext;
+
     int _videoStreamIndex = -1;
     int _audioStreamIndex = -1;
 
     // 当前帧索引 & 状态
-    cv::Mat _currentFrame; // 最后解码的帧
+    mutable cv::Mat _currentFrame; // 最后解码的帧
     int64_t _currentPts = AV_NOPTS_VALUE;
     int _currentFrameIndex = 0;
     bool _isPlaying = false;
     bool _isEndOfVideo = false;
+
+    // 新增帧解码队列
+    std::deque<AVFrameSPtr> _displayQueue;
+    const int MAX_DISPLAY_QUEUE_SIZE = 5;
 
     mutable std::recursive_mutex  _dataMutex;
 

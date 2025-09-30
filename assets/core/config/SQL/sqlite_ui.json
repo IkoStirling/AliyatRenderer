@@ -1,0 +1,14 @@
+{
+	"interface": {
+		"welcomeMsg": "SOCI SQL Command Line Tool (SQLite)",
+		"prompt": "sqlite> "
+	},
+	"multiLine": {
+		"continuationChars": [ "|", "\\" ],
+		"continuationPrompt": "> "
+	},
+	"parsing": {
+		"defaultStrategy": "first_word",
+		"ignoreCase": true
+	}
+}

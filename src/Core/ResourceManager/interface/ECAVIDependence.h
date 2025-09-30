@@ -17,6 +17,7 @@ extern "C" {
 }
 
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
 
 struct AudioFrame;
 struct AVPacketDeleter;
@@ -78,14 +79,24 @@ class AVFormatContextHolder
 {
 public:
     AVFormatContextHolder(const std::string& path) {
-        if (avformat_open_input(&ctx, path.c_str(), nullptr, nullptr) != 0) {
-            std::cerr << "Failed to open input file: " << path << std::endl;
-        }
+        open(path);
     }
     ~AVFormatContextHolder() {
-        if (ctx) avformat_close_input(&ctx);
+        reset();
     }
     AVFormatContext* get() { return ctx; }
+
+    void reset() {
+        if (ctx) avformat_close_input(&ctx);
+    }
+
+    bool open(const std::string& path) {
+        return avformat_open_input(&ctx, path.c_str(), nullptr, nullptr) == 0;
+    }
+
+    bool findStreamInfo() {
+        return avformat_find_stream_info(ctx, nullptr) >= 0;
+    }
 
     int findStream(AVCodecParameters*& codecParameters, AVMediaType type)
     {
@@ -97,7 +108,7 @@ public:
 
         codecParameters = nullptr;
 
-        if (avformat_find_stream_info(ctx, nullptr) < 0) {
+        if (findStreamInfo()) {
             std::cerr << "Failed to find stream info" << std::endl;
             return -1;
         }

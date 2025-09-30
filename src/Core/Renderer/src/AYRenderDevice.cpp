@@ -2,6 +2,37 @@
 #include "AYRendererManager.h"
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#include <windows.h>
+#include <commctrl.h> 
+#pragma comment(lib, "comctl32.lib") 
+
+LRESULT CALLBACK MySubclassProc(
+    HWND     hWnd,
+    UINT     uMsg,
+    WPARAM   wParam,
+    LPARAM   lParam,
+    UINT_PTR uIdSubclass,
+    DWORD_PTR dwRefData)
+{
+    static bool altPressed = false;
+
+    if (uMsg == WM_SYSKEYDOWN)
+        if (wParam == VK_F4 && (lParam & (1 << 29)))  // 检查Alt键是否按下
+            altPressed = true;
+    else if (uMsg == WM_SYSKEYUP)
+        if (wParam == VK_MENU)  // Alt键释放
+            altPressed = false;
+    else if (uMsg == WM_SYSCOMMAND)
+    {
+        if (wParam == SC_CLOSE && altPressed)  // 只有Alt+F4时才拦截
+        {
+            spdlog::info("[AYRenderDevice] User input alt + F4.");
+            altPressed = false;  // 重置状态
+            return 0;  // 拦截Alt+F4
+        }
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
 
 AYRenderDevice::AYRenderDevice() :
     _configPath("@config/Renderer/RenderDevice/config.ini")
@@ -43,6 +74,12 @@ bool AYRenderDevice::init(int width, int height)
 #if BX_PLATFORM_WINDOWS
     platformData.nwh = glfwGetWin32Window(_window);
     platformData.ndt = nullptr;
+    SetWindowSubclass(
+        (HWND)platformData.nwh,
+        MySubclassProc,        
+        1,                     
+        0                      
+    );
 #elif BX_PLATFORM_LINUX
     platformData.nwh = (void*)(uintptr_t)glfwGetX11Window(_window);
     platformData.ndt = glfwGetX11Display();          
