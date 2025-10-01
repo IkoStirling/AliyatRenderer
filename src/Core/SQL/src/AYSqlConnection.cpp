@@ -145,36 +145,55 @@ void AYSqlConnection::printQueryResult(soci::rowset<soci::row>& rows, std::ostre
             std::string value;
             try {
                 // 根据列类型获取数据
-                switch (columnProps[i].get_data_type()) {
-                case soci::dt_string:
-                    value = row.get<std::string>(i);
-                    break;
-                case soci::dt_integer:
-                    value = std::to_string(row.get<int>(i));
-                    break;
-                case soci::dt_double:
-                    value = std::to_string(row.get<double>(i));
-                    break;
-                case soci::dt_long_long:
-                    value = std::to_string(row.get<long long>(i));
-                    break;
-                case soci::dt_unsigned_long_long:
-                    value = std::to_string(row.get<unsigned long long>(i));
-                    break;
-                case soci::dt_date: {
-                    std::tm when = row.get<std::tm>(i);
-                    char buf[20];
-                    std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &when);
-                    value = buf;
-                    break;
+                if (row.get_indicator(i) == soci::i_null) {
+                    value = "NULL";
                 }
-                default:
-                    // 长整型不便打印
-                    value = "[unsupported]";
+                else
+                {
+                    switch (columnProps[i].get_data_type()) {
+                    case soci::dt_string:
+                        value = row.get<std::string>(i);
+                        break;
+                    case soci::dt_integer:
+                        value = std::to_string(row.get<int>(i));
+                        break;
+                    case soci::dt_double:
+                        value = std::to_string(row.get<double>(i));
+                        break;
+                    case soci::dt_long_long:
+                        value = std::to_string(row.get<long long>(i));
+                        break;
+                    case soci::dt_unsigned_long_long:
+                        value = std::to_string(row.get<unsigned long long>(i));
+                        break;
+                    case soci::dt_date: {
+                        std::tm when = row.get<std::tm>(i);
+                        char buf[20];
+                        std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &when);
+                        value = buf;
+                        break;
+                    }
+                    case soci::dt_blob:
+                        value = "[BLOB]";
+                        break;
+                    case soci::dt_xml:
+                        value = "[XML]";
+                        break;
+                    default:
+                        try {
+                            value = row.get<std::string>(i);
+                        }
+                        catch (...) {
+                            value = "[unknown]";
+                        }
+                    }
                 }
             }
+            catch (const std::exception& e) {
+                value = "[error: " + std::string(e.what()) + "]";
+            }
             catch (...) {
-                value = "[error]";
+                value = "[unknown error]";
             }
             currentRow.push_back(value);
             columnWidths[i] = std::max(columnWidths[i], value.size());

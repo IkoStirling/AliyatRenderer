@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <AYCmdInterface.h>
 #include <fstream>
-
+#include <soci/mysql/soci-mysql.h>
 struct User {
 	int id;
 	std::string name;
@@ -137,6 +137,238 @@ CommandLineArgs parseArguments(int argc, char* argv[]) {
     return args;
 }
 
+#include <cctype>
+#include <algorithm>
+
+STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STParsedCommand& cmd) {
+    std::string metaCmd = cmd.commandName.substr(1); // 去掉开头的反斜杠
+    std::transform(metaCmd.begin(), metaCmd.end(), metaCmd.begin(), ::tolower);
+
+    try {
+        // === 解析命令和参数 ===
+        std::string baseCmd;
+        std::string param;
+
+        size_t spacePos = metaCmd.find(' ');
+        if (spacePos != std::string::npos) {
+            baseCmd = metaCmd.substr(0, spacePos);
+            param = metaCmd.substr(spacePos + 1);
+            // 去除参数前后的空格
+            param.erase(0, param.find_first_not_of(" \t"));
+            param.erase(param.find_last_not_of(" \t") + 1);
+        }
+        else {
+            baseCmd = metaCmd;
+        }
+
+        // === 数据库连接操作 ===
+        if (baseCmd == "c" || baseCmd == "connect") {
+            if (param.empty()) {
+                // 显示当前连接信息
+                soci::row currentDB;
+                session << "SELECT current_database(), current_user", soci::into(currentDB);
+
+                std::stringstream output;
+                output << "You are connected to database \"" << currentDB.get<std::string>(0)
+                    << "\" as user \"" << currentDB.get<std::string>(1) << "\"\n";
+                return STCommandResult{ true, output.str(), "" };
+            }
+            else {
+                // 在实际应用中，这里应该重新初始化一个新的 session 连接到指定数据库
+                std::stringstream output;
+                output << "Would connect to database: " << param
+                    << " (Reconnect functionality not implemented in this interface)\n";
+                output << "Hint: Use different connection parameters or restart the tool with -n " << param;
+                return STCommandResult{ true, output.str(), "" };
+            }
+        }
+
+        // === 列出数据库 ===
+        else if (baseCmd == "l" || baseCmd == "list") {
+            std::string whereClause = "";
+            if (!param.empty()) {
+                whereClause = "WHERE datname LIKE :pattern ";
+            }
+
+            std::string sql = R"(
+                SELECT d.datname as "Name",
+                       pg_catalog.pg_get_userbyid(d.datdba) as "Owner",
+                       pg_catalog.pg_encoding_to_char(d.encoding) as "Encoding",
+                       CASE WHEN d.datallowconn THEN 'Yes' ELSE 'No' END as "Access"
+                FROM pg_catalog.pg_database d
+            )" + whereClause + "ORDER BY 1";
+
+            std::stringstream output;
+            output << "List of databases\n";
+            output << "Name | Owner | Encoding | Access\n";
+            output << "--------------------------------\n";
+            if (!param.empty()) {
+                soci::rowset<soci::row> rows = (session.prepare << sql, soci::use(param));
+                for (const auto& row : rows) {
+                    output << row.get<std::string>(0) << " | "
+                        << row.get<std::string>(1) << " | "
+                        << row.get<std::string>(2) << " | "
+                        << row.get<std::string>(3) << "\n";
+                }
+            }
+            else {
+                soci::rowset<soci::row> rows = (session.prepare << sql);
+                for (const auto& row : rows) {
+                    output << row.get<std::string>(0) << " | "
+                        << row.get<std::string>(1) << " | "
+                        << row.get<std::string>(2) << " | "
+                        << row.get<std::string>(3) << "\n";
+                }
+            }
+
+
+            return STCommandResult{ true, output.str(), "" };
+        }
+
+        // === 列出表 ===
+        else if (baseCmd == "dt") {
+            std::string pattern = param.empty() ? "%" : param;
+
+            soci::rowset<soci::row> rows = (session.prepare <<
+                R"(SELECT n.nspname as "Schema",
+                          c.relname as "Name",
+                          CASE c.relkind 
+                            WHEN 'r' THEN 'table' 
+                            WHEN 'v' THEN 'view' 
+                            WHEN 'm' THEN 'materialized view'
+                            ELSE c.relkind::text 
+                          END as "Type",
+                          pg_catalog.pg_get_userbyid(c.relowner) as "Owner"
+                   FROM pg_catalog.pg_class c
+                   LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+                   WHERE c.relkind IN ('r','v','m')
+                   AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+                   AND c.relname LIKE :pattern
+                   ORDER BY 1,2)")
+                << pattern;
+
+            std::stringstream output;
+            output << "List of relations\n";
+            output << "Schema | Name | Type | Owner\n";
+            output << "------------------------------\n";
+            for (const auto& row : rows) {
+                output << row.get<std::string>(0) << " | "
+                    << row.get<std::string>(1) << " | "
+                    << row.get<std::string>(2) << " | "
+                    << row.get<std::string>(3) << "\n";
+            }
+            return STCommandResult{ true, output.str(), "" };
+        }
+
+        // === 描述表结构 ===
+        else if (baseCmd == "d") {
+            if (param.empty()) {
+                return STCommandResult{ false, "", "Object name required after \\d" };
+            }
+
+            // 检查对象是否存在并获取类型
+            soci::row typeRow;
+            session << R"(SELECT c.relkind, n.nspname 
+                        FROM pg_class c 
+                        JOIN pg_namespace n ON c.relnamespace = n.oid 
+                        WHERE c.relname = :name 
+                        AND n.nspname NOT IN ('pg_catalog', 'information_schema'))",
+                soci::into(typeRow), soci::use(param);
+
+            if (!session.got_data()) {
+                return STCommandResult{ false, "", "Object not found: " + param };
+            }
+
+            char relkind = typeRow.get<std::string>(0)[0];
+            std::string schema = typeRow.get<std::string>(1);
+
+            if (relkind == 'r' || relkind == 'v' || relkind == 'm') {
+                // 表、视图或物化视图
+                soci::rowset<soci::row> rows = (session.prepare <<
+                    R"(SELECT a.attname as "Column",
+                              pg_catalog.format_type(a.atttypid, a.atttypmod) as "Type",
+                              CASE WHEN a.attnotnull THEN 'not null' ELSE '' END as "Modifiers"
+                       FROM pg_catalog.pg_attribute a
+                       WHERE a.attnum > 0 AND NOT a.attisdropped
+                       AND a.attrelid = (SELECT c.oid FROM pg_class c 
+                                         JOIN pg_namespace n ON c.relnamespace = n.oid 
+                                         WHERE c.relname = :name AND n.nspname = :schema)
+                       ORDER BY a.attnum)")
+                    << param << schema;
+
+                std::stringstream output;
+                output << "Table \"" << schema << "\".\"" << param << "\"\n";
+                output << "Column | Type | Modifiers\n";
+                output << "-------------------------\n";
+                for (const auto& row : rows) {
+                    output << row.get<std::string>(0) << " | "
+                        << row.get<std::string>(1) << " | "
+                        << row.get<std::string>(2) << "\n";
+                }
+                return STCommandResult{ true, output.str(), "" };
+            }
+            else if (relkind == 'i') {
+                // 索引
+                soci::rowset<soci::row> rows = (session.prepare <<
+                    R"(SELECT i.relname as "Name",
+                              am.amname as "Type",
+                              pg_catalog.pg_get_indexdef(i.oid) as "Definition"
+                       FROM pg_index x 
+                       JOIN pg_class c ON c.oid = x.indrelid
+                       JOIN pg_class i ON i.oid = x.indexrelid
+                       JOIN pg_am am ON i.relam = am.oid
+                       WHERE c.relname = :name)")
+                    << param;
+
+                std::stringstream output;
+                output << "Indexes for table \"" << param << "\"\n";
+                output << "Name | Type | Definition\n";
+                output << "--------------------------\n";
+                for (const auto& row : rows) {
+                    output << row.get<std::string>(0) << " | "
+                        << row.get<std::string>(1) << " | "
+                        << row.get<std::string>(2) << "\n";
+                }
+                return STCommandResult{ true, output.str(), "" };
+            }
+        }
+
+        // === 退出 ===
+        else if (baseCmd == "q" || baseCmd == "quit") {
+            return STCommandResult{ true, "Goodbye!", "EXIT" };
+        }
+
+        // === 帮助 ===
+        else if (baseCmd == "?" || baseCmd == "help") {
+            std::string help = R"(
+Available meta-commands:
+  \l [pattern]       List databases (optionally matching pattern)
+  \dt [pattern]      List tables (optionally matching pattern)
+  \d name           Describe table, view, or index
+  \c [dbname]       Connect to another database (show current if no dbname)
+  \q, \quit         Quit
+  \?, \help         Show this help
+
+Examples:
+  \l                 List all databases
+  \l test%           List databases starting with 'test'
+  \dt                List all tables
+  \dt user%          List tables starting with 'user'
+  \d users           Describe users table
+  \c soci_db         Connect to soci_db database
+)";
+            return STCommandResult{ true, help, "" };
+        }
+
+        else {
+            return STCommandResult{ false, "", "Unsupported meta-command: \\" + metaCmd };
+        }
+    }
+    catch (const std::exception& e) {
+        return STCommandResult{ false, "", "Error executing meta-command: " + std::string(e.what()) };
+    }
+}
+
 int main(int argc, char* argv[])
 {
 	try {
@@ -230,45 +462,76 @@ int main(int argc, char* argv[])
             }
             config = AYSqlConfig::MySQLConfig(args.host, args.port,
                 args.dbName, args.username, args.password);
+            std::cout << "MySQL connection: \n\t"
+                << config.connectionString << std::endl;;
             sqlPool.initialize(config);
-            auto conn = sqlPool.getConnection();
-            auto& session = conn->session();
+            
             parser = cmdInterface.loadConfig("assets/core/config/SQL/mysql_ui.json");
-            cmdInterface.setExecution([&session](STParsedCommand& cmd) {
+            cmdInterface.setExecution([&sqlPool,&config](STParsedCommand& cmd) {
                 try {
-                    // 特殊处理MySQL的SHOW命令
-                    std::string lowerCmd;
-                    std::transform(cmd.commandName.begin(), cmd.commandName.end(),
-                        std::back_inserter(lowerCmd), ::tolower);
+                    auto conn = sqlPool.getConnection();
+                    auto& session = conn->session();
+                    if (!conn->isConnected())
+                    {
+                        std::cout << "mysql reconnecting ...\n";
+                        conn->connect();
+                    }
+                    std::string lowerCmd = cmd.commandName;
+                    std::transform(lowerCmd.begin(), lowerCmd.end(), lowerCmd.begin(), ::tolower);
 
-                    if (lowerCmd == "show") {
+                    if (lowerCmd.find("show index") == 0) {
+                        // 暂时不处理该情况
+                        return STCommandResult{ false, "", "This command now is not support" };
+                        try {
+                            soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
+                            std::stringstream output;
+                            output << "Table\tNon_unique\tKey_name\tSeq_in_index\tColumn_name\tIndex_type\n";
+                            output << "---------------------------------------------------------------------\n";
+
+                            for (const auto& row : rows) {
+                                output << row.get<std::string>(0) << "\t"  // Table
+                                    << row.get<int>(1) << "\t\t"         // Non_unique
+                                    << row.get<std::string>(2) << "\t"   // Key_name
+                                    << row.get<int>(3) << "\t\t"         // Seq_in_index
+                                    << row.get<std::string>(4) << "\t"   // Column_name
+                                    << row.get<std::string>(10) << "\n"; // Index_type
+                            }
+                            return STCommandResult{ true, output.str(), "" };
+                        }
+                        catch (const std::exception& e) {
+                            return STCommandResult{ false, "", "SHOW INDEX error: " + std::string(e.what()) };
+                        }
+                    }
+
+                    if (lowerCmd.find("select") == 0 ||
+                        lowerCmd.find("show") == 0 ||
+                        lowerCmd.find("describe") == 0
+                        ) {
+                        // 查询语句
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
                         AYSqlConnection::printQueryResult(rows, output);
                         return STCommandResult{ true, output.str(), "" };
                     }
-
-                    // 处理其他命令
-                    soci::statement st = (session.prepare << cmd.normalized);
-                    st.alloc();
-                    st.prepare(cmd.normalized);
-                    st.define_and_bind();
-                    st.execute(true);
-
-                    int affected = 0;
-                    try {
-                        affected = st.get_affected_rows();
+                    else {
+                        // DML/DDL 语句
+                        session << cmd.normalized;
+                        return STCommandResult{ true, "Query executed successfully", "" };
                     }
-                    catch (...) {}
-
-                    std::string msg = "Query executed";
-                    if (affected > 0) {
-                        msg += ". Affected rows: " + std::to_string(affected);
-                    }
-                    return STCommandResult{ true, msg, "" };
                 }
                 catch (const std::exception& e) {
-                    return STCommandResult{ false, "", "MySQL Error: " + std::string(e.what()) };
+                    std::string errorMsg = e.what();
+                    // 检查特定的 MySQL 错误
+                    if (errorMsg.find("Lost connection") != std::string::npos) {
+                        return STCommandResult{ false, "",
+                            "MySQL connection lost. Please check:\n"
+                            "1. MySQL server is running\n"
+                            "2. Network connectivity\n"
+                            "3. wait_timeout and interactive_timeout settings\n"
+                            "4. Max allowed packet size" };
+                    }
+
+                    return STCommandResult{ false, "", "MySQL Error: " + errorMsg };
                 }
                 });
             break;
@@ -280,48 +543,66 @@ int main(int argc, char* argv[])
             }
             config = AYSqlConfig::PostgreSQLConfig(args.host, args.port,
                 args.dbName, args.username, args.password);
+            std::cout << "PostgreSQL connection: \n\t"
+                << config.connectionString << std::endl;
+            std::cout << "Postgres is not completed, do not support meta command\n";
             sqlPool.initialize(config);
-            auto conn = sqlPool.getConnection();
-            auto& session = conn->session();
+
             parser = cmdInterface.loadConfig("assets/core/config/SQL/postgres_ui.json");
-            cmdInterface.setExecution([&session](STParsedCommand& cmd) {
+            cmdInterface.setExecution([&sqlPool, &config](STParsedCommand& cmd) {
                 try {
+                    auto conn = sqlPool.getConnection();
+                    auto& session = conn->session();
+                    if (!conn->isConnected())
+                    {
+                        std::cout << "mysql reconnecting ...\n";
+                        conn->connect();
+                    }
                     // 特殊处理PostgreSQL的元命令
                     if (cmd.commandName[0] == '\\') {
-                        return STCommandResult{ false, "", "PostgreSQL meta-commands not supported" };
+                        return handlePostgreSQLMetaCommand(session, cmd);
                     }
 
-                    soci::statement st = (session.prepare << cmd.normalized);
-                    st.alloc();
-                    st.prepare(cmd.normalized);
-                    st.define_and_bind();
-                    st.execute(true);
+                    // 判断语句类型
+                    std::string upperCmd = cmd.normalized;
+                    std::transform(upperCmd.begin(), upperCmd.end(), upperCmd.begin(), ::toupper);
 
-                    // 尝试获取结果集（适用于SELECT等查询）
-                    try {
+                    bool isQuery = (upperCmd.find("SELECT") == 0) ||
+                        (upperCmd.find("SHOW") == 0) ||
+                        (upperCmd.find("WITH") == 0);
+
+                    bool isDDL = (upperCmd.find("CREATE") == 0) ||
+                        (upperCmd.find("DROP") == 0) ||
+                        (upperCmd.find("ALTER") == 0) ||
+                        (upperCmd.find("TRUNCATE") == 0);
+
+                    if (isQuery) {
+                        // 处理查询语句
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
-                        if (rows.begin() != rows.end()) { // 有结果集
-                            std::stringstream output;
-                            AYSqlConnection::printQueryResult(rows, output);
-                            return STCommandResult{ true, output.str(), "" };
+                        std::stringstream output;
+                        AYSqlConnection::printQueryResult(rows, output);
+                        return STCommandResult{ true, output.str(), "" };
+                    }
+                    else {
+                        // 处理 DML 和 DDL 语句
+                        soci::statement st = (session.prepare << cmd.normalized);
+                        st.execute(true);
+
+                        // 尝试获取影响行数（仅对 DML 有效）
+                        int affected = 0;
+                        try {
+                            affected = st.get_affected_rows();
                         }
-                    }
-                    catch (...) {
-                        // 不是查询语句
-                    }
+                        catch (...) {
+                            // DDL 语句没有影响行数
+                        }
 
-                    // 处理影响行数
-                    int affected = 0;
-                    try {
-                        affected = st.get_affected_rows();
+                        std::string msg = "Query executed successfully";
+                        if (affected > 0) {
+                            msg += ". Affected rows: " + std::to_string(affected);
+                        }
+                        return STCommandResult{ true, msg, "" };
                     }
-                    catch (...) {}
-
-                    std::string msg = "Query executed";
-                    if (affected > 0) {
-                        msg += ". Affected rows: " + std::to_string(affected);
-                    }
-                    return STCommandResult{ true, msg, "" };
                 }
                 catch (const std::exception& e) {
                     return STCommandResult{ false, "", "PostgreSQL Error: " + std::string(e.what()) };

@@ -95,6 +95,7 @@ public:
         return soci::rowset<soci::row>((session().prepare << query));
     }
 
+    void connect();
 
 private:
     std::unique_ptr<soci::session> _session;
@@ -125,6 +126,6 @@ private:
     std::string replaceNamedParams(const std::string& sql);
 
     // 实际建立连接的方法
-    void connect();
+    
     void disconnect();
 };

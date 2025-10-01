@@ -64,7 +64,7 @@ std::unique_ptr<AYSqlConnection> AYSqlPool::getConnectionImpl(int timeoutMs) {
     if (_pool.empty()) {
         // 尝试创建新连接
         if (!createNewConnection()) {
-            throw AYSqlException("Failed to create new connection");
+            throw AYSqlException("Failed to create new connection, input arguments may wrong");
         }
     }
 
