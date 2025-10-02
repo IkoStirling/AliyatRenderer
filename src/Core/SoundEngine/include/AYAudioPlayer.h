@@ -51,6 +51,9 @@ public:
     // 更新方法（用于流式音频）
     void update();
 
+    // 获取流式音频
+    std::shared_ptr<IAYAudioSource> getAudioSource() { return _currentSource; }
+
 private:
     void cleanup();
     bool refillBuffers(size_t minFrames = 2);

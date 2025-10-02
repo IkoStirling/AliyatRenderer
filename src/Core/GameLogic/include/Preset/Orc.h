@@ -193,13 +193,14 @@ public:
 				if (flag0)
 				{
 					auto ave = GET_CAST_MODULE(AYAVEngine, "AVEngine");
-					std::vector<std::string> lists{
-						"@audios/biteall.wav",
-						"@audios/shade6.wav",
-						"@audios/ambient/Evening_wanders.mp3",
-					};
-					ave->createPlaylist("orc", lists);
-					ave->playPlaylist("orc", true);
+					//std::vector<std::string> lists{
+					//	"@audios/shade6.wav",
+					//	//"@audios/ambient/Evening_wanders.mp3",
+					//	"@audios/bite-small.wav",
+					//};
+					//ave->createPlaylist("orc", lists);
+					//ave->playPlaylist("orc", true);
+					ave->playSound2D("@audios/ambient/Evening_wanders.mp3");
 					flag0 = false;
 				}
 			}

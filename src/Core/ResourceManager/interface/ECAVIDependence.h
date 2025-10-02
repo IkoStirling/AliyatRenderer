@@ -78,6 +78,8 @@ struct AudioFrame {
 class AVFormatContextHolder 
 {
 public:
+    AVFormatContextHolder() {
+    }
     AVFormatContextHolder(const std::string& path) {
         open(path);
     }

@@ -16,7 +16,8 @@ public:
     bool open(const std::string& path);
     AudioFramePtr decodeNextFrame();
 
-    const std::vector<uint8_t>& getPCMData() const override { return std::vector<uint8_t>(); }
+    const std::vector<uint8_t>& getPCMData() const override;
+    std::vector<float> getCurrentPCM(size_t numSamples);
     bool isStreaming() const override { return true; }
     // 获取音频信息
     int getSampleRate() const override { return _sampleRate; }
@@ -28,6 +29,7 @@ public:
     bool isSeekable() const;      // 判断是否支持跳转
     double getStartTime() const;   // 获取音频流的开始时间
     bool seekToTime(double seconds);
+    bool isDecodeFinished() const {return _decodeFinished && _frameQueue.empty();}
 
     virtual bool load(const std::string& filepath) override;
     virtual bool unload() override;
@@ -52,12 +54,19 @@ private:
     ALenum _format;
 
     // 状态控制
+    std::atomic<bool> _decodeFinished{ false };
     std::atomic<bool> _isPlaying{ false };
     std::atomic<double> _currentPts{ 0.0 }; // 当前音频PTS（秒）
     std::atomic<double> _startTime{ 0.0 }; // 流开始时间（秒）
     std::atomic<bool> _seekable{ false };   // 是否支持跳转
     std::mutex _decodeMutex;
     std::queue<AudioFramePtr> _frameQueue;
+
+    // 内容缓存
+    std::vector<float> _pcmBuffer;  // 环形缓冲区
+    size_t _bufferSize = 44100 * 10; // 10秒缓存
+    size_t _writePos = 0;
+    std::mutex _bufferMutex;    
 };
 
 REGISTER_RESOURCE_CLASS(AYAudioStream, 0)

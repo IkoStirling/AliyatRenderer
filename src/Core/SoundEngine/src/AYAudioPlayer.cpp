@@ -67,6 +67,7 @@ void AYAudioPlayer::pause()
         _state.store(PlayState::Paused);
     }
 }
+
 void AYAudioPlayer::resume()
 {
     if (_state == PlayState::Paused) {
@@ -74,8 +75,6 @@ void AYAudioPlayer::resume()
         _state.store(PlayState::Playing);
     }
 }
-
-
 
 void AYAudioPlayer::stop() {
     if (_state == PlayState::Stopped) return;
@@ -174,22 +173,20 @@ bool AYAudioPlayer::isPlaybackFinished() const {
         alGetSourcei(_source, AL_SOURCE_STATE, &state);
         return (state == AL_STOPPED && !_loop.load());
     }
-    // 3. 流式音频检查
-    else {
-        ALint state;
-        alGetSourcei(_source, AL_SOURCE_STATE, &state);
-
-        // 获取缓冲区状态
-        ALint processed;
-        alGetSourcei(_source, AL_BUFFERS_PROCESSED, &processed);
-        ALint queued;
-        alGetSourcei(_source, AL_BUFFERS_QUEUED, &queued);
-
-        // 完成条件：播放停止 + 无剩余有效缓冲区 + 不循环
-        return (state == AL_STOPPED) &&
-            (processed == queued) &&
-            !_loop.load();
-    }
+    //// 3. 流式音频检查
+    //else {
+    //    ALint state;
+    //    alGetSourcei(_source, AL_SOURCE_STATE, &state);
+    //    // 获取缓冲区状态
+    //    ALint processed;
+    //    alGetSourcei(_source, AL_BUFFERS_PROCESSED, &processed);
+    //    ALint queued;
+    //    alGetSourcei(_source, AL_BUFFERS_QUEUED, &queued);
+    //    // 完成条件：播放停止 + 无剩余有效缓冲区 + 不循环
+    //    return (state == AL_STOPPED) &&
+    //        (processed == queued) &&
+    //        !_loop.load();
+    //}
 }
 
 bool AYAudioPlayer::isAvaliableOrInterruptible() const {
@@ -233,23 +230,29 @@ void AYAudioPlayer::update() {
 
         // 维持至少2个缓冲区块
         if (!refillBuffers(2)) {
+            auto source = std::static_pointer_cast<AYAudioStream>(_currentSource);
+            source->seekToTime(0);
             if (_loop.load()) {  // 使用原子变量
-                auto source = std::static_pointer_cast<AYAudioStream>(_currentSource);
-                source->seekToTime(0);  // 重置到开头
                 if (!refillBuffers(3)) {  // 重新填充缓冲区
+                    auto callback = _callback;
                     stop();
+                    if (callback) {
+                        callback();
+                    }
                 }
             }
             else {
+                auto callback = _callback;
                 stop();
+                if (callback) {
+                    callback();
+                }
             }
         }
     }
-
-    // 检查播放是否结束
-    bool state = isPlaybackFinished();
-    if (state)
+    else if (bool state = isPlaybackFinished())
     {
+        // 检查静态音频播放是否结束
         if (_callback) {
             _callback();
         }

@@ -25,9 +25,13 @@ AYAVEngine::AYAVEngine():
         return;
     }
 
-    _players.push_back(std::make_shared<AYAudioPlayer>());
-    auto loopPlayer = _players.back();
-    loopPlayer->set3DParameters(_rolloffFactor, _referenceDistance, _maxDistance);
+    _analyzer = std::make_unique<AYSpectrumAnalyzer>();
+    for (int i = 0; i < maxAudioPlayerNum; i++)
+    {
+        _players.push_back(std::make_shared<AYAudioPlayer>());
+        _players.back()->set3DParameters(_rolloffFactor, _referenceDistance, _maxDistance);
+    }
+
 }
 
 AYAVEngine::~AYAVEngine()
@@ -56,7 +60,7 @@ void AYAVEngine::init()
             });
         _tokens.push_back(std::unique_ptr<AYEventToken>(token));
     }
-    _preloadAudios();
+    //_preloadAudios();
     _initialized = true;
 }
 
@@ -89,6 +93,17 @@ void AYAVEngine::update(float delta_time)
             }),
         _activeAudios.end());
 
+    // 频谱分析（针对背景音乐）
+    if (_players[AUDIO_SLOT_01]->getState() == AYAudioPlayer::PlayState::Playing) {
+        auto bgm = _players[AUDIO_SLOT_01]->getAudioSource();
+        if (bgm && bgm->isStreaming()) {
+            auto stream = std::static_pointer_cast<AYAudioStream>(bgm);
+            auto samples = stream->getCurrentPCM(_analyzer->getFFTSize());
+            _analyzer->analyze(samples);
+            _currentSpectrum = _analyzer->getBandEnergies(32); // 32频段
+        }
+    }
+
     // 更新视频逻辑
     for (auto& video : _activeVideos) {
         if (video->isPlaying()) {
@@ -112,7 +127,7 @@ void AYAVEngine::shutdown()
 {
     stopAll();
 
-    _saveAudios();
+    //_saveAudios();
 
     _audioCache.clear();
 
@@ -389,7 +404,7 @@ void AYAVEngine::_playNextTrack() {
         }
 
         // 尝试播放下一首曲目
-        playlist.currentAudio = playSound2D(playlist.tracks[playlist.currentTrackIndex], false, false, 1.0f, AUDIO_SLOT_01, false);
+        playlist.currentAudio = playSound2D(playlist.tracks[playlist.currentTrackIndex], true, false, 1.0f, AUDIO_SLOT_01, false);
 
         // 如果播放成功，设置回调并退出循环
         if (playlist.currentAudio) {
@@ -444,7 +459,7 @@ void AYAVEngine::_playPreviousTrack() {
         }
 
         // 播放上一首曲目
-        playlist.currentAudio = playSound2D(playlist.tracks[playlist.currentTrackIndex], false, false, 1.0f, AUDIO_SLOT_01, false);
+        playlist.currentAudio = playSound2D(playlist.tracks[playlist.currentTrackIndex], true, false, 1.0f, AUDIO_SLOT_01, false);
 
         // 设置播放完成回调
         if (playlist.currentAudio) {
@@ -468,7 +483,7 @@ void AYAVEngine::_playPreviousTrack() {
 
 void AYAVEngine::_onTrackFinished() 
 {
-    spdlog::info("sdasdasda");
+    spdlog::info("[AYAVEngine] one music finished");
     std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
     if (!_isPlaylistPlaying) return;
     _playNextTrack();
@@ -634,7 +649,6 @@ void AYAVEngine::_playAudioImpl(const std::shared_ptr<IAYAudioSource>& audio, co
             }
             index++;
         }
-        return;
     }
     else
     {

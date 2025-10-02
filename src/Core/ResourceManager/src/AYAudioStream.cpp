@@ -1,9 +1,11 @@
 ﻿#include "AYAudioStream.h"
+#include "AYAudioStream.h"
 #include "AYPath.h"
 
 AYAudioStream::AYAudioStream()
 {
-
+    _pcmBuffer.resize(_bufferSize); 
+    memset(_pcmBuffer.data(), 0, _bufferSize * sizeof(int16_t));
 }
 
 AYAudioStream::~AYAudioStream() {
@@ -133,7 +135,55 @@ AudioFramePtr AYAudioStream::decodeNextFrame() {
         true
     );
 
+    if (audioFrame && !audioFrame->data.empty()) {
+        std::lock_guard<std::mutex> bufferLock(_bufferMutex);
+
+        const int16_t* pcmData = reinterpret_cast<const int16_t*>(audioFrame->data.data());
+        size_t samples = audioFrame->data.size() / sizeof(int16_t);
+
+        // 处理环形缓冲区写入
+        for (size_t i = 0; i < samples; ++i) {
+            _pcmBuffer[_writePos] = pcmData[i];
+            _writePos = (_writePos + 1) % _bufferSize;
+        }
+    }
+    else
+    {
+        _decodeFinished = true;
+    }
+
     return audioFrame;
+}
+
+const std::vector<uint8_t>& AYAudioStream::getPCMData() const
+{
+    // 流式音频不支持获取完整pcm数据
+    static std::vector<uint8_t> empty;
+    return empty;
+}
+
+std::vector<float> AYAudioStream::getCurrentPCM(size_t numSamples) {
+    std::lock_guard<std::mutex> lock(_bufferMutex);
+    std::vector<float> result(numSamples, 0.0f);
+
+    if (_pcmBuffer.empty() || numSamples == 0) {
+        return result;
+    }
+
+    // 计算实际可读取的样本数
+    size_t availableSamples = (_writePos >= numSamples) ?
+        numSamples : _writePos;
+
+    // 计算起始读取位置
+    size_t readPos = (_writePos - availableSamples) % _bufferSize;
+
+    // 转换并拷贝数据
+    for (size_t i = 0; i < availableSamples; ++i) {
+        size_t idx = (readPos + i) % _bufferSize;
+        result[i] = _pcmBuffer[idx] / 32768.0f;
+    }
+
+    return result;
 }
 
 

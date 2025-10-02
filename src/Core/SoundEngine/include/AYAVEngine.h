@@ -6,6 +6,7 @@
 #include "AYAudioPlayer.h"
 #include "AYEventSystem.h"
 #include "AYConfigWrapper.h"
+#include "AYSpectrumAnalyzer.h"
 #include "glm/glm.hpp"
 #include <unordered_map>
 #include <vector>
@@ -80,6 +81,8 @@ public:
         const glm::vec3& forward = glm::vec3(0, 0, -1),
         const glm::vec3& up = glm::vec3(0, 1, 0));
 
+
+
 private:
     struct ActiveAudioSource {
         std::weak_ptr<IAYAudioSource> audio;
@@ -104,7 +107,9 @@ private:
     const int maxAudioPlayerNum = 10;
 
 
-   
+    std::unique_ptr<AYSpectrumAnalyzer> _analyzer;
+    std::vector<float> _currentSpectrum;
+
     std::vector<std::shared_ptr<AYAudioPlayer>> _players;
     std::unordered_map<std::string, std::weak_ptr<IAYAudioSource>> _audioCache;
     std::unordered_map<std::string, std::weak_ptr<AYVideo>> _videoCache;
