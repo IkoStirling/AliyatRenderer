@@ -360,7 +360,10 @@ GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag
 GLuint AYRenderDevice::getShaderV(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
 {
     if (reload)
+    {
+        spdlog::info("[AYRenderDevice] Shader reload: {}", name);
         _shaderManager->reloadShader(name);
+    }
     return _shaderManager->loadShader(name, vertex_shaderPath, fragment_shaderPath);
 }
 
@@ -389,8 +392,6 @@ bgfx::ProgramHandle AYRenderDevice::createShaderProgramB(const char* vtx_name,
 
 bgfx::ProgramHandle AYRenderDevice::getShaderB(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
 {
-    if (reload)
-        _shaderManager->reloadShader(name);
     return _shaderManager->loadShaderB(name, vertex_shaderPath, fragment_shaderPath);
 }
 

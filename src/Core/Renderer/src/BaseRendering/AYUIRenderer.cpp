@@ -268,7 +268,7 @@ void AYUIRenderer::renderUI() {
     }
 
     auto stateManager = _device->getGLStateManager();
-    auto uiShader = _getUIShader(true);
+    auto uiShader = _getUIShader(false);
     stateManager->useProgram(uiShader);
     stateManager->bindVertexArray(_uiVAO);
 

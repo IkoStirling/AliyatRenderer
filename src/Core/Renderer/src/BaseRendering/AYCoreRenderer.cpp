@@ -521,7 +521,7 @@ void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batc
     _device->saveGLState();
     auto stateManager = _device->getGLStateManager();
 
-    auto shader = _getInstanceShader(true);
+    auto shader = _getInstanceShader(false);
 
     // 状态设置
     stateManager->setCullFace(true);

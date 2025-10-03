@@ -1,10 +1,7 @@
 #include "AYRendererManager.h"
-#include "AYRendererManager.h"
-#include "AYRendererManager.h"
 #include "Mod_EngineCore.h"
 #include "AYResourceManager.h"
 #include "AYPath.h"
-#include "AYAVEngine.h"
 
 void AYRendererManager::init()
 {
@@ -103,6 +100,8 @@ void AYRendererManager::init()
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 11, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 12, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
 
+	
+
 }
 
 void AYRendererManager::update(float delta_time)
@@ -146,7 +145,7 @@ void AYRendererManager::_renderAll(float delta_time)
 {
 	_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
+	//_renderer->getSkyboxRenderer()->render(_renderer->getRenderContext());
 
 	for (auto renderable : _renderables)
 	{
@@ -176,7 +175,7 @@ void AYRendererManager::_renderAllB(float delta_time)
 	bgfx::dbgTextPrintf(80, 2, 0x0f, "\x1b[;8m    \x1b[;9m    \x1b[;10m    \x1b[;11m    \x1b[;12m    \x1b[;13m    \x1b[;14m    \x1b[;15m    \x1b[0m");
 	const bgfx::Stats* stats = bgfx::getStats();
 	bgfx::dbgTextPrintf(0, 2, 0x0f, "Backbuffer %dW x %dH in pixels, debug text %dW x %dH in characters.", stats->width, stats->height, stats->textWidth, stats->textHeight);
-	bgfx::setDebug(0 ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
+	bgfx::setDebug(1 ? BGFX_DEBUG_STATS : BGFX_DEBUG_TEXT);
 	bgfx::frame();
 }
 
@@ -402,38 +401,6 @@ void AYRendererManager::_displayDebugInfo()
 		}
 	}
 
-
-
-	if (0)
-	{
-		static bool t = true;
-		if (t)
-		{
-			t = false;
-			auto soundEngine = GET_CAST_MODULE(AYAVEngine, "AVEngine");
-			videos = soundEngine->playVideo("@videos/bad_apple.mp4",true);
-			videot = _device->createTexture2D(nullptr, videos->getWidth(), videos->getHeight());
-		}
-		//"@videos/bad_apple.mp4"
-
-		if (videos)
-		{
-			const uint8_t* pixelData = videos->getCurrentFramePixelData();
-			_device->updateTexture(videot, pixelData,
-				videos->getWidth(), videos->getHeight());
-			_renderer->getSpriteRenderer()->drawSprite(
-				videot,
-				{ glm::vec3(0,0,-1) },
-				glm::vec2(0),
-				glm::vec2(1),
-				glm::vec2(videos->getWidth(), videos->getHeight()) / ppm,  // 大小
-				glm::vec4(1.0f, 1.f, 1.f, 0.9f),// 颜色
-				false,
-				false,
-				glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
-			);
-		}
-	}
 
 	/*dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
 	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);*/

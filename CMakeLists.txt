@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
-
 if (MSVC)
 	add_compile_options(/wd4828)  # 忽略 C4828
 	add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
@@ -15,19 +14,9 @@ if (MSVC)
 	add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>")
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_definitions(BX_CONFIG_DEBUG=1)
-else()
-    add_compile_definitions(BX_CONFIG_DEBUG=0)
-endif()
-
-add_subdirectory(thirdParty/bgfx.cmake)
-
-
 #-------------第三方小型库--------------#
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/include)
 link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
-
 
 
 #-------------项目自定义库--------------#
@@ -54,8 +43,6 @@ add_subdirectory(src/Core/GameLogic)
 add_subdirectory(src/Core/EngineCore)
 
 
-add_subdirectory(utils)
-
 file(GLOB ASSETS
 	"${CMAKE_CURRENT_SOURCE_DIR}/assets"
 	"${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/*.dll"
@@ -77,15 +64,34 @@ if (WIN32)
     )
 endif()
 
-add_executable(TESTLIBS test.cpp)
-target_link_libraries(TESTLIBS PRIVATE engine_core)
+# 主程序
+add_executable(aliyat_renderer test.cpp)
+target_link_libraries(aliyat_renderer PRIVATE engine_core)
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+	if (WIN32)
+		set_target_properties(aliyat_renderer PROPERTIES
+			LINK_OPTIONS "/SUBSYSTEM:WINDOWS"
+		)
+	endif()
+endif()
+
+bgfx_compile_binary_to_header(
+  INPUT_FILE ${CMAKE_SOURCE_DIR}/assets/core/textures/icon_64_64.png
+  OUTPUT_FILE ${CMAKE_SOURCE_DIR}/generated/include/images/icon.h
+  ARRAY_NAME s_icon_64_64
+)
+
+add_custom_target(generate_icon_header DEPENDS 
+    ${CMAKE_SOURCE_DIR}/generated/include/images/icon.h
+)
 
 file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
+find_package(bgfx REQUIRED)
 add_executable(bgfxT bgfxT.cpp)
-target_link_libraries(bgfxT PRIVATE bgfx ${RENDER_LIBS})
-target_include_directories(bgfxT PRIVATE 
-    thirdParty/bgfx.cmake/bx/include
-)
+add_dependencies(bgfxT generate_icon_header)
+target_link_libraries(bgfxT PRIVATE bgfx::bgfx ${RENDER_LIBS})
+target_include_directories(bgfxT PRIVATE ${CMAKE_SOURCE_DIR}/generated/include/images)
+
 
 
 

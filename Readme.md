@@ -59,7 +59,7 @@ Before execute this program, preparing these packages:
 
 	1. Boost::asio
 		Network && TimerManager(Unused)
-	2. Opencv4, openal-soft, FFmpeg
+	2. Opencv4, openal-soft && fftw3, FFmpeg
 		Resource(Texture, Audio, Video)
 	3. Glm
 		Renderer...(Math)
@@ -87,7 +87,7 @@ Before execute this program, preparing these packages:
 Run the following commands:
 
 	vcpkg install boost-asio boost-system boost-property-tree boost-locale \
-              opencv4 openal-soft ffmpeg nlohmann-json box2d physx \
+              opencv4 openal-soft fftw3 ffmpeg nlohmann-json box2d physx \
               libarchive glm efsw assimp spdlog cpp-httplib soci \
               soci[mysql] soci[postgresql] soci[sqlite3] soci[odbc]
 ### Project Progress

@@ -54,7 +54,7 @@ private:
 	std::vector<int> _freeDebugDraws;
 	int _debugDrawCount = 0;
 private:
-	bool _useBgfx = true;
+	bool _useBgfx = false;
 	std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGL上下文管理
 	std::unique_ptr<AYRenderer> _renderer = nullptr;        // 具体绘制逻辑
 	std::unique_ptr<AYAnimationManager> _animeMana = nullptr;
@@ -74,8 +74,6 @@ private:
 	std::shared_ptr<AYAnimatedSprite> orcSprite;
 	std::shared_ptr<AYVideo> videos;
 	std::shared_ptr<AYModel> modelPmx;
-
-	GLuint videot;
 };
 
 REGISTER_MODULE_CLASS("Renderer", AYRendererManager)
