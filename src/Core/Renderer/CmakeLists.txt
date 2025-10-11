@@ -18,26 +18,27 @@ else()
 endif()
 find_package(bgfx REQUIRED)
 
+
 # UI Shader
 bgfx_compile_shaders(
   TYPE VERTEX
   SHADERS ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/vs_ui.sc
   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/varying.def.sc
-  OUTPUT_DIR ${CMAKE_SOURCE_DIR}/generated/include/shaders
-  AS_HEADERS
+  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
+  #AS_HEADERS
 )
 bgfx_compile_shaders(
   TYPE FRAGMENT
   SHADERS ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/fs_ui.sc
   VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/varying.def.sc
-  OUTPUT_DIR ${CMAKE_SOURCE_DIR}/generated/include/shaders
-  AS_HEADERS
+  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
+  #AS_HEADERS
 )
 
 
 target_include_directories(${MODULE_NAME} PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/generated/include/shaders
+	${CMAKE_BINARY_DIR}/include/generated/shaders
 )
 
 file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
@@ -51,6 +52,10 @@ target_link_libraries(${MODULE_NAME}
 	resource_manager
 	input_system
 	bgfx::bgfx
+	bgfx::bx
+	bgfx::bimg_decode
+	bgfx::bimg_encode
+	bgfx::bimg    
 	PRIVATE
 	${RENDER_LIBS}
 	Freetype::Freetype

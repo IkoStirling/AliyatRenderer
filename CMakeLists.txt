@@ -77,20 +77,21 @@ endif()
 
 bgfx_compile_binary_to_header(
   INPUT_FILE ${CMAKE_SOURCE_DIR}/assets/core/textures/icon_64_64.png
-  OUTPUT_FILE ${CMAKE_SOURCE_DIR}/generated/include/images/icon.h
+  OUTPUT_FILE ${CMAKE_BINARY_DIR}/include/generated/images/icon.h
   ARRAY_NAME s_icon_64_64
-)
-
-add_custom_target(generate_icon_header DEPENDS 
-    ${CMAKE_SOURCE_DIR}/generated/include/images/icon.h
 )
 
 file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
 find_package(bgfx REQUIRED)
-add_executable(bgfxT bgfxT.cpp)
-add_dependencies(bgfxT generate_icon_header)
-target_link_libraries(bgfxT PRIVATE bgfx::bgfx ${RENDER_LIBS})
-target_include_directories(bgfxT PRIVATE ${CMAKE_SOURCE_DIR}/generated/include/images)
+add_executable(bgfxT 
+	bgfxT.cpp 
+	${CMAKE_SOURCE_DIR}/assets/core/textures/icon_64_64.png
+)
+target_link_libraries(bgfxT PRIVATE renderer)
+target_include_directories(bgfxT PRIVATE 
+	${CMAKE_BINARY_DIR}/include/generated/images
+	${CMAKE_BINARY_DIR}/include/generated/shaders
+)
 
 
 
