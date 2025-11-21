@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "IAYCamera.h"
-#include <glm/glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 
 
@@ -14,23 +13,23 @@ public:
 
 	void update(float delta_time);
 
-	glm::mat4 getViewMatrix() const override;
+	AYMath::Matrix4 getViewMatrix() const override;
 
-	glm::mat4 getProjectionMatrix() const override;
+	AYMath::Matrix4 getProjectionMatrix() const override;
 
 	void setViewBox(float near, float far);
 
 	// left, right, bottom, top
-	void setDeadzone(const glm::vec4& zone); 
+	void setDeadzone(const AYMath::Vector4& zone); 
 
-	void setTargetPosition(const glm::vec2& targetPos); 
+	void setTargetPosition(const AYMath::Vector2& targetPos); 
 
-	void setCurrentPosition(const glm::vec2& currentPos); 
+	void setCurrentPosition(const AYMath::Vector2& currentPos); 
 
 	void showDeadzone(bool switcher);
 private:
-	glm::vec4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // 屏幕比例死区(摄像机不会跟随的四边形区域）
-	glm::vec4 _mapBounds{ -500.f, 500.f, -500.f, 500.f };
+	AYMath::Vector4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // 屏幕比例死区(摄像机不会跟随的四边形区域）
+	AYMath::Vector4 _mapBounds{ -500.f, 500.f, -500.f, 500.f };
 	float _moveSpeed = 5.f;
 	float _near = -500.f;
 	float _far = 500.f;

@@ -1,5 +1,4 @@
 #pragma once
-#include <glm/glm.hpp>
 #include "STTransform.h"
 #include "AYEventRegistry.h"
 #include "Event_CameraMove.h"
@@ -10,13 +9,13 @@ public:
     virtual ~IAYCamera() = default;
 
     // 获取视图矩阵（View Matrix）
-    virtual glm::mat4 getViewMatrix() const
+    virtual AYMath::Matrix4 getViewMatrix() const
     {
-        return glm::mat4(1.f);
+        return AYMath::Matrix4(1.f);
     }
 
     // 获取投影矩阵（Projection Matrix）
-    virtual glm::mat4 getProjectionMatrix() const
+    virtual AYMath::Matrix4 getProjectionMatrix() const
     {
         if (_dirtyProjection)
         {
@@ -53,13 +52,13 @@ public:
     }
 
     // 视口控制
-    virtual void setViewport(const glm::vec4& viewport) 
+    virtual void setViewport(const AYMath::Vector4& viewport) 
     { 
         _dirtyView = true;
         _dirtyProjection = true;
         _viewport = viewport; 
     }   //由摄像机决定渲染视口
-    glm::vec4 getViewport() const { return _viewport; }
+    AYMath::Vector4 getViewport() const { return _viewport; }
 
     virtual void setZoom(float zoom) { 
         _dirtyView = true;
@@ -69,9 +68,9 @@ public:
     }
     virtual float getPixelPerMeter() const { return 66.7f; }
 
-    virtual void setAdditionalOffset(const glm::vec2& offset) { _additionalOffset = offset; }
+    virtual void setAdditionalOffset(const AYMath::Vector2& offset) { _additionalOffset = offset; }
 
-    virtual const glm::vec3 getPosition() const { return _transform.position / getPixelPerMeter(); }
+    virtual const AYMath::Vector3 getPosition() const { return _transform.position / getPixelPerMeter(); }
 
     virtual void onCameraMoved() const
     {
@@ -86,14 +85,14 @@ public:
 protected:
     STTransform _transform;
     STTransform _lastTransform;
-    glm::vec3 _targetPosition = glm::vec3(0.f);
-    glm::vec4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
-    glm::vec2 _additionalOffset{ 0.0f };
+    AYMath::Vector3 _targetPosition = AYMath::Vector3(0.f);
+    AYMath::Vector4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
+    AYMath::Vector2 _additionalOffset{ 0.0f };
 
     float _zoom = 1.f;
 
     mutable bool _dirtyView = true;
     mutable bool _dirtyProjection = true;
-    mutable glm::mat4 _cachedView = glm::mat4(1.0);
-    mutable glm::mat4 _cachedProjection = glm::mat4(1.0);
+    mutable AYMath::Matrix4 _cachedView = AYMath::Matrix4(1.0);
+    mutable AYMath::Matrix4 _cachedProjection = AYMath::Matrix4(1.0);
 };

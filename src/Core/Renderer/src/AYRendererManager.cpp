@@ -13,7 +13,7 @@ void AYRendererManager::init()
 		int framebufferWidth, framebufferHeight;
 		glfwGetFramebufferSize(_device->getWindow(), &framebufferWidth, &framebufferHeight);
 
-		getCameraSystem()->setViewportAll(glm::vec4(0, 0, framebufferWidth, framebufferHeight));
+		getCameraSystem()->setViewportAll(AYMath::Vector4(0, 0, framebufferWidth, framebufferHeight));
 		bgfx::reset(framebufferWidth, framebufferHeight, BGFX_RESET_VSYNC);
 		bgfx::setViewRect(0, 0, 0, framebufferWidth, framebufferHeight);
 		});
@@ -31,7 +31,7 @@ void AYRendererManager::init()
 	_renderer->getMaterialManager()->createMaterial(
 		{
 			.name = "1",
-			.baseColor = glm::vec4(.2f, 0.5f, 0.1f, 1.0f),
+			.baseColor = AYMath::Vector4(.2f, 0.5f, 0.1f, 1.0f),
 			.metallic = 1.f,
 			.roughness = 0.3f,
 			.type = STMaterial::Type::Opaque,
@@ -40,7 +40,7 @@ void AYRendererManager::init()
 	_renderer->getMaterialManager()->createMaterial(
 		{
 			.name = "2",
-			.baseColor = glm::vec4(.6f, 0.2f, 0.5f, 1.0f),
+			.baseColor = AYMath::Vector4(.6f, 0.2f, 0.5f, 1.0f),
 			.metallic = 0.3f,
 			.roughness = 0.6f,
 			.type = STMaterial::Type::Opaque,
@@ -49,7 +49,7 @@ void AYRendererManager::init()
 	_renderer->getMaterialManager()->createMaterial(
 		{
 			.name = "3",
-			.baseColor = glm::vec4(.1f, 0.7f, 0.2f, 1.0f),
+			.baseColor = AYMath::Vector4(.1f, 0.7f, 0.2f, 1.0f),
 			.metallic = 0.8f,
 			.roughness = 0.1f,
 			.type = STMaterial::Type::Opaque,
@@ -58,22 +58,22 @@ void AYRendererManager::init()
 
 	auto lightManager = _renderer->getLightManager();
 	lightManager->addDirectionalLight({
-		.color = glm::vec3(1.0f, 0.95f, 0.9f),      // 暖白色
+		.color = AYMath::Vector3(1.0f, 0.95f, 0.9f),      // 暖白色
 		.intensity = 1.2f,
-		.direction = glm::vec3(-0.5f, -1.0f, -0.3f) // 左上后方照射
+		.direction = AYMath::Vector3(-0.5f, -1.0f, -0.3f) // 左上后方照射
 		});
 	lightManager->addPointLight({
-		.color = glm::vec3(0.8f, 0.9f, 1.0f),       // 冷色调
+		.color = AYMath::Vector3(0.8f, 0.9f, 1.0f),       // 冷色调
 		.intensity = 0.8f,
-		.position = glm::vec3(3.0f, 2.0f, 1.0f),
+		.position = AYMath::Vector3(3.0f, 2.0f, 1.0f),
 		.radius = 10.0f,
 		.linear = 0.07f
 		});
 	lightManager->addSpotLight({
-		.color = glm::vec3(1.0f, 0.9f, 0.7f),       // 暖黄色
+		.color = AYMath::Vector3(1.0f, 0.9f, 0.7f),       // 暖黄色
 		.intensity = 1.5f,
-		.position = glm::vec3(0.0f, 3.0f, 2.0f),
-		.direction = glm::vec3(0.0f, -0.7f, -0.5f), // 向下前方照射
+		.position = AYMath::Vector3(0.0f, 3.0f, 2.0f),
+		.direction = AYMath::Vector3(0.0f, -0.7f, -0.5f), // 向下前方照射
 		.cutOff = glm::cos(glm::radians(15.0f)),
 		.outerCutOff = glm::cos(glm::radians(25.0f))
 		});
@@ -83,22 +83,22 @@ void AYRendererManager::init()
 	auto ppm = camera->getPixelPerMeter();
 
 	std::string str = ATEXT(u8"测试测字串012%￥@#@\n测试测字串012%￥@#@");
-	auto id = _renderer->getUIRenderer()->createRectangle(glm::vec3(1,1,0)* ppm, glm::vec3(3,1,0) * ppm, glm::vec4(1));
+	auto id = _renderer->getUIRenderer()->createRectangle(AYMath::Vector3(1,1,0)* ppm, AYMath::Vector3(3,1,0) * ppm, AYMath::Vector4(1));
 	_renderer->getUIRenderer()->setText(id,"button");
 	_renderer->getUIRenderer()->setOnClicked(id, []() {
 		spdlog::info("[AYRendererManager] clicked!");
 		});
 	_renderer->getUIRenderer()->setOnUnhovered(id, [id, ui = _renderer->getUIRenderer()]() {
 		spdlog::info("[AYRendererManager] unhovered!");
-		ui->setColor(id, glm::vec4(1, 1, 1, 1));
+		ui->setColor(id, AYMath::Vector4(1, 1, 1, 1));
 		});
 	_renderer->getUIRenderer()->setOnHovered(id, [id, ui = _renderer->getUIRenderer()]() {
 		spdlog::info("[AYRendererManager] hovered!");
-		ui->setColor(id, glm::vec4(0, 0, 0, 1));
+		ui->setColor(id, AYMath::Vector4(0, 0, 0, 1));
 		});
-	_renderer->getUIRenderer()->createText(str, glm::vec3(1, 1, 0)* ppm, glm::vec4(1, 1, 1, 1), 1.f);
-	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 11, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
-	_renderer->getUIRenderer()->createText(str, glm::vec3(2, 12, 0)* ppm, glm::vec4(1,1,1,1), 1.f);
+	_renderer->getUIRenderer()->createText(str, AYMath::Vector3(1, 1, 0)* ppm, AYMath::Vector4(1, 1, 1, 1), 1.f);
+	_renderer->getUIRenderer()->createText(str, AYMath::Vector3(2, 11, 0)* ppm, AYMath::Vector4(1,1,1,1), 1.f);
+	_renderer->getUIRenderer()->createText(str, AYMath::Vector3(2, 12, 0)* ppm, AYMath::Vector4(1,1,1,1), 1.f);
 
 	
 
@@ -262,7 +262,7 @@ void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClose
 	_onWindowClosed = onWindowClosed;
 }
 
-void AYRendererManager::setScreenCleanColor(const glm::vec3& color)
+void AYRendererManager::setScreenCleanColor(const AYMath::Vector3& color)
 {
 	_color = color;
 	uint8_t r = static_cast<uint8_t>(color.r * 255.0f);
@@ -314,7 +314,7 @@ AYAnimatedSprite* AYRendererManager::create2DSprite(std::shared_ptr<AYSpriteAtla
 void AYRendererManager::_displayDebugInfo()
 {
 	constexpr float speed = 200.f;
-	static glm::vec2 pos = glm::vec2(200);
+	static AYMath::Vector2 pos = AYMath::Vector2(200);
 	static float x = 0.f, y = 0.f;
 	static bool l = true, d = true;
 	x += (l ? speed : -speed) * delta;
@@ -329,7 +329,7 @@ void AYRendererManager::_displayDebugInfo()
 		d = true;
 
 	std::string fps = ATEXT(u8"当前fps: ") + std::to_string(static_cast<int>(GetEngine()->getCurrentFPS()));
-	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, glm::vec3(1.0f, 1.0f, 1.0f));
+	_renderer->getFontRenderer()->renderText(fps, 25.0f, 25.0f, 1.0f, AYMath::Vector3(1.0f, 1.0f, 1.0f));
 
 	auto& context = getRenderContext();
 	auto cameraSystem = _renderer->getCameraSystem();
@@ -343,40 +343,40 @@ void AYRendererManager::_displayDebugInfo()
 	auto mat2 = mt->getMaterial("2").id;
 	auto mat3 = mt->getMaterial("3").id;
 	for (int i = 1; i < 100; i++) {
-		dr->drawRect2D({ glm::vec3(i * 10.f, 0, 0) }, glm::vec2(1.f), mat1, true);
-		dr->drawRect2D({ glm::vec3(i * -10.f, 0, 0), glm::vec3(0, i * 10.f, 0) }, glm::vec2(0.5f), mat2, false);
+		dr->drawRect2D({ AYMath::Vector3(i * 10.f, 0, 0) }, AYMath::Vector2(1.f), mat1, true);
+		dr->drawRect2D({ AYMath::Vector3(i * -10.f, 0, 0), AYMath::Vector3(0, i * 10.f, 0) }, AYMath::Vector2(0.5f), mat2, false);
 	}
 	for (int i = 1; i < 20; i++) {
 		for (int j = 1; j < 20; j++) {
-			dr->drawBox3D({ glm::vec3(i * -10.f + 10.f, 0, j * -10.f + 10.f)}, glm::vec3(0.5f), mat3, false, AYCoreRenderer::Space::World);
+			dr->drawBox3D({ AYMath::Vector3(i * -10.f + 10.f, 0, j * -10.f + 10.f)}, AYMath::Vector3(0.5f), mat3, false, AYCoreRenderer::Space::World);
 		}
 	}
 
-	dr->drawArrow2D({}, glm::vec3(0), glm::vec3(2,2,0)*ppm, 0.3f * ppm, glm::vec4(1), AYCoreRenderer::Space::Screen);
-	//dr->drawLine2D(glm::vec2(0), glm::vec2(5,5), glm::vec4(1));
+	dr->drawArrow2D({}, AYMath::Vector3(0), AYMath::Vector3(2,2,0)*ppm, 0.3f * ppm, AYMath::Vector4(1), AYCoreRenderer::Space::Screen);
+	//dr->drawLine2D(AYMath::Vector2(0), AYMath::Vector2(5,5), AYMath::Vector4(1));
 
 	// 死区框
-	//dr->drawRect2D({ glm::vec3(0, -0.5f, 0)}, glm::vec2(500, 1), mat2, true, AYCoreRenderer::Space::World);
+	//dr->drawRect2D({ AYMath::Vector3(0, -0.5f, 0)}, AYMath::Vector2(500, 1), mat2, true, AYCoreRenderer::Space::World);
 	
 	//_renderer->getSpriteRenderer()->drawSprite(
 	//	tex_ID,
-	//	{ glm::vec3(0, 0, -0.9f) },
+	//	{ AYMath::Vector3(0, 0, -0.9f) },
 	//	//{},
-	//	glm::vec2(0),
-	//	glm::vec2(1),
-	//	glm::vec2(10.0f),  // 大小
-	//	glm::vec4(1.0f, 1.f, 1.f, 1.f),// 颜色
+	//	AYMath::Vector2(0),
+	//	AYMath::Vector2(1),
+	//	AYMath::Vector2(10.0f),  // 大小
+	//	AYMath::Vector4(1.0f, 1.f, 1.f, 1.f),// 颜色
 	//	false,
 	//	false,
-	//	glm::vec2(0.5f, 0.5f)       // 原点(旋转中心)
+	//	AYMath::Vector2(0.5f, 0.5f)       // 原点(旋转中心)
 	//);
 
 	auto model = AYResourceManager::getInstance().load<AYModel>("@models/suzanne.fbx");
 	for (int i = 1; i < 100; i++) {
 		_renderer->getCoreRenderer()->drawMesh(
 			{
-				glm::vec3(i * -5 + 250, 5, 5),
-				glm::vec3(glm::radians(-90.f),0,0)
+				AYMath::Vector3(i * -5 + 250, 5, 5),
+				AYMath::Vector3(glm::radians(-90.f),0,0)
 			},
 			model->getMeshes()[0],
 			false,
@@ -391,8 +391,8 @@ void AYRendererManager::_displayDebugInfo()
 		for (int i = 0; i < meshes.size(); i++) {
 			_renderer->getCoreRenderer()->drawMesh(
 				{
-					glm::vec3(0, 0, 4),
-					glm::vec3(glm::radians(-90.f),0,0)
+					AYMath::Vector3(0, 0, 4),
+					AYMath::Vector3(glm::radians(-90.f),0,0)
 				},
 				meshes[i],
 				false,
@@ -402,6 +402,6 @@ void AYRendererManager::_displayDebugInfo()
 	}
 
 
-	/*dr->drawCircle2D({ glm::vec3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
-	dr->drawCircle2D({ glm::vec3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);*/
+	/*dr->drawCircle2D({ AYMath::Vector3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
+	dr->drawCircle2D({ AYMath::Vector3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);*/
 }

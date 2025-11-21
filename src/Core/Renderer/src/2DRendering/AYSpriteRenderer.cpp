@@ -31,13 +31,13 @@ void AYSpriteRenderer::shutdown()
 
 void AYSpriteRenderer::drawSprite(GLuint texture,
     const STTransform& transform,
-    const glm::vec2& uvOffset,
-    const glm::vec2& uvSize,
-    const glm::vec2& size,
-    const glm::vec4& color,
+    const AYMath::Vector2& uvOffset,
+    const AYMath::Vector2& uvSize,
+    const AYMath::Vector2& size,
+    const AYMath::Vector4& color,
     bool flipHorizontal,
     bool flipVertical,
-    const glm::vec2& origin
+    const AYMath::Vector2& origin
 )
 {
     drawSprite3D(
@@ -45,23 +45,23 @@ void AYSpriteRenderer::drawSprite(GLuint texture,
         transform,
         uvOffset,
         uvSize,
-        glm::vec3(size, 1.f),
+        AYMath::Vector3(size, 1.f),
         color,
         flipHorizontal,
         flipVertical,
-        glm::vec3(origin, 0.f)
+        AYMath::Vector3(origin, 0.f)
     );
 }
 
 void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
     const STTransform& transform,
-    const glm::vec2& size,
-    const glm::vec2& uvOffset,
-    const glm::vec2& uvSize, 
-    const glm::vec4& color,
+    const AYMath::Vector2& size,
+    const AYMath::Vector2& uvOffset,
+    const AYMath::Vector2& uvSize, 
+    const AYMath::Vector4& color,
     bool flipHorizontal,
     bool flipVertical,
-    const glm::vec2& origin
+    const AYMath::Vector2& origin
 )
 {
     drawSpriteFromAtlas3D(
@@ -69,23 +69,23 @@ void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
         transform,
         uvOffset,
         uvSize,
-        glm::vec3(size, 1.f),
+        AYMath::Vector3(size, 1.f),
         color,
         flipHorizontal,
         flipVertical,
-        glm::vec3(origin, 0.f)
+        AYMath::Vector3(origin, 0.f)
     );
 }
 
 void AYSpriteRenderer::drawSprite3D(GLuint texture,
     const STTransform& transform,
-    const glm::vec2& uvOffset,
-    const glm::vec2& uvSize,
-    const glm::vec3& size,
-    const glm::vec4& color,
+    const AYMath::Vector2& uvOffset,
+    const AYMath::Vector2& uvSize,
+    const AYMath::Vector3& size,
+    const AYMath::Vector4& color,
     bool flipHorizontal,
     bool flipVertical,
-    const glm::vec3& origin
+    const AYMath::Vector3& origin
 )
 {
     const auto& context = _renderer->getRenderContext();
@@ -94,9 +94,9 @@ void AYSpriteRenderer::drawSprite3D(GLuint texture,
     if (!camera)
         return;
 
-    glm::mat4 projection = camera->getProjectionMatrix();
-    glm::mat4 view = camera->getViewMatrix();
-    glm::mat4 model = transform.getPixelSpaceMatrix(
+    AYMath::Matrix4 projection = camera->getProjectionMatrix();
+    AYMath::Matrix4 view = camera->getViewMatrix();
+    AYMath::Matrix4 model = transform.getPixelSpaceMatrix(
         1,
         origin,
         size
@@ -130,13 +130,13 @@ void AYSpriteRenderer::drawSprite3D(GLuint texture,
 
 void AYSpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
     const STTransform& transform,
-    const glm::vec2& uvOffset,
-    const glm::vec2& uvSize,
-    const glm::vec3& size,
-    const glm::vec4& color,
+    const AYMath::Vector2& uvOffset,
+    const AYMath::Vector2& uvSize,
+    const AYMath::Vector3& size,
+    const AYMath::Vector4& color,
     bool flipHorizontal,
     bool flipVertical,
-    const glm::vec3& origin
+    const AYMath::Vector3& origin
 )
 {
     drawSprite3D(

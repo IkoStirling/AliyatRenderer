@@ -13,7 +13,7 @@ void AYAnimationManager::shutdown()
 
 std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& atlasName,
 	const std::string& texturePath,
-	const glm::vec2& spriteSize,
+	const AYMath::Vector2& spriteSize,
 	const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
 	const std::vector<bool>& loops)
 {
@@ -35,7 +35,7 @@ std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& 
 	auto atlas = std::make_shared<AYSpriteAtlas>(
 		textureId,
 		spriteSize,
-		glm::vec2(tex->getWidth(), tex->getHeight())
+		AYMath::Vector2(tex->getWidth(), tex->getHeight())
 	);
 
 	// 添加动画切片
@@ -62,8 +62,8 @@ std::shared_ptr<AYSpriteAtlas> AYAnimationManager::getAtlas(const std::string& a
 std::vector<AYAnimationFrame> AYAnimationManager::makeFrames(
 	int beginIndex,
 	int frameCount,
-	const glm::vec2& spriteSize,
-	const glm::vec2& atlasSize,
+	const AYMath::Vector2& spriteSize,
+	const AYMath::Vector2& atlasSize,
 	float duration)
 {
 	std::vector<AYAnimationFrame> outFrames;
@@ -93,9 +93,9 @@ std::vector<AYAnimationFrame> AYAnimationManager::makeFrames(
 		const int col = index % cols;  // 计算列号
 
 		outFrames.push_back({
-			glm::vec2(col * spriteSize.x / atlasSize.x,  // u offset
+			AYMath::Vector2(col * spriteSize.x / atlasSize.x,  // u offset
 					 row * spriteSize.y / atlasSize.y),  // v offset
-			glm::vec2(spriteSize.x / atlasSize.x,        // u size
+			AYMath::Vector2(spriteSize.x / atlasSize.x,        // u size
 					 spriteSize.y / atlasSize.y),        // v size
 			duration                                    // frame duration
 			});
@@ -106,8 +106,8 @@ std::vector<AYAnimationFrame> AYAnimationManager::makeFrames(
 
 std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>> 
 AYAnimationManager::makeAnimationData(
-	const glm::vec2& spriteSize,
-	const glm::vec2& atlasSize,
+	const AYMath::Vector2& spriteSize,
+	const AYMath::Vector2& atlasSize,
 	const std::vector<AnimeDataCreator>& indexs,
 	float duration)
 {

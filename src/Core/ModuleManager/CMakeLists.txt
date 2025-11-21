@@ -16,7 +16,6 @@ add_library(${MODULE_NAME} STATIC
     ${SRCS}
 )
 
-find_package(glm CONFIG REQUIRED)
 find_package(Iconv REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
@@ -25,7 +24,6 @@ target_include_directories(${MODULE_NAME} PUBLIC
 	)
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}
 	spdlog::spdlog_header_only
-	# Iconv::Iconv
-	glm::glm
 	configer
+	aymath_header_only
 )

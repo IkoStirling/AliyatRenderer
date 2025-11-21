@@ -16,9 +16,9 @@ public:
 
     // 基础属性
     virtual ShapeType getShapeType() const = 0;
-    virtual void setOffset(const glm::vec2& offset) { _offset = offset; }
-    virtual glm::vec2 getOffset() const { return _offset; }
-    virtual void setRotation(const glm::vec3& rotation) { _rotation = rotation; }
+    virtual void setOffset(const AYMath::Vector2& offset) { _offset = offset; }
+    virtual AYMath::Vector2 getOffset() const { return _offset; }
+    virtual void setRotation(const AYMath::Vector3& rotation) { _rotation = rotation; }
 
     // 物理材质
     virtual void setFriction(float friction) { _friction = friction; }
@@ -39,8 +39,8 @@ public:
     virtual bool isTrigger() const { return _isTrigger; }
 
 protected:
-    glm::vec2 _offset = { 0.0f, 0.0f };
-    glm::vec3 _rotation = { 0.0f, 0.0f, 0.0f };
+    AYMath::Vector2 _offset = { 0.0f, 0.0f };
+    AYMath::Vector3 _rotation = { 0.0f, 0.0f, 0.0f };
     float _friction = 0.2f;
     float _restitution = 0.0f;
     float _density = 1.0f;

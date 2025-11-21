@@ -1,8 +1,8 @@
 #include "2DRendering/AYSpriteAtlas.h"
 
 AYSpriteAtlas::AYSpriteAtlas(GLuint textureId,
-    const glm::vec2& spriteSize,
-    const glm::vec2& atlasSize)
+    const AYMath::Vector2& spriteSize,
+    const AYMath::Vector2& atlasSize)
     : _texture(textureId), _spriteSize(spriteSize), _atlasSize(atlasSize) 
 {
 }

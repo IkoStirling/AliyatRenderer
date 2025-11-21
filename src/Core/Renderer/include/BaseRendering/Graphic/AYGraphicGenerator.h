@@ -1,20 +1,20 @@
 ﻿#pragma once
 #include <vector>
-#include "glm/glm.hpp"
+#include "AYMathType.h"
 
 struct VertexInfo
 {
-	glm::vec3 position;
-	glm::vec3 normal;
-	glm::vec2 uv;
-	//glm::vec4 color;    //顶点颜色
+	AYMath::Vector3 position;
+	AYMath::Vector3 normal;
+	AYMath::Vector2 uv;
+	//AYMath::Vector4 color;    //顶点颜色
 };
 
 class AYGraphicGenerator
 {
 public:
 	// -------------VertexInfo----------------
-	static std::vector<VertexInfo> createBox(const glm::vec3& half_extents, bool wireframe);
+	static std::vector<VertexInfo> createBox(const AYMath::Vector3& half_extents, bool wireframe);
 
 
 public:
@@ -25,19 +25,19 @@ public:
 
 public:
 	// ----------------Vertex------------------
-	static std::vector<glm::vec3> createCircleV(float radius, int segments);
-	static std::vector<glm::vec3> createBoxV(const glm::vec3& half_extents);
-	static std::vector<glm::vec3> createRectV();
+	static std::vector<AYMath::Vector3> createCircleV(float radius, int segments);
+	static std::vector<AYMath::Vector3> createBoxV(const AYMath::Vector3& half_extents);
+	static std::vector<AYMath::Vector3> createRectV();
 
 
 
 
 public:
 	// ----------------Normals-----------------
-	static glm::vec3 create2DN();
-	static std::vector<glm::vec3> createBoxN();
+	static AYMath::Vector3 create2DN();
+	static std::vector<AYMath::Vector3> createBoxN();
 
 public:
 	// -----------TextureCoordinate------------
-	static std::vector<glm::vec2> createRectT();
+	static std::vector<AYMath::Vector2> createRectT();
 };

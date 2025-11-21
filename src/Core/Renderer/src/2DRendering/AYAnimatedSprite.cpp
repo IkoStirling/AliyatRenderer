@@ -34,11 +34,11 @@ void AYAnimatedSprite::update(float deltaTime)
 
 void AYAnimatedSprite::render(
     const STTransform& transform,
-    const glm::vec3& size,
-    const glm::vec4& color,
+    const AYMath::Vector3& size,
+    const AYMath::Vector4& color,
     bool flipHorizontal,
     bool flipVertical,
-    const glm::vec3& origin
+    const AYMath::Vector3& origin
 ) 
 {
     if (!_controller.isPlaying()) return;

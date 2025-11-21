@@ -5,17 +5,17 @@
 class Box2DPolygonCollider : public AYPolygon2DCollider, public Box2DColliderBase
 {
 public:
-    explicit Box2DPolygonCollider(const std::vector<glm::vec2>& vertices = {}) :
+    explicit Box2DPolygonCollider(const std::vector<AYMath::Vector2>& vertices = {}) :
         AYPolygon2DCollider(vertices) {
     }
 
-    void setVertices(const std::vector<glm::vec2>& vertices) override
+    void setVertices(const std::vector<AYMath::Vector2>& vertices) override
     {
         AYPolygon2DCollider::setVertices(vertices);
         if (isValid()) updateShape(_shapeId);
     }
 
-    void addVertex(const glm::vec2& vertex) override
+    void addVertex(const AYMath::Vector2& vertex) override
     {
         AYPolygon2DCollider::addVertex(vertex);
         if (isValid()) updateShape(_shapeId);
@@ -36,7 +36,7 @@ public:
         if (isValid()) updateShape(_shapeId);
     }
 
-    void setOffset(const glm::vec2& offset) override
+    void setOffset(const AYMath::Vector2& offset) override
     {
         AYPolygon2DCollider::setOffset(offset);
         if (isValid()) updateShape(_shapeId);

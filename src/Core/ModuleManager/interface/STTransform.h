@@ -1,6 +1,6 @@
 ﻿#pragma once
 #define GLM_ENABLE_EXPERIMENTAL
-#include "glm/glm.hpp"
+#include "AYMathType.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtx/euler_angles.hpp"
 #include "glm/gtx/quaternion.hpp"
@@ -12,12 +12,12 @@ struct STTransform
         enum Type { EULER, QUAT };
 
         // 构造函数
-        Rotation() : _type(EULER), _data(glm::vec3(0.0f)) {}
-        explicit Rotation(const glm::vec3& euler) : _type(EULER), _data(euler) {}
-        explicit Rotation(const glm::quat& quat) : _type(QUAT), _data(quat) {}
+        Rotation() : _type(EULER), _data(AYMath::Vector3(0.0f)) {}
+        explicit Rotation(const AYMath::Vector3& euler) : _type(EULER), _data(euler) {}
+        explicit Rotation(const AYMath::Quaternion& quat) : _type(QUAT), _data(quat) {}
 
         // 获取矩阵
-        glm::mat4 getMatrix() const {
+        AYMath::Matrix4 getMatrix() const {
             if (_type == EULER) {
                 return glm::eulerAngleXYZ(_data.euler.x, _data.euler.y, _data.euler.z);
             }
@@ -27,23 +27,23 @@ struct STTransform
         }
 
         // 获取欧拉角（弧度）
-        glm::vec3 getEulerAngles() const {
+        AYMath::Vector3 getEulerAngles() const {
             return (_type == EULER) ? _data.euler : glm::eulerAngles(_data.quat);
         }
 
         // 获取四元数
-        glm::quat getQuaternion() const {
-            return (_type == EULER) ? glm::quat(_data.euler) : _data.quat;
+        AYMath::Quaternion getQuaternion() const {
+            return (_type == EULER) ? AYMath::Quaternion(_data.euler) : _data.quat;
         }
 
         // 设置欧拉角（弧度）
-        void setEulerAngles(const glm::vec3& euler) {
+        void setEulerAngles(const AYMath::Vector3& euler) {
             _type = EULER;
             _data.euler = euler;
         }
 
         // 设置四元数
-        void setQuaternion(const glm::quat& quat) {
+        void setQuaternion(const AYMath::Quaternion& quat) {
             _type = QUAT;
             _data.quat = quat;
         }
@@ -58,7 +58,7 @@ struct STTransform
 
         void switchToQuat() {
             if (_type == EULER) {
-                _data.quat = glm::quat(_data.euler);
+                _data.quat = AYMath::Quaternion(_data.euler);
                 _type = QUAT;
             }
         }
@@ -68,47 +68,47 @@ struct STTransform
     private:
         Type _type;
         union Data {
-            glm::vec3 euler;
-            glm::quat quat;
+            AYMath::Vector3 euler;
+            AYMath::Quaternion quat;
 
             Data() : euler(0.0f) {}
-            explicit Data(const glm::vec3& e) : euler(e) {}
-            explicit Data(const glm::quat& q) : quat(q) {}
+            explicit Data(const AYMath::Vector3& e) : euler(e) {}
+            explicit Data(const AYMath::Quaternion& q) : quat(q) {}
         } _data;
     };
 
 public:
-    STTransform(glm::vec3 pos = glm::vec3(0.0f),
-        glm::vec3 euler = glm::vec3(0.0f),
-        glm::vec3 scl = glm::vec3(1.0f))
+    STTransform(AYMath::Vector3 pos = AYMath::Vector3(0.0f),
+        AYMath::Vector3 euler = AYMath::Vector3(0.0f),
+        AYMath::Vector3 scl = AYMath::Vector3(1.0f))
         : position(pos), rotation(euler), scale(scl) {
     }
 
-    glm::vec3 position = glm::vec3(0.0f);
+    AYMath::Vector3 position = AYMath::Vector3(0.0f);
     Rotation rotation;
-    glm::vec3 scale = glm::vec3(1.0f);
+    AYMath::Vector3 scale = AYMath::Vector3(1.0f);
 
-    glm::mat4 getTransformMatrix() const {
-        glm::mat4 matrix(1.0f);
+    AYMath::Matrix4 getTransformMatrix() const {
+        AYMath::Matrix4 matrix(1.0f);
         matrix = glm::translate(matrix, position);
         matrix = matrix * rotation.getMatrix();
         matrix = glm::scale(matrix, scale);
         return matrix;
     }
 
-    glm::mat4 getPixelSpaceMatrix(float pixelsPerMeter,
-        const glm::vec3& origin = glm::vec3(0.5f),
-        const glm::vec3& additionalScale = glm::vec3(1.0f)) const
+    AYMath::Matrix4 getPixelSpaceMatrix(float pixelsPerMeter,
+        const AYMath::Vector3& origin = AYMath::Vector3(0.5f),
+        const AYMath::Vector3& additionalScale = AYMath::Vector3(1.0f)) const
     {
         //最终模型矩阵 = 缩放 -》 旋转 -》 平移 -》 单位 
-        glm::mat4 matrix(1.0f);
+        AYMath::Matrix4 matrix(1.0f);
 
-        glm::vec3 pixelPos = position * pixelsPerMeter;
-        glm::vec3 totalScale = scale * additionalScale;
+        AYMath::Vector3 pixelPos = position * pixelsPerMeter;
+        AYMath::Vector3 totalScale = scale * additionalScale;
 
         matrix = glm::translate(matrix, pixelPos);
 
-        glm::vec3 originOffset = glm::vec3(origin.x, origin.y, origin.z) * totalScale;
+        AYMath::Vector3 originOffset = AYMath::Vector3(origin.x, origin.y, origin.z) * totalScale;
         matrix = glm::translate(matrix, -originOffset);
         matrix = matrix * rotation.getMatrix();
 
@@ -117,24 +117,24 @@ public:
     }
 
     // 获取方向向量
-    glm::vec3 getForwardVector() const 
+    AYMath::Vector3 getForwardVector() const 
     {
-        return glm::normalize(glm::vec3(rotation.getMatrix() * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+        return glm::normalize(AYMath::Vector3(rotation.getMatrix() * AYMath::Vector4(0.0f, 0.0f, 1.0f, 0.0f)));
     }
 
-    glm::vec3 getUpVector() const 
+    AYMath::Vector3 getUpVector() const 
     {
-        return glm::normalize(glm::vec3(rotation.getMatrix() * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f)));
+        return glm::normalize(AYMath::Vector3(rotation.getMatrix() * AYMath::Vector4(0.0f, 1.0f, 0.0f, 0.0f)));
     }
 
-    glm::vec3 getRightVector() const 
+    AYMath::Vector3 getRightVector() const 
     {
-        return glm::normalize(glm::vec3(rotation.getMatrix() * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)));
+        return glm::normalize(AYMath::Vector3(rotation.getMatrix() * AYMath::Vector4(1.0f, 0.0f, 0.0f, 0.0f)));
     }
 
-    static bool approximatelyEqual(const glm::vec3& a, const glm::vec3& b, float epsilon = glm::epsilon<float>())
+    static bool approximatelyEqual(const AYMath::Vector3& a, const AYMath::Vector3& b, float epsilon = glm::epsilon<float>())
     {
-        return glm::all(glm::lessThanEqual(glm::abs(a - b), glm::vec3(epsilon)));
+        return glm::all(glm::lessThanEqual(glm::abs(a - b), AYMath::Vector3(epsilon)));
     }
 
     bool operator==(const STTransform& other) const {

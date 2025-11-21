@@ -1,44 +1,17 @@
 #pragma once
 #include "AYECSEngine.h"
+#include "AYMathType.h"
+
 #include "STPhysicsComponent.h"
+
 #include <box2d/math_functions.h>
 #include <foundation/PxVec3.h>
+
 #include <iostream>
 #include <sstream>
-#include <glm/glm.hpp>
 #include <atomic>
 #include <functional>
 
 // GLM -> Box2D 向量转换
 const float PIXELS_PER_METER = 16.f;
 
-inline b2Vec2 glmToBox2D(const glm::vec2& v) {
-    return b2Vec2(v.x, v.y);
-}
-
-inline b2Rot f2B2Rot(float degree)
-{
-    float radians = glm::radians(degree);
-    float c = glm::cos(radians);
-    float s = glm::sin(radians);
-
-    return b2Rot(c, s);
-}
-
-// Box2D -> GLM 向量转换
-inline glm::vec2 box2DToGlm(const b2Vec2& v) {
-    return glm::vec2(v.x, v.y);
-}
-
-inline glm::vec2 box2DToEngine(const b2Vec2& v) {
-    return glm::vec2(v.x * PIXELS_PER_METER, v.y * PIXELS_PER_METER);
-}
-
-inline glm::vec2 glmToEngine(const glm::vec2& v) {
-    return v * PIXELS_PER_METER;
-}
-
-// GLM -> PhysX 向量转换（需适配 PhysX 的 PxVec3）
-inline physx::PxVec3 glmToPhysX(const glm::vec3& v) {
-    return physx::PxVec3(v.x, v.y, v.z);
-}

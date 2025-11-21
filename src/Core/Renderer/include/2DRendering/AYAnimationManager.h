@@ -19,7 +19,7 @@ public:
     // 加载图集并注册动画
     std::shared_ptr<AYSpriteAtlas> loadAtlas(const std::string& atlasName, 
         const std::string& texturePath,
-        const glm::vec2& spriteSize,
+        const AYMath::Vector2& spriteSize,
         const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
         const std::vector<bool>& loops = {});
 
@@ -28,13 +28,13 @@ public:
     std::vector<AYAnimationFrame> makeFrames(
         int beginIndex,
         int frameCount,
-        const glm::vec2& spriteSize,
-        const glm::vec2& atlasSize,
+        const AYMath::Vector2& spriteSize,
+        const AYMath::Vector2& atlasSize,
         float duration = 0.1);
 
     std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>> makeAnimationData(
-        const glm::vec2& spriteSize,
-        const glm::vec2& atlasSize,
+        const AYMath::Vector2& spriteSize,
+        const AYMath::Vector2& atlasSize,
         const std::vector<AnimeDataCreator>& indexs,
         float duration = 0.1
     );

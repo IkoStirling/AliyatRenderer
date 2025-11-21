@@ -1,5 +1,5 @@
 #pragma once
-#include <box2d/box2d.h>
+#include "Adapter/Box2DAdapter.h"
 
 class Box2DColliderBase 
 {

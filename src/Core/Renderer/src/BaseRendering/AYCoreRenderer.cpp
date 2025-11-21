@@ -4,7 +4,7 @@
 #include <glm/gtc/type_ptr.hpp> ​​
 #include "AYPath.h"
 
-std::string mat4ToStringPretty(const glm::mat4& matrix) {
+std::string mat4ToStringPretty(const AYMath::Matrix4& matrix) {
     std::ostringstream oss;
     oss << "[\n";
     for (int i = 0; i < 4; ++i) {
@@ -67,7 +67,7 @@ bool AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
 
         _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
         glBufferData(GL_ARRAY_BUFFER,
-            _instanceBufferSize * sizeof(glm::mat4),
+            _instanceBufferSize * sizeof(AYMath::Matrix4),
             nullptr,
             GL_DYNAMIC_DRAW);
         return true;
@@ -117,7 +117,7 @@ void AYCoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices)
     AY_CHECK_GL_ERROR("Upload Vertex Data failed");
 }
 
-void AYCoreRenderer::uploadInstanceData(const std::vector<glm::mat4>& instances) 
+void AYCoreRenderer::uploadInstanceData(const std::vector<AYMath::Matrix4>& instances) 
 {
     if (instances.empty()) return;
 
@@ -125,14 +125,14 @@ void AYCoreRenderer::uploadInstanceData(const std::vector<glm::mat4>& instances)
     {
         _device->getGLStateManager()->bindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
         glBufferData(GL_ARRAY_BUFFER,
-            _instanceBufferSize * sizeof(glm::mat4),
+            _instanceBufferSize * sizeof(AYMath::Matrix4),
             nullptr,
             GL_DYNAMIC_DRAW);
     }
 
     glBufferSubData(GL_ARRAY_BUFFER,
         0,
-        instances.size() * sizeof(glm::mat4),
+        instances.size() * sizeof(AYMath::Matrix4),
         instances.data());
 
     AY_CHECK_GL_ERROR("Upload Instance Data failed");
@@ -165,7 +165,7 @@ AYCoreRenderer::InstanceGroup* AYCoreRenderer::findOrCreateInstanceGroup(
     InstanceType type,
     int expectedVertexCount,
     int expectedIndexCount,
-    const glm::mat4& transform)
+    const AYMath::Matrix4& transform)
 {
     // 模型矩阵在此函数中添加
     // 查找现有实例组
@@ -215,7 +215,7 @@ void AYCoreRenderer::drawLine2D(const VertexInfo& start, const VertexInfo& end, 
     _currentBatch->vertices.push_back(end);
 }
 
-void AYCoreRenderer::drawLine2D(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color)
+void AYCoreRenderer::drawLine2D(const AYMath::Vector2& start, const AYMath::Vector2& end, const AYMath::Vector4& color)
 {
     drawLine2D({{start,0},color}, { {end,0},color }, Space::Screen);
 }
@@ -247,22 +247,22 @@ void AYCoreRenderer::drawTriangle(const VertexInfo* vertices,
 }
 
 void AYCoreRenderer::drawArrow2D(const STTransform& transform,
-    const glm::vec3& from,
-    const glm::vec3& to,
+    const AYMath::Vector3& from,
+    const AYMath::Vector3& to,
     float headSize,
-    const glm::vec4& color,
+    const AYMath::Vector4& color,
     Space space
 )
 {
-    glm::mat4 model = transform.getTransformMatrix();
-    glm::vec3 worldFrom = model * glm::vec4(from, 1.0f);
-    glm::vec3 worldTo = model * glm::vec4(to, 1.0f);
+    AYMath::Matrix4 model = transform.getTransformMatrix();
+    AYMath::Vector3 worldFrom = model * AYMath::Vector4(from, 1.0f);
+    AYMath::Vector3 worldTo = model * AYMath::Vector4(to, 1.0f);
     drawLine2D(worldFrom, worldTo, color );
 
     // arrow head
-    glm::vec3 dir = glm::normalize(to - from);
-    glm::vec3 perp(-dir.y, dir.x, 0.f);
-    glm::vec3 headBase = worldTo - dir * headSize;
+    AYMath::Vector3 dir = glm::normalize(to - from);
+    AYMath::Vector3 perp(-dir.y, dir.x, 0.f);
+    AYMath::Vector3 headBase = worldTo - dir * headSize;
 
     drawLine2D(worldTo, headBase + perp * headSize * 0.5f, color);
     drawLine2D(worldTo, headBase - perp * headSize * 0.5f, color);
@@ -270,7 +270,7 @@ void AYCoreRenderer::drawArrow2D(const STTransform& transform,
 
 
 void AYCoreRenderer::drawRect2D(const STTransform& transform,
-    const glm::vec2& size,
+    const AYMath::Vector2& size,
     uint32_t materialID,
     bool wireframe,
     Space space)
@@ -287,7 +287,7 @@ void AYCoreRenderer::drawRect2D(const STTransform& transform,
         InstanceType::Rectangle,
         4, 
         !wireframe ? 6 : 8,
-        transform.getTransformMatrix() * glm::scale(glm::mat4(1.0f), glm::vec3(size, 1.0f))
+        transform.getTransformMatrix() * glm::scale(AYMath::Matrix4(1.0f), AYMath::Vector3(size, 1.0f))
     );
 
     if (group->vertexCount == -1) 
@@ -331,7 +331,7 @@ void AYCoreRenderer::drawCircle2D(const STTransform& transform,
     {
         auto normal = AYGraphicGenerator::create2DN();
         std::vector<VertexInfo> vertices;
-        vertices.push_back({ glm::vec3(0.0f, 0.0f, 0.0f), normal }); // 中心点
+        vertices.push_back({ AYMath::Vector3(0.0f, 0.0f, 0.0f), normal }); // 中心点
         auto circlePoints = AYGraphicGenerator::createCircleV(radius, segments);
         for (const auto& point : circlePoints) {
             vertices.push_back({ point, normal });
@@ -344,7 +344,7 @@ void AYCoreRenderer::drawCircle2D(const STTransform& transform,
 }
 
 void AYCoreRenderer::drawBox3D(const STTransform& transform,
-    const glm::vec3& half_extents,
+    const AYMath::Vector3& half_extents,
     uint32_t materialID,
     bool wireframe,
     Space space)
@@ -383,7 +383,7 @@ void AYCoreRenderer::drawMesh(const STTransform& transform,
 
     if (mat.type == STMaterial::Type::Transparent) {
         // 计算网格中心到摄像机的距离
-        glm::vec3 worldCenter = transform.getTransformMatrix() * glm::vec4(mesh.center, 1.0f);
+        AYMath::Vector3 worldCenter = transform.getTransformMatrix() * AYMath::Vector4(mesh.center, 1.0f);
         float distance = glm::distance(
             _renderer->getCameraSystem()->getActiveCamera()->getPosition(),
             worldCenter
@@ -415,9 +415,9 @@ void AYCoreRenderer::drawMesh(const STTransform& transform,
 
         for (size_t i = 0; i < mesh.vertices.size(); i++)
         {
-            glm::vec3 pos = mesh.vertices[i];
-            glm::vec3 normal = (i < mesh.normals.size()) ? mesh.normals[i] : glm::vec3(0.0f, 1.0f, 0.0f);
-            glm::vec2 uv = (i < mesh.texCoords.size()) ? mesh.texCoords[i] : glm::vec2(0.0f, 0.0f);
+            AYMath::Vector3 pos = mesh.vertices[i];
+            AYMath::Vector3 normal = (i < mesh.normals.size()) ? mesh.normals[i] : AYMath::Vector3(0.0f, 1.0f, 0.0f);
+            AYMath::Vector2 uv = (i < mesh.texCoords.size()) ? mesh.texCoords[i] : AYMath::Vector2(0.0f, 0.0f);
 
             tmp.emplace_back(pos, normal, uv);
         }
@@ -427,19 +427,19 @@ void AYCoreRenderer::drawMesh(const STTransform& transform,
     }
 }
 
-//void AYCoreRenderer::drawSphere3D(const STTransform& transform, float radius, const glm::vec4& color, int segments)
+//void AYCoreRenderer::drawSphere3D(const STTransform& transform, float radius, const AYMath::Vector4& color, int segments)
 //{
 //}
 //
-//void AYCoreRenderer::drawCapsule3D(const STTransform& transform, float radius, float half_height, const glm::vec4& color, int segments)
+//void AYCoreRenderer::drawCapsule3D(const STTransform& transform, float radius, float half_height, const AYMath::Vector4& color, int segments)
 //{
 //}
 //
-//void AYCoreRenderer::drawCylinder3D(const STTransform& transform, float radius, float halfHeight, const glm::vec4& color, int segments)
+//void AYCoreRenderer::drawCylinder3D(const STTransform& transform, float radius, float halfHeight, const AYMath::Vector4& color, int segments)
 //{
 //}
 //
-//void AYCoreRenderer::drawMesh3D(const STTransform& transform, const std::vector<glm::vec3>& vertices, const std::vector<uint32_t>& indices, const glm::vec4& color, bool wireframe)
+//void AYCoreRenderer::drawMesh3D(const STTransform& transform, const std::vector<AYMath::Vector3>& vertices, const std::vector<uint32_t>& indices, const AYMath::Vector4& color, bool wireframe)
 //{
 //}
 
@@ -707,7 +707,7 @@ GLuint AYCoreRenderer::_getInstanceShader(bool reload)
 void AYCoreRenderer::_setupDebugShader()
 {
     const size_t INITIAL_VERTEX_BUFFER_SIZE = sizeof(VertexInfo) * _vertexBufferSize;
-    const size_t INITIAL_INSTANCE_BUFFER_SIZE = sizeof(glm::mat4) * _instanceBufferSize;
+    const size_t INITIAL_INSTANCE_BUFFER_SIZE = sizeof(AYMath::Matrix4) * _instanceBufferSize;
     const size_t INITIAL_INDEX_BUFFER_SIZE = 3 * sizeof(uint32_t) * _indexBufferSize;
 
     for (int i = 0; i < 2; i++)
@@ -749,7 +749,7 @@ void AYCoreRenderer::_switchVertexBuffer()
     glBindBuffer(GL_ARRAY_BUFFER, _instanceVBO);
     for (int i = 0; i < 4; ++i) {
         glEnableVertexAttribArray(3 + i);
-        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4) * i));
+        glVertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(AYMath::Matrix4), (void*)(sizeof(AYMath::Vector4) * i));
         glVertexAttribDivisor(3 + i, 1);
     }
 
@@ -770,7 +770,7 @@ size_t AYCoreRenderer::_computeBatchKeyHash(const BatchKey& key)
     seed ^= std::hash<bool>()(key.depthTestEnabled) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
     // 哈希矩阵（使用 FloatHash）
-    auto hashMatrix = [](const glm::mat4& mat) {
+    auto hashMatrix = [](const AYMath::Matrix4& mat) {
         size_t matrixSeed = 0;
         for (int i = 0; i < 4; ++i) {
             for (int j = 0; j < 4; ++j) {

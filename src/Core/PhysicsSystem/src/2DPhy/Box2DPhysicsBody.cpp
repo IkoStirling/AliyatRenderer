@@ -3,14 +3,14 @@
 #include "2DPhy/Collision/Box2D/Box2DCircleCollider.h"
 #include "2DPhy/Collision/Box2D/Box2DPolygonCollider.h"
 #include "2DPhy/Collision/Box2D/Box2DEdgeCollider.h"
+#include "Adapter/Box2DAdapter.h"
 
-
-Box2DPhysicsBody::Box2DPhysicsBody(b2WorldId worldId, const glm::vec2& position,
+Box2DPhysicsBody::Box2DPhysicsBody(b2WorldId worldId, const AYMath::Vector2& position,
     float rotation, BodyType type) 
 {
     b2BodyDef def = b2DefaultBodyDef();
-    def.position = glmToBox2D(position);
-    def.rotation = f2B2Rot(rotation);
+    def.position = AYMath::Adapter::toBox2DV2(position);
+    def.rotation = AYMath::Adapter::toBox2DRot(rotation);
     def.type = convertBodyType(type);
     def.userData = this;
     _bodyId = b2CreateBody(worldId, &def);
@@ -38,23 +38,23 @@ STTransform Box2DPhysicsBody::getTransform()
 {
     b2Transform trans = b2Body_GetTransform(_bodyId);
     return STTransform{
-        glm::vec3(trans.p.x, trans.p.y, 0),
-        glm::vec3(0, 0, b2Rot_GetAngle(trans.q))
+        AYMath::Vector3(trans.p.x, trans.p.y, 0),
+        AYMath::Vector3(0, 0, b2Rot_GetAngle(trans.q))
     };
 }
 
-glm::vec2 Box2DPhysicsBody::getPosition()
+AYMath::Vector2 Box2DPhysicsBody::getPosition()
 {
-    return box2DToGlm(b2Body_GetPosition(_bodyId));
+    return AYMath::Adapter::fromBox2DV2(b2Body_GetPosition(_bodyId));
 }
 
-void Box2DPhysicsBody::setLinearVelocity(const glm::vec2& velocity) {
-    b2Body_SetLinearVelocity(_bodyId, glmToBox2D(velocity));
+void Box2DPhysicsBody::setLinearVelocity(const AYMath::Vector2& velocity) {
+    b2Body_SetLinearVelocity(_bodyId, AYMath::Adapter::toBox2DV2(velocity));
 }
 
-glm::vec2 Box2DPhysicsBody::getLinearVelocity() const {
+AYMath::Vector2 Box2DPhysicsBody::getLinearVelocity() const {
     b2Vec2 velocity = b2Body_GetLinearVelocity(_bodyId);
-    return box2DToGlm(velocity);
+    return AYMath::Adapter::fromBox2DV2(velocity);
 }
 
 void Box2DPhysicsBody::setAngularVelocity(float velocity) {
@@ -65,12 +65,12 @@ float Box2DPhysicsBody::getAngularVelocity() const {
     return b2Body_GetAngularVelocity(_bodyId);
 }
 
-void Box2DPhysicsBody::applyForce(const glm::vec2& force) {
-    b2Body_ApplyForceToCenter(_bodyId, glmToBox2D(force), true);
+void Box2DPhysicsBody::applyForce(const AYMath::Vector2& force) {
+    b2Body_ApplyForceToCenter(_bodyId, AYMath::Adapter::toBox2DV2(force), true);
 }
 
-void Box2DPhysicsBody::applyImpulse(const glm::vec2& impulse) {
-    b2Body_ApplyLinearImpulseToCenter(_bodyId, glmToBox2D(impulse), true);
+void Box2DPhysicsBody::applyImpulse(const AYMath::Vector2& impulse) {
+    b2Body_ApplyLinearImpulseToCenter(_bodyId, AYMath::Adapter::toBox2DV2(impulse), true);
 }
 
 void Box2DPhysicsBody::applyTorque(float torque) {
@@ -108,7 +108,7 @@ bool Box2DPhysicsBody::hasCollider(IAYCollider* collider) const
 }
 
 // 碰撞查询
-void Box2DPhysicsBody::queryOverlapArea(const glm::vec4& area) {
+void Box2DPhysicsBody::queryOverlapArea(const AYMath::Vector4& area) {
     // 实现AABB查询逻辑
 }
 
@@ -216,19 +216,19 @@ void* Box2DPhysicsBody::getB2BodyUserData() const
     return nullptr;
 }
 
-glm::vec4 Box2DPhysicsBody::getAABB() const
+AYMath::Vector4 Box2DPhysicsBody::getAABB() const
 {
     if (!B2_IS_NON_NULL(_bodyId))
-        return glm::vec4(0.0f);
+        return AYMath::Vector4(0.0f);
 
     b2AABB aabb = b2Body_ComputeAABB(_bodyId);
 
     if (aabb.lowerBound.x > aabb.upperBound.x || aabb.lowerBound.y > aabb.upperBound.y)
     {
-        return glm::vec4(0.0f);
+        return AYMath::Vector4(0.0f);
     }
 
-    return glm::vec4(
+    return AYMath::Vector4(
         aabb.lowerBound.x,
         aabb.lowerBound.y,
         aabb.upperBound.x,
@@ -236,9 +236,9 @@ glm::vec4 Box2DPhysicsBody::getAABB() const
     );
 }
 
-std::vector<glm::vec2> Box2DPhysicsBody::getColliderVertices() const
+std::vector<AYMath::Vector2> Box2DPhysicsBody::getColliderVertices() const
 {
-    std::vector<glm::vec2> vertices;
+    std::vector<AYMath::Vector2> vertices;
 
     if (B2_IS_NULL(_bodyId)) return vertices;
 
@@ -333,12 +333,12 @@ std::vector<glm::vec2> Box2DPhysicsBody::getColliderVertices() const
     return vertices;
 }
 
-glm::vec2 Box2DPhysicsBody::getLowestPoint() const
+AYMath::Vector2 Box2DPhysicsBody::getLowestPoint() const
 {
-    std::vector<glm::vec2> vertices = getColliderVertices();
-    if (vertices.empty()) return glm::vec2(0);
+    std::vector<AYMath::Vector2> vertices = getColliderVertices();
+    if (vertices.empty()) return AYMath::Vector2(0);
 
-    glm::vec2 lowestPoint = vertices[0];
+    AYMath::Vector2 lowestPoint = vertices[0];
     for (const auto& vertex : vertices)
     {
         if (vertex.y < lowestPoint.y)
@@ -350,12 +350,12 @@ glm::vec2 Box2DPhysicsBody::getLowestPoint() const
     return lowestPoint;
 }
 
-glm::vec2 Box2DPhysicsBody::getHighestPoint() const
+AYMath::Vector2 Box2DPhysicsBody::getHighestPoint() const
 {
-    std::vector<glm::vec2> vertices = getColliderVertices();
-    if (vertices.empty()) return glm::vec2(0);
+    std::vector<AYMath::Vector2> vertices = getColliderVertices();
+    if (vertices.empty()) return AYMath::Vector2(0);
 
-    glm::vec2 highestPoint = vertices[0];
+    AYMath::Vector2 highestPoint = vertices[0];
     for (const auto& vertex : vertices)
     {
         if (vertex.y > highestPoint.y)

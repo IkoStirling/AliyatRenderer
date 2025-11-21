@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "AYRenderDevice.h"
 #include "STTransform.h"
-#include <glm/glm.hpp>
 #include <memory>
 
 class AYRenderer;
@@ -14,46 +13,46 @@ public:
 
     void drawSprite(GLuint texture,
         const STTransform& transform,
-        const glm::vec2& uvOffset,
-        const glm::vec2& uvSize,
-        const glm::vec2& size = glm::vec2(1.0f),
-        const glm::vec4& color = glm::vec4(1.0f),
+        const AYMath::Vector2& uvOffset,
+        const AYMath::Vector2& uvSize,
+        const AYMath::Vector2& size = AYMath::Vector2(1.0f),
+        const AYMath::Vector4& color = AYMath::Vector4(1.0f),
         bool flipHorizontal = false,
         bool flipVertical = false,
-        const glm::vec2& origin = glm::vec2(0.5f)
+        const AYMath::Vector2& origin = AYMath::Vector2(0.5f)
         );
 
     void drawSpriteFromAtlas(GLuint texture,
         const STTransform& transform,
-        const glm::vec2& uvOffset,
-        const glm::vec2& uvSize,
-        const glm::vec2& size = glm::vec2(1.0f),
-        const glm::vec4& color = glm::vec4(1.0f),
+        const AYMath::Vector2& uvOffset,
+        const AYMath::Vector2& uvSize,
+        const AYMath::Vector2& size = AYMath::Vector2(1.0f),
+        const AYMath::Vector4& color = AYMath::Vector4(1.0f),
         bool flipHorizontal = false,
         bool flipVertical = false,
-        const glm::vec2& origin = glm::vec2(0.5f)
+        const AYMath::Vector2& origin = AYMath::Vector2(0.5f)
         );
 
     void drawSprite3D(GLuint texture,
         const STTransform& transform,
-        const glm::vec2& uvOffset = glm::vec2(0.f),
-        const glm::vec2& uvSize = glm::vec2(1.f),
-        const glm::vec3& size = glm::vec3(1.0f),
-        const glm::vec4& color = glm::vec4(1.0f),
+        const AYMath::Vector2& uvOffset = AYMath::Vector2(0.f),
+        const AYMath::Vector2& uvSize = AYMath::Vector2(1.f),
+        const AYMath::Vector3& size = AYMath::Vector3(1.0f),
+        const AYMath::Vector4& color = AYMath::Vector4(1.0f),
         bool flipHorizontal = false,
         bool flipVertical = false,
-        const glm::vec3& origin = glm::vec3(0.5f)
+        const AYMath::Vector3& origin = AYMath::Vector3(0.5f)
         );
 
     void drawSpriteFromAtlas3D(GLuint texture,
         const STTransform& transform,
-        const glm::vec2& uvOffset,
-        const glm::vec2& uvSize,
-        const glm::vec3& size = glm::vec3(1.0f),
-        const glm::vec4& color = glm::vec4(1.0f),
+        const AYMath::Vector2& uvOffset,
+        const AYMath::Vector2& uvSize,
+        const AYMath::Vector3& size = AYMath::Vector3(1.0f),
+        const AYMath::Vector4& color = AYMath::Vector4(1.0f),
         bool flipHorizontal = false,
         bool flipVertical = false,
-        const glm::vec3& origin = glm::vec3(0.5f)
+        const AYMath::Vector3& origin = AYMath::Vector3(0.5f)
         );
 
 

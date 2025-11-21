@@ -21,6 +21,7 @@ link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 
 #-------------项目自定义库--------------#
 
+add_subdirectory(src/Core/Math)
 add_subdirectory(src/Core/ConfigWrapper)
 add_subdirectory(src/Core/SQL)
 add_subdirectory(src/Core/Command)

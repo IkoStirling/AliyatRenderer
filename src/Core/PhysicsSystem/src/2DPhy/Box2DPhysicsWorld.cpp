@@ -22,13 +22,13 @@ void Box2DPhysicsWorld::step(float deltaTime, int velocity_iterations, int posit
     b2World_Step(_worldId, deltaTime, 4);
 }
 
-void Box2DPhysicsWorld::setGravity(const glm::vec3& gravity)
+void Box2DPhysicsWorld::setGravity(const AYMath::Vector3& gravity)
 {
     b2Vec2 b2Gravity = { gravity.x, gravity.y };
     b2World_SetGravity(_worldId, b2Gravity);
 }
 
-bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, STRaycastResult& hit)
+bool Box2DPhysicsWorld::raycast(const AYMath::Vector3& start, const AYMath::Vector3& end, STRaycastResult& hit)
 {
     b2Vec2 b2Start = { start.x, start.y };
     b2Vec2 b2End = { end.x, end.y };
@@ -46,7 +46,7 @@ bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, ST
     return false;
 }
 
-bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, std::function<bool(const STRaycastResult&)> callback)
+bool Box2DPhysicsWorld::raycast(const AYMath::Vector3& start, const AYMath::Vector3& end, std::function<bool(const STRaycastResult&)> callback)
 {
     b2Vec2 b2Start = { start.x, start.y };
     b2Vec2 b2End = { end.x, end.y };
@@ -68,10 +68,10 @@ bool Box2DPhysicsWorld::raycast(const glm::vec3& start, const glm::vec3& end, st
     return false;
 }
 
-IAYPhysicsBody* Box2DPhysicsWorld::createBody(EntityID entity, const glm::vec3& position, float rotation, IAYPhysicsBody::BodyType type)
+IAYPhysicsBody* Box2DPhysicsWorld::createBody(EntityID entity, const AYMath::Vector3& position, float rotation, IAYPhysicsBody::BodyType type)
 {
     std::lock_guard<std::mutex> lock(_bbodyMutex);
-    auto [iter, inserted] = _bodies.try_emplace(entity, std::make_unique<Box2DPhysicsBody>(_worldId, glm::vec2(position), rotation, type));
+    auto [iter, inserted] = _bodies.try_emplace(entity, std::make_unique<Box2DPhysicsBody>(_worldId, AYMath::Vector2(position), rotation, type));
     auto& body = iter->second;
     body->setOwningEntity(entity);
     body->setType(type);
@@ -123,7 +123,7 @@ Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IAYPh
     if (B2_ID_EQUALS(bodyId, b2_nullBodyId)) return info;
 
     // 获取碰撞体最低点
-    glm::vec2 lowestPoint = box2DBody->getLowestPoint();
+    AYMath::Vector2 lowestPoint = box2DBody->getLowestPoint();
 
     // 向下发射射线检测地面
     b2Vec2 origin = { lowestPoint.x, lowestPoint.y + 0.015f };
@@ -136,8 +136,8 @@ Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IAYPh
     {
         info.isGrounded = true;
         info.distanceToGround = maxDistance * result.fraction;
-        info.contactPoint = glm::vec2(result.point.x, result.point.y);
-        info.contactNormal = glm::vec2(result.normal.x, result.normal.y);
+        info.contactPoint = AYMath::Vector2(result.point.x, result.point.y);
+        info.contactNormal = AYMath::Vector2(result.normal.x, result.normal.y);
 
         // 从形状获取刚体
         b2BodyId groundBodyId = b2Shape_GetBody(result.shapeId);
@@ -147,7 +147,7 @@ Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IAYPh
     return info;
 }
 
-STRaycastResult Box2DPhysicsWorld::raycastToGround(const glm::vec2& point, float maxDistance)
+STRaycastResult Box2DPhysicsWorld::raycastToGround(const AYMath::Vector2& point, float maxDistance)
 {
     STRaycastResult hit;
 
@@ -188,8 +188,8 @@ void Box2DPhysicsWorld::fillRaycastResult(const b2RayResult& result, STRaycastRe
     {
         b2BodyId bodyId = b2Shape_GetBody(result.shapeId);
         hit.body = static_cast<IAYPhysicsBody*>(b2Body_GetUserData(bodyId));
-        hit.point = glm::vec3(result.point.x, result.point.y, 0);
-        hit.normal = glm::vec3(result.normal.x, result.normal.y, 0);
+        hit.point = AYMath::Vector3(result.point.x, result.point.y, 0);
+        hit.normal = AYMath::Vector3(result.normal.x, result.normal.y, 0);
         hit.fraction = result.fraction;
     }
     else

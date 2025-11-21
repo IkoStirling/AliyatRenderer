@@ -55,7 +55,7 @@ private:
 
     struct InstanceGroup 
     {
-        std::vector<glm::mat4> matrices;
+        std::vector<AYMath::Matrix4> matrices;
         int vertexCount = -1;  // 每个实例对应的顶点数
         int baseVertex = -1;   // 顶点缓冲中的起始位置
         int indexCount = -1;
@@ -74,8 +74,8 @@ private:
     {
         Space space;
         GLenum primitiveType;
-        //glm::mat4 projectionMatrix;
-        //glm::mat4 viewMatrix;
+        //AYMath::Matrix4 projectionMatrix;
+        //AYMath::Matrix4 viewMatrix;
         bool useInstanced;
         bool depthTestEnabled;
         STMaterial::Type materialType;  // 材质类型
@@ -125,7 +125,7 @@ public:
         InstanceType type,
         int expectedVertexCount,
         int expectedIndexCount,
-        const glm::mat4& transform);
+        const AYMath::Matrix4& transform);
 
     void addVertexData(const std::vector<VertexInfo>& vertices, InstanceGroup* group);
 
@@ -133,7 +133,7 @@ public:
 
     // 基础图形
     void drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space);
-    void drawLine2D(const glm::vec2& start, const glm::vec2& end, const glm::vec4& color);
+    void drawLine2D(const AYMath::Vector2& start, const AYMath::Vector2& end, const AYMath::Vector4& color);
     void drawTriangle(const VertexInfo& p1,
         const VertexInfo& p2,
         const VertexInfo& p3,
@@ -143,14 +143,14 @@ public:
         Space space);
 
     void drawArrow2D(const STTransform& transform, 
-        const glm::vec3& from,
-        const glm::vec3& to,
+        const AYMath::Vector3& from,
+        const AYMath::Vector3& to,
         float headSize,
-        const glm::vec4& color,
+        const AYMath::Vector4& color,
         Space space = Space::World);    //没有进行世界坐标适配
 
     void drawRect2D(const STTransform& transform,
-        const glm::vec2& size,
+        const AYMath::Vector2& size,
         uint32_t materialID,
         bool wireframe = false,
         Space space = Space::World);    //实例化渲染
@@ -163,13 +163,13 @@ public:
         Space space = Space::World);    //实例化渲染
 
 
-    //void drawCapsule2D(const glm::vec2& base, const glm::vec2& tip, float radius, const glm::vec4& color);
+    //void drawCapsule2D(const AYMath::Vector2& base, const AYMath::Vector2& tip, float radius, const AYMath::Vector4& color);
 
     // 3D基础图形
 
 
     void drawBox3D(const STTransform& transform,
-        const glm::vec3& half_extents,
+        const AYMath::Vector3& half_extents,
         uint32_t materialID,
         bool wireframe = true,
         Space space = Space::World);
@@ -180,39 +180,39 @@ public:
         Space space);
 
     //void drawSphere3D(const STTransform& transform,
-    //    float radius, const glm::vec4& color,
+    //    float radius, const AYMath::Vector4& color,
     //    int segments = 16);
 
     //// 复合图形
     //void drawCapsule3D(const STTransform& transform,
     //    float radius,
     //    float half_height,
-    //    const glm::vec4& color,
+    //    const AYMath::Vector4& color,
     //    int segments = 8);
 
     //void drawCylinder3D(const STTransform& transform,
     //    float radius,
     //    float halfHeight,
-    //    const glm::vec4& color,
+    //    const AYMath::Vector4& color,
     //    int segments = 12);
 
     //void drawMesh3D(const STTransform& transform,
-    //    const std::vector<glm::vec3>& vertices,
+    //    const std::vector<AYMath::Vector3>& vertices,
     //    const std::vector<uint32_t>& indices,
-    //    const glm::vec4& color,
+    //    const AYMath::Vector4& color,
     //    bool wireframe = false);
 
-    //void drawArrow3D(const glm::vec3& from, const glm::vec3& to, float headSize, const glm::vec4& color);
+    //void drawArrow3D(const AYMath::Vector3& from, const AYMath::Vector3& to, float headSize, const AYMath::Vector4& color);
 
     // 辅助标记
-    //void drawCross2D(const glm::vec2& position, float size, const glm::vec4& color);
-    //void drawCross3D(const glm::vec3& position, float size, const glm::vec4& color);
-    //void drawGrid2D(const glm::vec2& center, int divisions, float spacing, const glm::vec4& color);
-    //void drawGrid3D(const glm::vec3& center, int divisions, float spacing, const glm::vec3& axisColor);
+    //void drawCross2D(const AYMath::Vector2& position, float size, const AYMath::Vector4& color);
+    //void drawCross3D(const AYMath::Vector3& position, float size, const AYMath::Vector4& color);
+    //void drawGrid2D(const AYMath::Vector2& center, int divisions, float spacing, const AYMath::Vector4& color);
+    //void drawGrid3D(const AYMath::Vector3& center, int divisions, float spacing, const AYMath::Vector3& axisColor);
 
     // 射线检测可视化
-    //void drawRay2D(const glm::vec2& origin, const glm::vec2& direction, float length, const glm::vec4& color);
-    //void drawRay3D(const glm::vec3& origin, const glm::vec3& direction, float length, const glm::vec4& color);
+    //void drawRay2D(const AYMath::Vector2& origin, const AYMath::Vector2& direction, float length, const AYMath::Vector4& color);
+    //void drawRay3D(const AYMath::Vector3& origin, const AYMath::Vector3& direction, float length, const AYMath::Vector4& color);
 
 
 public:
@@ -276,7 +276,7 @@ private:
     bool ensureIndexBufferCapacity(size_t requiredIndices);
 
     void uploadVertexData(const std::vector<VertexInfo>& vertices);
-    void uploadInstanceData(const std::vector<glm::mat4>& instances);
+    void uploadInstanceData(const std::vector<AYMath::Matrix4>& instances);
     void uploadIndexData(const std::vector<uint32_t>& indices);
 private:
     AYRenderDevice* _device;

@@ -30,7 +30,7 @@ public:
     IAYCamera* getCamera(const std::string& name) const;
 
     // 更改窗口大小后调用该函数，已嵌入回调
-    void setViewportAll(const glm::vec4& viewport); 
+    void setViewportAll(const AYMath::Vector4& viewport); 
 
 private:
     std::unordered_map<uint32_t, std::unique_ptr<IAYCamera>> _cameras;

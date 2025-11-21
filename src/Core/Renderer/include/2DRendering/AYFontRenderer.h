@@ -21,8 +21,8 @@ struct Character {
     glm::ivec2 size;    //size.y 字形的高度
     glm::ivec2 bearing; //bearing.y基线到顶部的距离
     unsigned int advance;
-    glm::vec2 atlasPos; // 纹理图集位置
-    glm::vec2 atlasSize; // 在图集中的尺寸
+    AYMath::Vector2 atlasPos; // 纹理图集位置
+    AYMath::Vector2 atlasSize; // 在图集中的尺寸
 };
 
 /*
@@ -40,9 +40,9 @@ public:
     bool loadFont(const std::string& fontPath, unsigned int fontSize, const std::map<std::string, float>& axisValues = {});
     bool loadChar(FT_Face face, char32_t charCode);
     bool findChar(Character& theChar, char32_t charCode);
-    void getCharacterQuatInfo(const Character& ch, glm::vec3& render_pos, std::vector<glm::vec3>& result_pos, std::vector<glm::vec2>& result_uv, float scale);
+    void getCharacterQuatInfo(const Character& ch, AYMath::Vector3& render_pos, std::vector<AYMath::Vector3>& result_pos, std::vector<AYMath::Vector2>& result_uv, float scale);
     // 废弃
-    void renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color);
+    void renderText(const std::string& text, float x, float y, float scale, const AYMath::Vector3& color);
 
     FT_Face& getCurrentFace() { return _currentFace; }
     /*

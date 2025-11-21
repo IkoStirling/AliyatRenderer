@@ -15,7 +15,7 @@ public:
         if (isValid()) updateShape(_shapeId);
     }
 
-    void setOffset(const glm::vec2& offset) override
+    void setOffset(const AYMath::Vector2& offset) override
     {
         _offset = offset;
         if (isValid()) updateShape(_shapeId);

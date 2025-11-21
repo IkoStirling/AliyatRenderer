@@ -135,7 +135,7 @@ bool AYFontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize
     return true;
 }
 
-void AYFontRenderer::renderText(const std::string& text, float x, float y, float scale, const glm::vec3& color) 
+void AYFontRenderer::renderText(const std::string& text, float x, float y, float scale, const AYMath::Vector3& color) 
 { 
     glfwMakeContextCurrent(_device->getWindow());
 
@@ -146,7 +146,7 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
 
     int width, height;
     glfwGetFramebufferSize(_device->getWindow(), &width, &height);
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(width),
+    AYMath::Matrix4 projection = glm::ortho(0.0f, static_cast<float>(width),
         static_cast<float>(height), 0.0f); // 注意Y轴翻转
     glUniformMatrix4fv(glGetUniformLocation(_shaderProgram, "projection"),
         1, GL_FALSE, glm::value_ptr(projection));
@@ -173,7 +173,7 @@ void AYFontRenderer::renderText(const std::string& text, float x, float y, float
     AY_CHECK_GL_ERROR("AYFontRenderer found somthing wrong");
 }
 
-void AYFontRenderer::getCharacterQuatInfo(const Character& ch, glm::vec3& render_pos, std::vector<glm::vec3>& result_pos, std::vector<glm::vec2>& result_uv, float scale)
+void AYFontRenderer::getCharacterQuatInfo(const Character& ch, AYMath::Vector3& render_pos, std::vector<AYMath::Vector3>& result_pos, std::vector<AYMath::Vector2>& result_uv, float scale)
 {
     float xpos = render_pos.x + ch.bearing.x * scale;
     float ypos = render_pos.y - ch.bearing.y * scale;  // 修正Y坐标计算
@@ -383,11 +383,11 @@ void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
             glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
             static_cast<unsigned int>(face->glyph->advance.x),
-            glm::vec2(
+            AYMath::Vector2(
                 static_cast<float>(atlas.currentX) / atlas.width,
                 static_cast<float>(atlas.currentY) / atlas.height
             ),
-            glm::vec2(
+            AYMath::Vector2(
                 static_cast<float>(face->glyph->bitmap.width) / atlas.width,
                 static_cast<float>(face->glyph->bitmap.rows) / atlas.height
             )

@@ -5,16 +5,16 @@
 class Box2DEdgeCollider : public AYEdge2DCollider, public Box2DColliderBase
 {
 public:
-    explicit Box2DEdgeCollider(const glm::vec2& size = { 1.0f, 1.0f }) :
+    explicit Box2DEdgeCollider(const AYMath::Vector2& size = { 1.0f, 1.0f }) :
         AYEdge2DCollider(size) {
     }
 
-    void setOffset(const glm::vec2& offset) override {
+    void setOffset(const AYMath::Vector2& offset) override {
         AYEdge2DCollider::setOffset(offset);
         if (isValid()) updateShape(_shapeId);
     }
 
-    void setVertices(const glm::vec2& v1, const glm::vec2& v2) override
+    void setVertices(const AYMath::Vector2& v1, const AYMath::Vector2& v2) override
     {
         AYEdge2DCollider::setVertices(v1, v2);
         if (isValid()) updateShape(_shapeId);
@@ -26,7 +26,7 @@ public:
         if (isValid()) updateShape(_shapeId);
     }
 
-    void setAdjacentVertices(const glm::vec2& prevVertex, const glm::vec2& nextVertex) override
+    void setAdjacentVertices(const AYMath::Vector2& prevVertex, const AYMath::Vector2& nextVertex) override
     {
         AYEdge2DCollider::setAdjacentVertices(prevVertex, nextVertex);
         if (isValid()) updateShape(_shapeId);

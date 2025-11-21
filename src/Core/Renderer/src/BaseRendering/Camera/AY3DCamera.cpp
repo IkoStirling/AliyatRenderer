@@ -19,7 +19,7 @@ void AY3DCamera::update(float delta_time)
     }
 }
 
-glm::mat4 AY3DCamera::getViewMatrix() const
+AYMath::Matrix4 AY3DCamera::getViewMatrix() const
 {
     if (_dirtyView)
     {
@@ -34,7 +34,7 @@ glm::mat4 AY3DCamera::getViewMatrix() const
     return _cachedView;
 }
 
-glm::mat4 AY3DCamera::getProjectionMatrix() const
+AYMath::Matrix4 AY3DCamera::getProjectionMatrix() const
 {
     if (_dirtyProjection)
     {
@@ -56,7 +56,7 @@ glm::mat4 AY3DCamera::getProjectionMatrix() const
     return _cachedProjection;
 }
 
-void AY3DCamera::setLookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& up)
+void AY3DCamera::setLookAt(const AYMath::Vector3& eye, const AYMath::Vector3& center, const AYMath::Vector3& up)
 {
     _targetPosition = center;
     _cachedFront = glm::normalize(center - eye);
@@ -81,13 +81,13 @@ void AY3DCamera::setOrthographic(float size, float nearPlane, float farPlane)
     _orthographic = true;
 }
 
-void AY3DCamera::setPosition(const glm::vec3& position)
+void AY3DCamera::setPosition(const AYMath::Vector3& position)
 {
     _transform.position = position;
     _targetPosition = position;
 }
 
-void AY3DCamera::setTargetPosition(const glm::vec3& target)
+void AY3DCamera::setTargetPosition(const AYMath::Vector3& target)
 {
     _targetPosition = target;
 }
@@ -99,31 +99,31 @@ void AY3DCamera::rotate(float yaw, float pitch)
     _yaw += yaw;
     _pitch = glm::clamp(_pitch - pitch, -89.0f, 89.0f);
 
-    glm::vec3 front;
+    AYMath::Vector3 front;
     front.x = cos(glm::radians(_yaw)) * cos(glm::radians(_pitch));
     front.y = sin(glm::radians(_pitch));
     front.z = sin(glm::radians(_yaw)) * cos(glm::radians(_pitch));
     _cachedFront = glm::normalize(front);
 
     // 重新计算右向量和上向量
-    _cachedRight = glm::normalize(glm::cross(_cachedFront, glm::vec3(0.0f, 1.0f, 0.0f)));
+    _cachedRight = glm::normalize(glm::cross(_cachedFront, AYMath::Vector3(0.0f, 1.0f, 0.0f)));
     _cachedUp = glm::normalize(glm::cross(_cachedRight, _cachedFront));
 }
 
-void AY3DCamera::move(const glm::vec3& offset)
+void AY3DCamera::move(const AYMath::Vector3& offset)
 {
     _transform.position += offset;
 }
 
-const glm::vec3& AY3DCamera::getFront() const
+const AYMath::Vector3& AY3DCamera::getFront() const
 {
     return _cachedFront;
 }
-const glm::vec3& AY3DCamera::getUp() const
+const AYMath::Vector3& AY3DCamera::getUp() const
 {
     return _cachedUp;
 }
-const glm::vec3& AY3DCamera::getRight() const
+const AYMath::Vector3& AY3DCamera::getRight() const
 {
     return _cachedRight;
 }
@@ -137,6 +137,6 @@ void AY3DCamera::_updateCachedVectors()
     _cachedFront = glm::normalize(_cachedFront);
 
     // 计算 right 和 up
-    _cachedRight = glm::normalize(glm::cross(_cachedFront, glm::vec3(0.0f, 1.0f, 0.0f)));
+    _cachedRight = glm::normalize(glm::cross(_cachedFront, AYMath::Vector3(0.0f, 1.0f, 0.0f)));
     _cachedUp = glm::normalize(glm::cross(_cachedRight, _cachedFront));
 }

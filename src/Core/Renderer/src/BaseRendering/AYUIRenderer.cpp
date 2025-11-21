@@ -36,9 +36,9 @@ void AYUIRenderer::shutdown() {
     _saveUIRendererConfigINI();
 }
 
-uint32_t AYUIRenderer::createRectangle(const glm::vec3& position, const glm::vec3& size,
-    const glm::vec4& color, GLuint texture, bool is3D,
-    const glm::vec3& rotation, const glm::vec3& scale) 
+uint32_t AYUIRenderer::createRectangle(const AYMath::Vector3& position, const AYMath::Vector3& size,
+    const AYMath::Vector4& color, GLuint texture, bool is3D,
+    const AYMath::Vector3& rotation, const AYMath::Vector3& scale) 
 {
     UIElement element;
     auto& renderData = element.renderData;
@@ -60,20 +60,20 @@ uint32_t AYUIRenderer::createRectangle(const glm::vec3& position, const glm::vec
     return element.id;
 }
 
-uint32_t AYUIRenderer::createText(const std::string& text, const glm::vec3& position,
-    const glm::vec4& color, float scale, bool is3D)
+uint32_t AYUIRenderer::createText(const std::string& text, const AYMath::Vector3& position,
+    const AYMath::Vector4& color, float scale, bool is3D)
 {
     UIElement element;
     auto& renderData = element.renderData;
     element.id = _nextElementId++;
     renderData.position = position;
-    renderData.size = glm::vec3(1); // 文本大小动态计算
+    renderData.size = AYMath::Vector3(1); // 文本大小动态计算
     renderData.color = color;
     renderData.texture = 0; // 使用字体纹理图集
     renderData.visible = true;
     renderData.dirty = true;
-    renderData.scale = glm::vec3(1.0f);
-    renderData.rotation = glm::vec3(0.0f);
+    renderData.scale = AYMath::Vector3(1.0f);
+    renderData.rotation = AYMath::Vector3(0.0f);
     renderData.is3D = is3D;
 
     element.text = text;
@@ -86,7 +86,7 @@ uint32_t AYUIRenderer::createText(const std::string& text, const glm::vec3& posi
     return element.id;
 }
 
-void AYUIRenderer::setPosition(uint32_t elementId, const glm::vec3& position) {
+void AYUIRenderer::setPosition(uint32_t elementId, const AYMath::Vector3& position) {
     if (elementId > 0 && elementId <= _uiElements.size()) {
         uint32_t index = elementId - 1;
         if (_uiElements[index].renderData.position != position) {
@@ -98,7 +98,7 @@ void AYUIRenderer::setPosition(uint32_t elementId, const glm::vec3& position) {
     }
 }
 
-void AYUIRenderer::setSize(uint32_t elementId, const glm::vec3& size) {
+void AYUIRenderer::setSize(uint32_t elementId, const AYMath::Vector3& size) {
     if (elementId > 0 && elementId <= _uiElements.size()) {
         uint32_t index = elementId - 1;
         if (_uiElements[index].renderData.size != size) {
@@ -110,7 +110,7 @@ void AYUIRenderer::setSize(uint32_t elementId, const glm::vec3& size) {
     }
 }
 
-void AYUIRenderer::setColor(uint32_t elementId, const glm::vec4& color) {
+void AYUIRenderer::setColor(uint32_t elementId, const AYMath::Vector4& color) {
     if (elementId > 0 && elementId <= _uiElements.size()) {
         uint32_t index = elementId - 1;
         if (_uiElements[index].renderData.color != color) {
@@ -146,7 +146,7 @@ void AYUIRenderer::setVisible(uint32_t elementId, bool visible) {
     }
 }
 
-void AYUIRenderer::setRotation(uint32_t elementId, const glm::vec3& rotation)
+void AYUIRenderer::setRotation(uint32_t elementId, const AYMath::Vector3& rotation)
 {
     if (elementId > 0 && elementId <= _uiElements.size()) {
         uint32_t index = elementId - 1;
@@ -159,7 +159,7 @@ void AYUIRenderer::setRotation(uint32_t elementId, const glm::vec3& rotation)
     }
 }
 
-void AYUIRenderer::setScale(uint32_t elementId, const glm::vec3& scale)
+void AYUIRenderer::setScale(uint32_t elementId, const AYMath::Vector3& scale)
 {
     if (elementId > 0 && elementId <= _uiElements.size()) {
         uint32_t index = elementId - 1;
@@ -225,7 +225,7 @@ void AYUIRenderer::setOnReleased(uint32_t elementId, std::function<void()> callb
     }
 }
 
-bool AYUIRenderer::isInsideElement(uint32_t elementId, const glm::vec2& position)
+bool AYUIRenderer::isInsideElement(uint32_t elementId, const AYMath::Vector2& position)
 {
     if (elementId <= 0 || elementId > _uiElements.size())
         return false;
@@ -280,16 +280,16 @@ void AYUIRenderer::renderUI() {
         // 更新投影矩阵
         auto cameraSystem = _renderer->getCameraSystem();
         IAYCamera* camera;
-        glm::mat4 projection;
-        glm::mat4 model;
-        glm::mat4 view;
+        AYMath::Matrix4 projection;
+        AYMath::Matrix4 model;
+        AYMath::Matrix4 view;
         if (!batch.is3D)
         {
             camera = cameraSystem->getCamera(AYCameraSystem::SCREEN_SPACE_CAMERA);
             projection = camera->getProjectionMatrix();
             view = camera->getViewMatrix();
             stateManager->setDepthTest(batch.is3D);
-            model = glm::mat4(1.f); //预留，不做实现
+            model = AYMath::Matrix4(1.f); //预留，不做实现
         }
         else
         {
@@ -297,7 +297,7 @@ void AYUIRenderer::renderUI() {
             projection = camera->getProjectionMatrix();
             view = camera->getViewMatrix();
             stateManager->setDepthTest(batch.is3D);
-            model = glm::mat4(1.f);
+            model = AYMath::Matrix4(1.f);
         }
         
         glUniformMatrix4fv(glGetUniformLocation(uiShader, "u_projection"),
@@ -319,11 +319,11 @@ void AYUIRenderer::renderUI() {
         }
 
         glUniform1i(glGetUniformLocation(uiShader, "u_isRect"), 1);
-        glUniform2fv(glGetUniformLocation(uiShader, "u_rectSize"), 1, glm::value_ptr(glm::vec2(66.7f)));
+        glUniform2fv(glGetUniformLocation(uiShader, "u_rectSize"), 1, glm::value_ptr(AYMath::Vector2(66.7f)));
         glUniform1f(glGetUniformLocation(uiShader, "u_cornerRadius"), 0.1f);
         glUniform1f(glGetUniformLocation(uiShader, "u_strokeWidth"), 0.05f);
-        glUniform4fv(glGetUniformLocation(uiShader, "u_fillColor"), 1, glm::value_ptr(glm::vec4(1,1,1,1)));
-        glUniform4fv(glGetUniformLocation(uiShader, "u_strokeColor"), 1, glm::value_ptr(glm::vec4(1,0,0,1)));
+        glUniform4fv(glGetUniformLocation(uiShader, "u_fillColor"), 1, glm::value_ptr(AYMath::Vector4(1,1,1,1)));
+        glUniform4fv(glGetUniformLocation(uiShader, "u_strokeColor"), 1, glm::value_ptr(AYMath::Vector4(1,0,0,1)));
 
 
         // 使用索引绘制
@@ -422,17 +422,17 @@ void AYUIRenderer::updateElementVertices(uint32_t elementIndex) {
     // 创建新的批次或添加到现有批次
     UIBatch* targetBatch = getTargetBatch(element);
 
-    std::vector<glm::vec3> rectPoints = AYGraphicGenerator::createRectV();
-    glm::vec3 normal = AYGraphicGenerator::create2DN();
-    std::vector<glm::vec2> texCoords = AYGraphicGenerator::createRectT();
+    std::vector<AYMath::Vector3> rectPoints = AYGraphicGenerator::createRectV();
+    AYMath::Vector3 normal = AYGraphicGenerator::create2DN();
+    std::vector<AYMath::Vector2> texCoords = AYGraphicGenerator::createRectT();
     std::vector<GLuint> indices = AYGraphicGenerator::createRectI(true);
 
     // 变换顶点位置：缩放和位移
-    std::vector<glm::vec3> transformedPositions;
+    std::vector<AYMath::Vector3> transformedPositions;
     transformedPositions.reserve(rectPoints.size());
     for (const auto& vertex : rectPoints) {
         // 缩放顶点的x和y分量，z保持不变或设为0
-        glm::vec3 scaledVertex = glm::vec3(
+        AYMath::Vector3 scaledVertex = AYMath::Vector3(
             vertex.x * renderData.size.x,
             vertex.y * renderData.size.y,
             0.0f // 或者 vertex.z，但在2D中通常为0
@@ -441,9 +441,9 @@ void AYUIRenderer::updateElementVertices(uint32_t elementIndex) {
         float anchorOffsetX = (renderData.anchor.x + 0.5f) * renderData.size.x;
         float anchorOffsetY = (renderData.anchor.y + 0.5f) * renderData.size.y;
 
-        glm::vec3 adjustedPosition = renderData.position + glm::vec3(anchorOffsetX, anchorOffsetY, 0.0f);
+        AYMath::Vector3 adjustedPosition = renderData.position + AYMath::Vector3(anchorOffsetX, anchorOffsetY, 0.0f);
         // 平移顶点到element的位置
-        glm::vec3 transformedVertex = scaledVertex + adjustedPosition;
+        AYMath::Vector3 transformedVertex = scaledVertex + adjustedPosition;
         transformedPositions.push_back(transformedVertex);
     }
 
@@ -471,8 +471,8 @@ void AYUIRenderer::updateTextVertices(uint32_t elementIndex) {
     UIElement& element = _uiElements[elementIndex];
     if (element.text.empty()) return;
 
-    glm::vec3 startPos = element.renderData.position;
-    glm::vec3 currentPos = startPos;
+    AYMath::Vector3 startPos = element.renderData.position;
+    AYMath::Vector3 currentPos = startPos;
     auto normal = AYGraphicGenerator::create2DN();
     auto indices = AYGraphicGenerator::createRectI(true);
 
@@ -497,8 +497,8 @@ void AYUIRenderer::updateTextVertices(uint32_t elementIndex) {
         }
 
         targetBatch = getTargetBatch(theChar.textureID, element.renderData.is3D);
-        std::vector<glm::vec3> vertices;
-        std::vector<glm::vec2> texcroods;
+        std::vector<AYMath::Vector3> vertices;
+        std::vector<AYMath::Vector2> texcroods;
         fontRenderer->getCharacterQuatInfo(theChar, currentPos, vertices, texcroods, element.textScale);
 
         uint32_t vertexOffset = targetBatch->positions.size();

@@ -10,8 +10,8 @@
 class AYSpriteAtlas {
 public:
     AYSpriteAtlas(GLuint textureId,
-        const glm::vec2& spriteSize,
-        const glm::vec2& atlasSize);
+        const AYMath::Vector2& spriteSize,
+        const AYMath::Vector2& atlasSize);
 
     bool addAnimation(const std::string& name,
         std::shared_ptr<AYAnimationClip> clip);
@@ -22,7 +22,7 @@ public:
 
 private:
     GLuint _texture;
-    glm::vec2 _spriteSize;
-    glm::vec2 _atlasSize;
+    AYMath::Vector2 _spriteSize;
+    AYMath::Vector2 _atlasSize;
     std::unordered_map<std::string, std::shared_ptr<AYAnimationClip>> _animations;
 };

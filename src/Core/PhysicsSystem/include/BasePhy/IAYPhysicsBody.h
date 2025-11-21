@@ -21,18 +21,18 @@ public:
     //---------------位置旋转----------------
     virtual void setTransform(const STTransform& transform) = 0;
     virtual STTransform getTransform() = 0;
-    virtual glm::vec2 getPosition() = 0;
+    virtual AYMath::Vector2 getPosition() = 0;
 
     //-----------------速度------------------
-    virtual void setLinearVelocity(const glm::vec2& velocity) = 0;
-    virtual glm::vec2 getLinearVelocity() const = 0;
+    virtual void setLinearVelocity(const AYMath::Vector2& velocity) = 0;
+    virtual AYMath::Vector2 getLinearVelocity() const = 0;
     virtual void setAngularVelocity(float velocity) = 0;
     virtual float  getAngularVelocity() const = 0;
 
 
     //---------------力和运动----------------
-    virtual void applyForce(const glm::vec2& force) = 0;
-    virtual void applyImpulse(const glm::vec2& impulse) = 0;  //冲量
+    virtual void applyForce(const AYMath::Vector2& force) = 0;
+    virtual void applyImpulse(const AYMath::Vector2& impulse) = 0;  //冲量
     virtual void applyTorque(float torque) = 0;    //扭矩
 
 
@@ -46,7 +46,7 @@ public:
     virtual const std::vector<IAYCollider*> getColliders() const = 0;
 
     // 碰撞查询
-    virtual void queryOverlapArea(const glm::vec4& area) = 0;
+    virtual void queryOverlapArea(const AYMath::Vector4& area) = 0;
 
 
     //---------------物理材质----------------

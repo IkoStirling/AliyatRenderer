@@ -101,9 +101,9 @@ void AYPhysicsSystem::setDebugDrawEnabled(bool enabled)
 						float width = maxX - minX;
 						float height = maxY - minY;
 
-						// 转换为 glm::vec2
-						glm::vec3 center(centerX, centerY, 0);
-						glm::vec2 size(width, height);
+						// 转换为 AYMath::Vector2
+						AYMath::Vector3 center(centerX, centerY, 0);
+						AYMath::Vector2 size(width, height);
 						renderer->getCoreRenderer()
 							->drawRect2D(
 								{ center },

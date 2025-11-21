@@ -14,35 +14,35 @@ public:
 
     void update(float delta_time);
 
-    glm::mat4 getViewMatrix() const override;
+    AYMath::Matrix4 getViewMatrix() const override;
 
-    glm::mat4 getProjectionMatrix() const override;
+    AYMath::Matrix4 getProjectionMatrix() const override;
 
-    void setLookAt(const glm::vec3& eye, const glm::vec3& center, const glm::vec3& up);
+    void setLookAt(const AYMath::Vector3& eye, const AYMath::Vector3& center, const AYMath::Vector3& up);
 
     void setPerspective(float fov, float nearPlane, float farPlane);
 
     void setOrthographic(float size, float nearPlane, float farPlane);
 
-    void setPosition(const glm::vec3& position);
+    void setPosition(const AYMath::Vector3& position);
 
-    void setTargetPosition(const glm::vec3& target);
+    void setTargetPosition(const AYMath::Vector3& target);
 
     void rotate(float yaw, float pitch);
 
-    void move(const glm::vec3& offset);
+    void move(const AYMath::Vector3& offset);
 
     // 获取相机属性
-    const glm::vec3& getFront() const;
-    const glm::vec3& getUp() const;
-    const glm::vec3& getRight() const;
+    const AYMath::Vector3& getFront() const;
+    const AYMath::Vector3& getUp() const;
+    const AYMath::Vector3& getRight() const;
 
 private:
     void _updateCachedVectors();
     // 相机参数
-    glm::vec3 _cachedFront;
-    glm::vec3 _cachedRight;
-    glm::vec3 _cachedUp;
+    AYMath::Vector3 _cachedFront;
+    AYMath::Vector3 _cachedRight;
+    AYMath::Vector3 _cachedUp;
 
     // 旋转角度
     float _yaw = -90.0f;   // 偏航角

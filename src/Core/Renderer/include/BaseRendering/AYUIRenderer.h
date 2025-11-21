@@ -19,21 +19,21 @@ public:
 
 
     // UI元素管理
-    uint32_t createRectangle(const glm::vec3& position, const glm::vec3& size,
-        const glm::vec4& color, GLuint texture = 0, bool is3D = false,
-        const glm::vec3& rotation = glm::vec3(0.0f), const glm::vec3& scale = glm::vec3(1.0f));
+    uint32_t createRectangle(const AYMath::Vector3& position, const AYMath::Vector3& size,
+        const AYMath::Vector4& color, GLuint texture = 0, bool is3D = false,
+        const AYMath::Vector3& rotation = AYMath::Vector3(0.0f), const AYMath::Vector3& scale = AYMath::Vector3(1.0f));
 
-    uint32_t createText(const std::string& text, const glm::vec3& position,
-        const glm::vec4& color, float textScale = 1.0f, bool is3D = false);
+    uint32_t createText(const std::string& text, const AYMath::Vector3& position,
+        const AYMath::Vector4& color, float textScale = 1.0f, bool is3D = false);
 
     // 修改UI元素
-    void setPosition(uint32_t elementId, const glm::vec3& position);
-    void setSize(uint32_t elementId, const glm::vec3& size);
-    void setColor(uint32_t elementId, const glm::vec4& color);
+    void setPosition(uint32_t elementId, const AYMath::Vector3& position);
+    void setSize(uint32_t elementId, const AYMath::Vector3& size);
+    void setColor(uint32_t elementId, const AYMath::Vector4& color);
     void setText(uint32_t elementId, const std::string& text);
     void setVisible(uint32_t elementId, bool visible);
-    void setRotation(uint32_t elementId, const glm::vec3& rotation);
-    void setScale(uint32_t elementId, const glm::vec3& scale);
+    void setRotation(uint32_t elementId, const AYMath::Vector3& rotation);
+    void setScale(uint32_t elementId, const AYMath::Vector3& scale);
     void setIs3D(uint32_t elementId, bool is3D);
 
     void setOnClicked(uint32_t elementId, std::function<void()> callback);
@@ -42,7 +42,7 @@ public:
     void setOnPressed(uint32_t elementId, std::function<void()> callback);
     void setOnReleased(uint32_t elementId, std::function<void()> callback);
 
-    bool isInsideElement(uint32_t elementId, const glm::vec2& position);
+    bool isInsideElement(uint32_t elementId, const AYMath::Vector2& position);
 
     // 渲染
     void beginUIFrame();
@@ -51,10 +51,10 @@ public:
 private:
     // UIBatch - 将相关的顶点数据和属性数据聚合在一起
     struct UIBatch {
-        std::vector<glm::vec3> positions;      // 顶点位置
-        std::vector<glm::vec2> texCoords;      // 纹理坐标
-        std::vector<glm::vec3> normals;        // 法线
-        std::vector<glm::vec4> colors;         // 顶点颜色
+        std::vector<AYMath::Vector3> positions;      // 顶点位置
+        std::vector<AYMath::Vector2> texCoords;      // 纹理坐标
+        std::vector<AYMath::Vector3> normals;        // 法线
+        std::vector<AYMath::Vector4> colors;         // 顶点颜色
         std::vector<GLuint> indices;           // 索引数据
         std::vector<bool> visibles;            // 是否可见
         std::vector<bool> dirtyFlags;          // 脏标记
@@ -75,15 +75,15 @@ private:
     };
 
     struct UIRenderData {
-        glm::vec3 position;
-        glm::vec3 size;
-        glm::vec4 color;
+        AYMath::Vector3 position;
+        AYMath::Vector3 size;
+        AYMath::Vector4 color;
         GLuint texture;
         bool visible;
         bool is3D;
-        glm::vec3 rotation;
-        glm::vec3 scale;
-        glm::vec2 anchor = { 0.0f, 0.0f };
+        AYMath::Vector3 rotation;
+        AYMath::Vector3 scale;
+        AYMath::Vector2 anchor = { 0.0f, 0.0f };
         float depth;
         bool dirty;
     };
@@ -111,21 +111,21 @@ private:
         UIInteractionState interaction;
         UICallback callback;
         std::string text;
-        glm::vec4 textColor = glm::vec4(1,1,0,1);
+        AYMath::Vector4 textColor = AYMath::Vector4(1,1,0,1);
         float textScale;
 
         // === 交互配置（样式 / 状态颜色，可选）===
-        glm::vec4 hoverColor;     // 悬停时颜色（可选，根据需要使用）
-        glm::vec4 pressedColor;   // 按下时颜色
-        glm::vec4 disabledColor;  // 禁用时颜色
+        AYMath::Vector4 hoverColor;     // 悬停时颜色（可选，根据需要使用）
+        AYMath::Vector4 pressedColor;   // 按下时颜色
+        AYMath::Vector4 disabledColor;  // 禁用时颜色
     };
 
     // 顶点结构
     struct UIVertex {
-        glm::vec3 position;
-        glm::vec2 texCoord;
-        glm::vec4 color;
-        glm::vec3 normal; //3D 扩展
+        AYMath::Vector3 position;
+        AYMath::Vector2 texCoord;
+        AYMath::Vector4 color;
+        AYMath::Vector3 normal; //3D 扩展
     };
 
     UIBatch* getTargetBatch(const UIElement& element);

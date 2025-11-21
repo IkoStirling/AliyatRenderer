@@ -12,20 +12,20 @@ void AY2DCamera::update(float delta_time)
     float viewHeight = _viewport.w / (ppm * _zoom); // 视口高度(米)
 
     // 2. 计算死区边界（物理单位-米）
-    glm::vec2 deadzoneMin(
+    AYMath::Vector2 deadzoneMin(
         -viewWidth * 0.5f + viewWidth * _deadzone.x,  // 左边界
         -viewHeight * 0.5f + viewHeight * _deadzone.z // 下边界
     );
-    glm::vec2 deadzoneMax(
+    AYMath::Vector2 deadzoneMax(
         viewWidth * 0.5f - viewWidth * (1 - _deadzone.y),   // 右边界
         viewHeight * 0.5f - viewHeight * (1 - _deadzone.w)  // 上边界
     );
 
     // 计算目标点相对于摄像机中心的偏移(世界单位)
-    glm::vec2 targetOffset = glm::vec2(_targetPosition) - glm::vec2(_transform.position);
+    AYMath::Vector2 targetOffset = AYMath::Vector2(_targetPosition) - AYMath::Vector2(_transform.position);
 
     // 3. 计算移动偏移（物理单位-米）
-    glm::vec2 moveOffset(0.0f);
+    AYMath::Vector2 moveOffset(0.0f);
 
     if (targetOffset.x < deadzoneMin.x) {
         moveOffset.x = targetOffset.x - deadzoneMin.x;
@@ -44,7 +44,7 @@ void AY2DCamera::update(float delta_time)
     // 应用移动（物理单位-米）
     if (glm::length(moveOffset) > 0) _dirtyView = true;
 
-    glm::vec2 newPos = glm::vec2(_transform.position) + moveOffset * _moveSpeed * delta_time;
+    AYMath::Vector2 newPos = AYMath::Vector2(_transform.position) + moveOffset * _moveSpeed * delta_time;
 
     // 地图边界约束（物理单位-米）
     newPos.x = glm::clamp(newPos.x,
@@ -54,24 +54,24 @@ void AY2DCamera::update(float delta_time)
         _mapBounds.z + viewHeight * 0.5f,
         _mapBounds.w - viewHeight * 0.5f);
 
-    _transform.position = glm::vec3(newPos, _transform.position.z);
+    _transform.position = AYMath::Vector3(newPos, _transform.position.z);
 }
 
-glm::mat4 AY2DCamera::getViewMatrix() const
+AYMath::Matrix4 AY2DCamera::getViewMatrix() const
 {
     if (_dirtyView)
     {
         // 将屏幕中心定义为(0,0), 正常是在左上角, 不进行缩放
-        _cachedView = glm::translate(glm::mat4(1.0f),
-            -glm::vec3(
-                glm::vec2(_transform.position) + _additionalOffset,
+        _cachedView = glm::translate(AYMath::Matrix4(1.0f),
+            -AYMath::Vector3(
+                AYMath::Vector2(_transform.position) + _additionalOffset,
                 0.0f));
         _dirtyView = false;
     }
     return _cachedView;
 }
 
-glm::mat4 AY2DCamera::getProjectionMatrix() const
+AYMath::Matrix4 AY2DCamera::getProjectionMatrix() const
 {
     if (_dirtyProjection)
     {
@@ -100,19 +100,19 @@ void AY2DCamera::setViewBox(float view_near, float view_far)
     _far = view_far;
 }
 
-void AY2DCamera::setDeadzone(const glm::vec4& zone)
+void AY2DCamera::setDeadzone(const AYMath::Vector4& zone)
 {
     _deadzone = zone;
 } 
 
-void AY2DCamera::setTargetPosition(const glm::vec2& targetPos)
+void AY2DCamera::setTargetPosition(const AYMath::Vector2& targetPos)
 {
-    _targetPosition = glm::vec3(targetPos, 0.f);
+    _targetPosition = AYMath::Vector3(targetPos, 0.f);
 }
 
-void AY2DCamera::setCurrentPosition(const glm::vec2& currentPos)
+void AY2DCamera::setCurrentPosition(const AYMath::Vector2& currentPos)
 {
-    _transform.position = glm::vec3(currentPos, 0.f);
+    _transform.position = AYMath::Vector3(currentPos, 0.f);
 }
 
 void AY2DCamera::showDeadzone(bool switcher)
@@ -123,8 +123,8 @@ void AY2DCamera::showDeadzone(bool switcher)
         _ddeadzone = rendererManager->addDebugDraw(false, [](AYRenderer* renderer, AYRenderDevice* device) {
             renderer->getCoreRenderer()
                 ->drawRect2D(
-                    { glm::vec3(1920 * 0.5f, 1080 * 0.5f, 0) },
-                    glm::vec2(1920 * 0.4f, 1080 * 0.4f),
+                    { AYMath::Vector3(1920 * 0.5f, 1080 * 0.5f, 0) },
+                    AYMath::Vector2(1920 * 0.4f, 1080 * 0.4f),
                     0,
                     true,
                     AYCoreRenderer::Space::Screen);

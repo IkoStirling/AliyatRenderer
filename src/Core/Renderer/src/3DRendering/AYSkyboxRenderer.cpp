@@ -126,11 +126,11 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
     if (!camera)
         return;
 
-    glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix())); // 移除平移部分
+    AYMath::Matrix4 view = AYMath::Matrix4(AYMath::Matrix3(camera->getViewMatrix())); // 移除平移部分
     glUniformMatrix4fv(glGetUniformLocation(shader, "view"),
         1, GL_FALSE, glm::value_ptr(view));
 
-    glm::mat4 projection;
+    AYMath::Matrix4 projection;
     if (camera->getType() == IAYCamera::Type::ORTHOGRAPHIC_2D) {
         auto viewport = camera->getViewport();
         float aspect = viewport.z / viewport.w;
@@ -146,11 +146,11 @@ void AYSkyboxRenderer::render(const AYRenderContext& context)
     glUniform1i(glGetUniformLocation(shader, "skyboxType"), static_cast<int>(_type));
     glUniform1f(glGetUniformLocation(shader, "u_time"), glfwGetTime());
 
-    glm::mat4 inverseView = glm::inverse(view);
+    AYMath::Matrix4 inverseView = glm::inverse(view);
     glUniformMatrix4fv(glGetUniformLocation(shader, "u_inverseView"),
         1, GL_FALSE, glm::value_ptr(inverseView));
 
-    glm::vec3 position = camera->getPosition();
+    AYMath::Vector3 position = camera->getPosition();
     glUniform3f(glGetUniformLocation(shader, "u_cameraPos"),
         position.x,position.y,position.z);
 

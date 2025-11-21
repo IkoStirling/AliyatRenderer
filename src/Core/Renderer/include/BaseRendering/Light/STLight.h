@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+#include "AYMathType.h"
 
 enum class LightType {
     Directional,
@@ -9,22 +9,22 @@ enum class LightType {
 
 //struct STBaseLight
 //{
-//    glm::vec3 color = glm::vec3(1.0f);
+//    AYMath::Vector3 color = AYMath::Vector3(1.0f);
 //    float intensity = 1.0f;
 //};
 
 struct STDirectionalLight
 {
-    glm::vec3 color = glm::vec3(1.0f);
+    AYMath::Vector3 color = AYMath::Vector3(1.0f);
     float intensity = 1.0f;
-    glm::vec3 direction = glm::vec3(0.0f, -1.0f, 0.0f);
+    AYMath::Vector3 direction = AYMath::Vector3(0.0f, -1.0f, 0.0f);
 };
 
 struct STPointLight
 { 
-    glm::vec3 color = glm::vec3(1.0f);
+    AYMath::Vector3 color = AYMath::Vector3(1.0f);
     float intensity = 1.0f;
-    glm::vec3 position = glm::vec3(0.0f);
+    AYMath::Vector3 position = AYMath::Vector3(0.0f);
     float radius = 10.0f;
 
     // Ë¥¼õ²ÎÊý
@@ -35,10 +35,10 @@ struct STPointLight
 
 struct STSpotLight //¾Û¹âµÆ
 {
-    glm::vec3 color = glm::vec3(1.0f);
+    AYMath::Vector3 color = AYMath::Vector3(1.0f);
     float intensity = 1.0f;
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 direction = glm::vec3(0.0f, 0.0f, -1.0f);
+    AYMath::Vector3 position = AYMath::Vector3(0.0f);
+    AYMath::Vector3 direction = AYMath::Vector3(0.0f, 0.0f, -1.0f);
     float cutOff = glm::cos(glm::radians(12.5f));
     float outerCutOff = glm::cos(glm::radians(15.0f));
 

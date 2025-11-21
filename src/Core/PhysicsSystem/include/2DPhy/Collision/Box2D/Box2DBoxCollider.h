@@ -5,11 +5,11 @@
 class Box2DBoxCollider : public AYBox2DCollider, public Box2DColliderBase
 {
 public:
-    explicit Box2DBoxCollider(const glm::vec2& size = { 1.0f, 1.0f }) :
+    explicit Box2DBoxCollider(const AYMath::Vector2& size = { 1.0f, 1.0f }) :
         AYBox2DCollider(size) {}
 
     // 特有方法
-    void setSize(const glm::vec2& size) override
+    void setSize(const AYMath::Vector2& size) override
     {
         _size = size;
         if (isValid()) {
@@ -17,7 +17,7 @@ public:
         }
     }
 
-    void setRotation(const glm::vec3& rotation) override
+    void setRotation(const AYMath::Vector3& rotation) override
     {
         _rotation = rotation;
         if (isValid()) {
@@ -50,9 +50,9 @@ private:
         float halfHeight = _size.y * 0.5f;
 
         // 如果有偏移或旋转，使用偏移版本的函数
-        if (_offset != glm::vec2(0.0f, 0.0f) || _rotation != glm::vec3(0.0f)) {
+        if (_offset != AYMath::Vector2(0.0f, 0.0f) || _rotation != AYMath::Vector3(0.0f)) {
             b2Vec2 center = { _offset.x, _offset.y };
-            b2Rot rotation = f2B2Rot(_rotation.z);
+            b2Rot rotation = AYMath::Adapter::toBox2DRot(_rotation.z);
             // 如果有圆角半径（如果需要的话）
             // float radius = 0.1f; // 示例圆角半径
             // return b2MakeOffsetRoundedBox(halfWidth, halfHeight, center, b2Rot{0.0f}, radius);

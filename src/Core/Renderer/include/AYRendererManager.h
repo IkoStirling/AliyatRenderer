@@ -29,7 +29,7 @@ public:
 	void removeDebugDraw(int callbackId);
 
 	void setWindowCloseCallback(WindowCloseCallback onWindowClosed);
-	void setScreenCleanColor(const glm::vec3& color);
+	void setScreenCleanColor(const AYMath::Vector3& color);
 	void switchRenderModle(bool isBgfx);
 
 	AYRenderContext& getRenderContext();
@@ -62,8 +62,8 @@ private:
 	WindowCloseCallback _onWindowClosed;
 	std::vector<IAYRenderable*> _renderables; //不管理可渲染对象
 
-	//glm::vec3 _color = { 0.f,0.f,0.f };
-	glm::vec3 _color = { 0.2f,0.3f,0.3f };
+	//AYMath::Vector3 _color = { 0.f,0.f,0.f };
+	AYMath::Vector3 _color = { 0.2f,0.3f,0.3f };
 private:
 	//******************debug**********************
 	void _displayDebugInfo();

@@ -19,8 +19,8 @@ public:
             auto& callback = elem.callback;
             if (!renderData.visible || !interaction.interactive) continue;
 
-            glm::vec3 pos = renderData.position;
-            glm::vec3 size = renderData.size;
+            AYMath::Vector3 pos = renderData.position;
+            AYMath::Vector3 size = renderData.size;
 
             bool inside = _uiRenderer->isInsideElement(elem.id, event.mousePos);
 
@@ -54,8 +54,8 @@ public:
             auto& callback = elem.callback;
             if (!renderData.visible || !interaction.interactive || !interaction.isHovered) continue;
 
-            glm::vec3 pos = renderData.position;
-            glm::vec3 size = renderData.size;
+            AYMath::Vector3 pos = renderData.position;
+            AYMath::Vector3 size = renderData.size;
 
             bool inside = _uiRenderer->isInsideElement(elem.id, event.mousePos);
 
@@ -80,8 +80,8 @@ public:
             auto& callback = elem.callback;
             if (!renderData.visible || !interaction.interactive || !interaction.isPressed) continue;
 
-            glm::vec3 pos = renderData.position;
-            glm::vec3 size = renderData.size;
+            AYMath::Vector3 pos = renderData.position;
+            AYMath::Vector3 size = renderData.size;
 
             bool inside = _uiRenderer->isInsideElement(elem.id, event.mousePos);
 

@@ -1,12 +1,12 @@
 #pragma once
 #include <vector>
-#include <glm/glm.hpp>
+#include "AYMathType.h"
 #include <string>
 #include <memory>
 
 struct AYAnimationFrame {
-    glm::vec2 uvOffset;    // 纹理坐标偏移
-    glm::vec2 uvSize;      // 纹理坐标尺寸
+    AYMath::Vector2 uvOffset;    // 纹理坐标偏移
+    AYMath::Vector2 uvSize;      // 纹理坐标尺寸
     float duration;        // 帧持续时间(秒)
 
     // 可添加事件触发点等扩展字段
