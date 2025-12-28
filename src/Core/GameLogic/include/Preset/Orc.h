@@ -10,6 +10,12 @@
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 #include "AYAVEngine.h"
 
+using namespace ::ayt::engine::game;
+using namespace ::ayt::engine::physics;
+using namespace ::ayt::engine::input;
+using namespace ::ayt::engine::path;
+using namespace ::ayt::engine::resource;
+
 class Orc : public AYEntrant
 {
 public:
@@ -50,7 +56,7 @@ public:
 		defaultBinding->addAction("f4", AYInputAction::Type::Press, KeyboardInput{ GLFW_KEY_F4 });
 		inputSystem->addInputMapping("default", defaultBinding);
 
-		auto ecsEngine = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
+		auto ecsEngine = GET_CAST_MODULE(ECS, "ECSEngine");
 		ecsEngine->addComponent<STAttackComponent>(_entity, STAttackComponent{
 				.damage = 10.0f,
 				.range = 2.0f,
@@ -62,7 +68,7 @@ public:
 		setPosition(glm::vec3(0, 0, -5));
 		_orcSprite->setup_sprite(
 			_name,
-			AYPath::Engine::getPresetTexturePath() + "Orc.png",
+			Path::Engine::getPresetTexturePath() + "Orc.png",
 			glm::vec2(16,9),
 			glm::vec2(100, 100),
 			glm::vec2(800, 600),
@@ -156,7 +162,7 @@ public:
 			if (jump)
 				_controller->jump();
 
-			auto ecs = GET_CAST_MODULE(AYECSEngine, "ECSEngine");
+			auto ecs = GET_CAST_MODULE(ECS, "ECSEngine");
 			// 先判断蓄力攻击
 			if (chargeHold)
 			{
@@ -206,7 +212,7 @@ public:
 			}
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_C }))
 			{
-				spdlog::info("[Orc] C");
+				AYLOG_INFO("[Orc] C");
 				_camera[switcher]->shake(100.f, 1.5f);
 			}
 			else if (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_V }))

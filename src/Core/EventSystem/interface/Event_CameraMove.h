@@ -2,27 +2,31 @@
 #include "IAYEvent.h"
 #include "STTransform.h"
 #include <iostream>
-class Event_CameraMove : public IAYEvent
+namespace ayt::engine::event
 {
-	DECLARE_EVENT_CLASS(Event_CameraMove, "Event_CameraMove")
-	SUPPORT_MEMORY_POOL(Event_CameraMove)
-public:
-	Event_CameraMove():
-		IAYEvent(Builder()
-		.setPriority(99)
-		.setMerge(true)
-		.setLayer(AYEventLayer::GAME_LOGIC))
-	{}
-
-	virtual void merge(const IAYEvent& other) override
+	class Event_CameraMove : public IEvent
 	{
-		if (other.getTypeIndex() == this->getTypeIndex())
+		DECLARE_EVENT_CLASS(Event_CameraMove, "Event_CameraMove")
+		SUPPORT_MEMORY_POOL(Event_CameraMove)
+	public:
+		Event_CameraMove() :
+			IEvent(Builder()
+				.setPriority(99)
+				.setMerge(true)
+				.setLayer(EventLayer::GAME_LOGIC))
 		{
-			this->transform = static_cast<const Event_CameraMove&>(other).transform;
 		}
-	}
 
-	STTransform transform{};
-};
+		virtual void merge(const IEvent& other) override
+		{
+			if (other.getTypeIndex() == this->getTypeIndex())
+			{
+				this->transform = static_cast<const Event_CameraMove&>(other).transform;
+			}
+		}
 
-REGISTER_EVENT_CLASS(Event_CameraMove);
+		math::Transform transform{};
+	};
+
+	REGISTER_EVENT_CLASS(Event_CameraMove);
+}

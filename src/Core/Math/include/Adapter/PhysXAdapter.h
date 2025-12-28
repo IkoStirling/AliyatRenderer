@@ -2,7 +2,7 @@
 #include "PxPhysicsAPI.h"
 #include "AYMathType.h"
 
-namespace AYMath::Adapter {
+namespace ayt::engine::math::adapter {
     // PhysX → Engine
     inline Vector3 fromPhysX(const physx::PxVec3& v) {
         return Vector3(v.x, v.y, v.z);

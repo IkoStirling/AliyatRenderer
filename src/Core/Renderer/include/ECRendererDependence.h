@@ -31,7 +31,7 @@
             spdlog::debug("[OpenGL Error] {} (0x{:x}) in {} at {}:{}", \
                 errStr, err, errContext, __FILE__, __LINE__); \
             if (err == GL_OUT_OF_MEMORY) { \
-                spdlog::error("[AY_CHECK_GL_ERROR] Fatal OpenGL error: Out of memory"); \
+                AYLOG_ERR("[AY_CHECK_GL_ERROR] Fatal OpenGL error: Out of memory"); \
                 std::terminate(); \
             } \
         } \

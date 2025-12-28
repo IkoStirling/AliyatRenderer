@@ -5,10 +5,11 @@
 #include <typeindex> 
 #include <string>
 
-
-/*
-	this marco's aim is to provide some default methods
-*/
+namespace ayt::engine::event
+{
+	/*
+		this marco's aim is to provide some default methods
+	*/
 #define DECLARE_EVENT_CLASS(CLASS_NAME, EVENT_TYPE_NAME) \
 public: \
 	virtual const char* getType()const override { \
@@ -27,9 +28,9 @@ public: \
 	}\
 private:\
 
-/*
-	this marco's aim is to provide some default methods
-*/
+	/*
+		this marco's aim is to provide some default methods
+	*/
 #define DECLARE_TEMPLATE_EVENT_CLASS(CLASS_NAME, EVENT_TYPE_NAME, TEMPLATE_TYPE_NAME) \
 public: \
 	virtual const char* getType()const override { \
@@ -52,7 +53,7 @@ private:\
 #define REGISTER_EVENT_CLASS(CLASS_NAME, ...) \
 struct CLASS_NAME##_Register{ \
 	CLASS_NAME##_Register(){ \
-		::AYEventRegistry::getInstance().registerEvent<CLASS_NAME>(CLASS_NAME::staticGetType()); \
+		::ayt::engine::event::EventRegistry::getInstance().registerEvent<CLASS_NAME>(CLASS_NAME::staticGetType()); \
 	}\
 }; \
 static CLASS_NAME##_Register CLASS_NAME##_register; \
@@ -61,7 +62,7 @@ static CLASS_NAME##_Register CLASS_NAME##_register; \
 #define REGISTER_TEMPLATE_EVENT_CLASS(CLASS_NAME, TYPE_NAME) \
 struct CLASS_NAME##_Register##TYPE_NAME{ \
 	CLASS_NAME##_Register##TYPE_NAME(){ \
-		::AYEventRegistry::getInstance().registerEvent<CLASS_NAME<TYPE_NAME>>(CLASS_NAME<TYPE_NAME>::staticGetType()); \
+		::ayt::engine::event::EventRegistry::getInstance().registerEvent<CLASS_NAME<TYPE_NAME>>(CLASS_NAME<TYPE_NAME>::staticGetType()); \
 	}\
 }; \
 static CLASS_NAME##_Register##TYPE_NAME CLASS_NAME##_register##TYPE_NAME; \
@@ -69,41 +70,42 @@ static CLASS_NAME##_Register##TYPE_NAME CLASS_NAME##_register##TYPE_NAME; \
 
 
 
-/*
-	不使用工厂方法，请避免使用make_shared绕开内存池
-*/
-class IAYEvent
-{
-	SUPPORT_MEMORY_POOL(IAYEvent)
-public:
-	class Builder;
-public:
-	explicit IAYEvent(const Builder& builder);
-
-	virtual void merge(const IAYEvent& other) {};
-public:
-	const int priority;
-	const bool shouldMerge;
-	const AYEventLayer layer;
-
-public:
-	class Builder
+	/*
+		不使用工厂方法，请避免使用make_shared绕开内存池
+	*/
+	class IEvent
 	{
+		SUPPORT_MEMORY_POOL(IEvent)
 	public:
-		Builder();
+		class Builder;
+	public:
+		explicit IEvent(const Builder& builder);
 
-		Builder& setPriority(int in_priority);
-		Builder& setMerge(bool in_tickOnce);
-		Builder& setLayer(AYEventLayer in_layer);
+		virtual void merge(const IEvent& other) {};
+	public:
+		const int priority;
+		const bool shouldMerge;
+		const EventLayer layer;
 
-		int priority;	//数值越小优先级越高，取值[0,100]
-		bool shouldMerge;
-		AYEventLayer layer;
+	public:
+		class Builder
+		{
+		public:
+			Builder();
+
+			Builder& setPriority(int in_priority);
+			Builder& setMerge(bool in_tickOnce);
+			Builder& setLayer(EventLayer in_layer);
+
+			int priority;	//数值越小优先级越高，取值[0,100]
+			bool shouldMerge;
+			EventLayer layer;
+		};
+	public:
+		virtual ~IEvent() = default;
+
+		virtual const char* getType()const = 0;
+		virtual std::type_index getTypeIndex()const = 0;
 	};
-public:
-	virtual ~IAYEvent() = default;
 
-	virtual const char* getType()const = 0;
-	virtual std::type_index getTypeIndex()const = 0;
-};
-
+}

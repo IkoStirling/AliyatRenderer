@@ -4,6 +4,10 @@
 #include <AYCmdInterface.h>
 #include <fstream>
 #include <soci/mysql/soci-mysql.h>
+
+using namespace ayt::engine::cmd;
+using namespace ayt::engine::sql;
+
 struct User {
 	int id;
 	std::string name;
@@ -140,7 +144,7 @@ CommandLineArgs parseArguments(int argc, char* argv[]) {
 #include <cctype>
 #include <algorithm>
 
-STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STParsedCommand& cmd) {
+CommandResult handlePostgreSQLMetaCommand(soci::session& session, const ParsedCommand& cmd) {
     std::string metaCmd = cmd.commandName.substr(1); // 去掉开头的反斜杠
     std::transform(metaCmd.begin(), metaCmd.end(), metaCmd.begin(), ::tolower);
 
@@ -171,7 +175,7 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
                 std::stringstream output;
                 output << "You are connected to database \"" << currentDB.get<std::string>(0)
                     << "\" as user \"" << currentDB.get<std::string>(1) << "\"\n";
-                return STCommandResult{ true, output.str(), "" };
+                return CommandResult{ true, output.str(), "" };
             }
             else {
                 // 在实际应用中，这里应该重新初始化一个新的 session 连接到指定数据库
@@ -179,7 +183,7 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
                 output << "Would connect to database: " << param
                     << " (Reconnect functionality not implemented in this interface)\n";
                 output << "Hint: Use different connection parameters or restart the tool with -n " << param;
-                return STCommandResult{ true, output.str(), "" };
+                return CommandResult{ true, output.str(), "" };
             }
         }
 
@@ -222,7 +226,7 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
             }
 
 
-            return STCommandResult{ true, output.str(), "" };
+            return CommandResult{ true, output.str(), "" };
         }
 
         // === 列出表 ===
@@ -257,13 +261,13 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
                     << row.get<std::string>(2) << " | "
                     << row.get<std::string>(3) << "\n";
             }
-            return STCommandResult{ true, output.str(), "" };
+            return CommandResult{ true, output.str(), "" };
         }
 
         // === 描述表结构 ===
         else if (baseCmd == "d") {
             if (param.empty()) {
-                return STCommandResult{ false, "", "Object name required after \\d" };
+                return CommandResult{ false, "", "Object name required after \\d" };
             }
 
             // 检查对象是否存在并获取类型
@@ -276,7 +280,7 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
                 soci::into(typeRow), soci::use(param);
 
             if (!session.got_data()) {
-                return STCommandResult{ false, "", "Object not found: " + param };
+                return CommandResult{ false, "", "Object not found: " + param };
             }
 
             char relkind = typeRow.get<std::string>(0)[0];
@@ -305,7 +309,7 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
                         << row.get<std::string>(1) << " | "
                         << row.get<std::string>(2) << "\n";
                 }
-                return STCommandResult{ true, output.str(), "" };
+                return CommandResult{ true, output.str(), "" };
             }
             else if (relkind == 'i') {
                 // 索引
@@ -329,13 +333,13 @@ STCommandResult handlePostgreSQLMetaCommand(soci::session& session, const STPars
                         << row.get<std::string>(1) << " | "
                         << row.get<std::string>(2) << "\n";
                 }
-                return STCommandResult{ true, output.str(), "" };
+                return CommandResult{ true, output.str(), "" };
             }
         }
 
         // === 退出 ===
         else if (baseCmd == "q" || baseCmd == "quit") {
-            return STCommandResult{ true, "Goodbye!", "EXIT" };
+            return CommandResult{ true, "Goodbye!", "EXIT" };
         }
 
         // === 帮助 ===
@@ -357,15 +361,15 @@ Examples:
   \d users           Describe users table
   \c soci_db         Connect to soci_db database
 )";
-            return STCommandResult{ true, help, "" };
+            return CommandResult{ true, help, "" };
         }
 
         else {
-            return STCommandResult{ false, "", "Unsupported meta-command: \\" + metaCmd };
+            return CommandResult{ false, "", "Unsupported meta-command: \\" + metaCmd };
         }
     }
     catch (const std::exception& e) {
-        return STCommandResult{ false, "", "Error executing meta-command: " + std::string(e.what()) };
+        return CommandResult{ false, "", "Error executing meta-command: " + std::string(e.what()) };
     }
 }
 
@@ -378,8 +382,8 @@ int main(int argc, char* argv[])
             printHelp();
             return 0;
         }
-        AYCommandInterface cmdInterface;
-        std::unique_ptr<IAYCommandParser> parser;
+        CommandInterface cmdInterface;
+        std::unique_ptr<ICommandParser> parser;
         AYSqlPool& sqlPool = AYSqlPool::getInstance();
         AYSqlConfig config;
 
@@ -413,7 +417,7 @@ int main(int argc, char* argv[])
             auto conn = sqlPool.getConnection();
             auto& session = conn->session();
             parser = cmdInterface.loadConfig("assets/core/config/SQL/sqlite_ui.json");
-            cmdInterface.setExecution([&session](STParsedCommand& cmd) {
+            cmdInterface.setExecution([&session](ParsedCommand& cmd) {
                 try {
                     // 判断是否是SELECT查询
                     std::string prefix = cmd.commandName.substr(0, 6);
@@ -425,7 +429,7 @@ int main(int argc, char* argv[])
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
                         AYSqlConnection::printQueryResult(rows, output);
-                        return STCommandResult{ true, output.str(), "" };
+                        return CommandResult{ true, output.str(), "" };
                     }
                     else {
                         soci::statement st = (session.prepare << cmd.normalized);
@@ -446,11 +450,11 @@ int main(int argc, char* argv[])
                         if (affected > 0) {
                             msg += ". Affected rows: " + std::to_string(affected);
                         }
-                        return STCommandResult{ true, msg, "" };
+                        return CommandResult{ true, msg, "" };
                     }
                 }
                 catch (const std::exception& e) {
-                    return STCommandResult{ false, "", "SQL Error: " + std::string(e.what()) };
+                    return CommandResult{ false, "", "SQL Error: " + std::string(e.what()) };
                 }
                 });
             break;
@@ -467,7 +471,7 @@ int main(int argc, char* argv[])
             sqlPool.initialize(config);
             
             parser = cmdInterface.loadConfig("assets/core/config/SQL/mysql_ui.json");
-            cmdInterface.setExecution([&sqlPool,&config](STParsedCommand& cmd) {
+            cmdInterface.setExecution([&sqlPool,&config](ParsedCommand& cmd) {
                 try {
                     auto conn = sqlPool.getConnection();
                     auto& session = conn->session();
@@ -481,7 +485,7 @@ int main(int argc, char* argv[])
 
                     if (lowerCmd.find("show index") == 0) {
                         // 暂时不处理该情况
-                        return STCommandResult{ false, "", "This command now is not support" };
+                        return CommandResult{ false, "", "This command now is not support" };
                         try {
                             soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                             std::stringstream output;
@@ -496,10 +500,10 @@ int main(int argc, char* argv[])
                                     << row.get<std::string>(4) << "\t"   // Column_name
                                     << row.get<std::string>(10) << "\n"; // Index_type
                             }
-                            return STCommandResult{ true, output.str(), "" };
+                            return CommandResult{ true, output.str(), "" };
                         }
                         catch (const std::exception& e) {
-                            return STCommandResult{ false, "", "SHOW INDEX error: " + std::string(e.what()) };
+                            return CommandResult{ false, "", "SHOW INDEX error: " + std::string(e.what()) };
                         }
                     }
 
@@ -511,19 +515,19 @@ int main(int argc, char* argv[])
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
                         AYSqlConnection::printQueryResult(rows, output);
-                        return STCommandResult{ true, output.str(), "" };
+                        return CommandResult{ true, output.str(), "" };
                     }
                     else {
                         // DML/DDL 语句
                         session << cmd.normalized;
-                        return STCommandResult{ true, "Query executed successfully", "" };
+                        return CommandResult{ true, "Query executed successfully", "" };
                     }
                 }
                 catch (const std::exception& e) {
                     std::string errorMsg = e.what();
                     // 检查特定的 MySQL 错误
                     if (errorMsg.find("Lost connection") != std::string::npos) {
-                        return STCommandResult{ false, "",
+                        return CommandResult{ false, "",
                             "MySQL connection lost. Please check:\n"
                             "1. MySQL server is running\n"
                             "2. Network connectivity\n"
@@ -531,7 +535,7 @@ int main(int argc, char* argv[])
                             "4. Max allowed packet size" };
                     }
 
-                    return STCommandResult{ false, "", "MySQL Error: " + errorMsg };
+                    return CommandResult{ false, "", "MySQL Error: " + errorMsg };
                 }
                 });
             break;
@@ -549,7 +553,7 @@ int main(int argc, char* argv[])
             sqlPool.initialize(config);
 
             parser = cmdInterface.loadConfig("assets/core/config/SQL/postgres_ui.json");
-            cmdInterface.setExecution([&sqlPool, &config](STParsedCommand& cmd) {
+            cmdInterface.setExecution([&sqlPool, &config](ParsedCommand& cmd) {
                 try {
                     auto conn = sqlPool.getConnection();
                     auto& session = conn->session();
@@ -581,7 +585,7 @@ int main(int argc, char* argv[])
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
                         AYSqlConnection::printQueryResult(rows, output);
-                        return STCommandResult{ true, output.str(), "" };
+                        return CommandResult{ true, output.str(), "" };
                     }
                     else {
                         // 处理 DML 和 DDL 语句
@@ -601,11 +605,11 @@ int main(int argc, char* argv[])
                         if (affected > 0) {
                             msg += ". Affected rows: " + std::to_string(affected);
                         }
-                        return STCommandResult{ true, msg, "" };
+                        return CommandResult{ true, msg, "" };
                     }
                 }
                 catch (const std::exception& e) {
-                    return STCommandResult{ false, "", "PostgreSQL Error: " + std::string(e.what()) };
+                    return CommandResult{ false, "", "PostgreSQL Error: " + std::string(e.what()) };
                 }
                 });
             break;

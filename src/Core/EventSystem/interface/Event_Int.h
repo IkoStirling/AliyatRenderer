@@ -1,27 +1,31 @@
 #pragma once
 #include "IAYEvent.h"
 #include <iostream>
-class Event_Int : public IAYEvent
+namespace ayt::engine::event
 {
-	DECLARE_EVENT_CLASS(Event_Int, "Event_Int")
-	SUPPORT_MEMORY_POOL(Event_Int)
-public:
-	Event_Int():
-		IAYEvent(Builder()
-		.setPriority(99)
-		.setMerge(true)
-		.setLayer(AYEventLayer::GAME_LOGIC))
-	{}
-
-	virtual void merge(const IAYEvent& other) override
+	class Event_Int : public IEvent
 	{
-		if (other.getTypeIndex() == this->getTypeIndex())
+		DECLARE_EVENT_CLASS(Event_Int, "Event_Int")
+		SUPPORT_MEMORY_POOL(Event_Int)
+	public:
+		Event_Int() :
+			IEvent(Builder()
+				.setPriority(99)
+				.setMerge(true)
+				.setLayer(EventLayer::GAME_LOGIC))
 		{
-			this->carryer += static_cast<const Event_Int&>(other).carryer;
 		}
-	}
 
-	int carryer{0};
-};
+		virtual void merge(const IEvent& other) override
+		{
+			if (other.getTypeIndex() == this->getTypeIndex())
+			{
+				this->carryer += static_cast<const Event_Int&>(other).carryer;
+			}
+		}
 
-REGISTER_EVENT_CLASS(Event_Int);
+		int carryer{ 0 };
+	};
+
+	REGISTER_EVENT_CLASS(Event_Int);
+}

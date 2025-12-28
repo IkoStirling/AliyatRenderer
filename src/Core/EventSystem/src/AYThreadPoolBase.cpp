@@ -1,51 +1,54 @@
 ﻿#include "AYThreadPoolBase.h"
 
-AYThreadPoolBase::AYThreadPoolBase(size_t in_threadNums)
+namespace ayt::engine::pool::thread
 {
-	_workers.reserve(in_threadNums);
-	
-	for (size_t i = 0; i < in_threadNums; i++)
+	ThreadPoolBase::ThreadPoolBase(size_t in_threadNums)
 	{
-		_workers.emplace_back([this]() {
-			while (true)
-			{
-				Task task;
+		_workers.reserve(in_threadNums);
+
+		for (size_t i = 0; i < in_threadNums; i++)
+		{
+			_workers.emplace_back([this]() {
+				while (true)
 				{
-					std::unique_lock<std::mutex> lock(_queueMutex);
-					_conditionVariable.wait(lock, [this]() {
-						//线程被通知停止，但还有任务没执行完，则继续运行无需等待
-						//predicate为true时无需等待，直接唤醒
-						return !_tasksQueue.empty() || shouldThreadStop;
-						});
-					if (_tasksQueue.empty() && shouldThreadStop)
-						return;
-					task = std::move(_tasksQueue.front());
-					_tasksQueue.pop();
+					Task task;
+					{
+						std::unique_lock<std::mutex> lock(_queueMutex);
+						_conditionVariable.wait(lock, [this]() {
+							//线程被通知停止，但还有任务没执行完，则继续运行无需等待
+							//predicate为true时无需等待，直接唤醒
+							return !_tasksQueue.empty() || shouldThreadStop;
+							});
+						if (_tasksQueue.empty() && shouldThreadStop)
+							return;
+						task = std::move(_tasksQueue.front());
+						_tasksQueue.pop();
+					}
+					task();
 				}
-				task();
-			}
-		});
+				});
+		}
 	}
-}
 
-AYThreadPoolBase::~AYThreadPoolBase()
-{
-	stop();
-}
-
-void AYThreadPoolBase::stop()
-{
+	ThreadPoolBase::~ThreadPoolBase()
 	{
-		std::lock_guard<std::mutex> lock(_queueMutex);
-		shouldThreadStop = true;
+		stop();
 	}
 
-	_conditionVariable.notify_all();
-
-	for (auto& worker : _workers)
+	void ThreadPoolBase::stop()
 	{
-		if (worker.joinable())
-			worker.join();
+		{
+			std::lock_guard<std::mutex> lock(_queueMutex);
+			shouldThreadStop = true;
+		}
+
+		_conditionVariable.notify_all();
+
+		for (auto& worker : _workers)
+		{
+			if (worker.joinable())
+				worker.join();
+		}
+		_workers.clear();
 	}
-	_workers.clear();
 }

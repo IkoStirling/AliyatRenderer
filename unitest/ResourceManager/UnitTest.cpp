@@ -13,7 +13,7 @@ namespace ResourceManager {
 		{
 			auto x = AYResourceManager::getInstance().loadAsync<AYTexture>("12345");
 		}
-		AYModuleManager::getInstance().getModule("EventSystem")->update(1);
+		ModuleManager::getInstance().getModule("EventSystem")->update(1);
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 		AYResourceManager::getInstance().printStats();
 

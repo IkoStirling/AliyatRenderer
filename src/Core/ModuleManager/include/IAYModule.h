@@ -2,13 +2,16 @@
 #include <memory>
 #include "AYModuleRegistry.h"
 
+namespace ayt::engine::modules
+{
+
 #define DECLARE_MODULE(CLASS_NAME) \
 class CLASS_NAME; \
 extern void RegisterModule_##CLASS_NAME();
 
 #define REGISTER_MODULE(CLASS_NAME) \
 void RegisterModule_##CLASS_NAME() { \
-    ::AYModuleManager::getInstance().registerModule(#CLASS_NAME, \
+    ::ayt::engine::modules::ModuleManager::getInstance().registerModule(#CLASS_NAME, \
         std::make_shared<CLASS_NAME>()); \
 }
 
@@ -19,7 +22,7 @@ struct CLASS_NAME##_Register { \
     CLASS_NAME##_Register() { \
         static bool registered = []() -> bool { \
             try { \
-                auto& manager = ::AYModuleManager::getInstance(); \
+                auto& manager = ::ayt::engine::modules::ModuleManager::getInstance(); \
                 if (!manager.hasModule(REGISTER_NAME)) { \
                     return manager.registerModule(REGISTER_NAME, \
                         std::make_shared<CLASS_NAME>(##__VA_ARGS__)); \
@@ -40,15 +43,16 @@ static int RegisterModule_##CLASS_NAME() { \
 static int CLASS_NAME##_registered = RegisterModule_##CLASS_NAME(); \
 }
 
-/*
-    目前使用方式：
-        仅为非单例模块提供的单例管理方式
-*/
-class IAYModule
-{
-public:
-	virtual void init() = 0;
-	virtual void update(float delta_time) = 0;
-	virtual void shutdown() = 0;
 
-};
+    /*
+        目前使用方式：
+            仅为非单例模块提供的单例管理方式
+    */
+    class IModule
+    {
+    public:
+        virtual void init() = 0;
+        virtual void update(float delta_time) = 0;
+        virtual void shutdown() = 0;
+    };
+}

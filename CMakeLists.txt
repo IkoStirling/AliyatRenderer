@@ -23,6 +23,7 @@ link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 
 add_subdirectory(src/Core/Math)
 add_subdirectory(src/Core/ConfigWrapper)
+add_subdirectory(src/Core/Log)
 add_subdirectory(src/Core/SQL)
 add_subdirectory(src/Core/Command)
 add_subdirectory(src/Core/ModuleManager)
@@ -82,17 +83,17 @@ bgfx_compile_binary_to_header(
   ARRAY_NAME s_icon_64_64
 )
 
-file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
-find_package(bgfx REQUIRED)
-add_executable(bgfxT 
-	bgfxT.cpp 
-	${CMAKE_SOURCE_DIR}/assets/core/textures/icon_64_64.png
-)
-target_link_libraries(bgfxT PRIVATE renderer)
-target_include_directories(bgfxT PRIVATE 
-	${CMAKE_BINARY_DIR}/include/generated/images
-	${CMAKE_BINARY_DIR}/include/generated/shaders
-)
+#file(GLOB RENDER_LIBS "${CMAKE_SOURCE_DIR}/thirdParty/lib/*")
+#find_package(bgfx REQUIRED)
+#add_executable(bgfxT 
+#	bgfxT.cpp 
+#	${CMAKE_SOURCE_DIR}/assets/core/textures/icon_64_64.png
+#)
+#target_link_libraries(bgfxT PRIVATE renderer)
+#target_include_directories(bgfxT PRIVATE 
+#	${CMAKE_BINARY_DIR}/include/generated/images
+#	${CMAKE_BINARY_DIR}/include/generated/shaders
+#)
 
 
 

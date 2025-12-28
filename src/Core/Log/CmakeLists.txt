@@ -1,0 +1,28 @@
+set(MODULE_NAME logger)
+set(INTERFACE_NAME ${MODULE_NAME}_xxx)
+
+
+add_library(${INTERFACE_NAME} INTERFACE
+)
+target_include_directories(${INTERFACE_NAME} INTERFACE 
+	${CMAKE_CURRENT_SOURCE_DIR}/interface
+)
+
+
+file(GLOB_RECURSE SRCS
+	"*.cpp"
+	"*."
+)
+add_library(${MODULE_NAME} STATIC
+    ${SRCS}
+)
+target_include_directories(${MODULE_NAME} PUBLIC 
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+find_package(spdlog CONFIG REQUIRED)
+
+# 严格来说接口库是需要方链接，这里相当于直接include了interface目录
+target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}) 
+
+target_link_libraries(${MODULE_NAME} PRIVATE spdlog::spdlog_header_only) 

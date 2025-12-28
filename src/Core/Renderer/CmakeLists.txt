@@ -20,20 +20,20 @@ find_package(bgfx REQUIRED)
 
 
 # UI Shader
-bgfx_compile_shaders(
-  TYPE VERTEX
-  SHADERS ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/vs_ui.sc
-  VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/varying.def.sc
-  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
-  #AS_HEADERS
-)
-bgfx_compile_shaders(
-  TYPE FRAGMENT
-  SHADERS ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/fs_ui.sc
-  VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/varying.def.sc
-  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
-  #AS_HEADERS
-)
+#bgfx_compile_shaders(
+#  TYPE VERTEX
+#  SHADERS ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/vs_ui.sc
+#  VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/varying.def.sc
+#  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
+#  #AS_HEADERS
+#)
+#bgfx_compile_shaders(
+#  TYPE FRAGMENT
+#  SHADERS ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/fs_ui.sc
+#  VARYING_DEF ${CMAKE_SOURCE_DIR}/assets/core/shaders/UIRenderer/varying.def.sc
+#  OUTPUT_DIR ${CMAKE_BINARY_DIR}/include/generated/shaders
+#  #AS_HEADERS
+#)
 
 
 target_include_directories(${MODULE_NAME} PUBLIC 

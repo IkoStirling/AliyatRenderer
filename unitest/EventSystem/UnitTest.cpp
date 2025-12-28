@@ -13,9 +13,9 @@
 
 
 
-namespace AYEventSystemUnitTest
+namespace EventSystemUnitTest
 {
-	std::shared_ptr<AYEventSystem> eventSystem;
+	std::shared_ptr<EventSystem> eventSystem;
 
 	class MyClass
 	{
@@ -25,7 +25,7 @@ namespace AYEventSystemUnitTest
 		double c;
 	};
 
-	class AYEventSystem_Mock : public AYEventThreadPoolManager
+	class EventSystem_Mock : public EventPool
 	{
 	public:
 		void enque()
@@ -34,21 +34,21 @@ namespace AYEventSystemUnitTest
 		}
 	};
 
-	class MyEvent :public IAYEvent
+	class MyEvent :public ayt::engine::event::IEvent
 	{
 		DECLARE_EVENT_CLASS(MyEvent, "MyEvent");
 	public:
 
 		MyEvent():
-			IAYEvent(
-				IAYEvent::Builder()
+			IEvent(
+				IEvent::Builder()
 				.setPriority(1)
 				.setMerge(true)
 			)
 		{
 		}
 
-		virtual void merge(const IAYEvent& other) override
+		virtual void merge(const IEvent& other) override
 		{
 		}
 
@@ -58,40 +58,40 @@ namespace AYEventSystemUnitTest
 	REGISTER_EVENT_CLASS(MyEvent);
 
 
-	class AnEvent :public IAYEvent
+	class AnEvent :public ayt::engine::event::IEvent
 	{
 		DECLARE_EVENT_CLASS(AnEvent, "AnEvent");
 	public:
 		AnEvent() :
-			IAYEvent(
-				IAYEvent::Builder()
+			IEvent(
+				IEvent::Builder()
 					.setPriority(99)
 					.setMerge(true)
-					//.setLayer(AYEventLayer::RENDER)
+					//.setLayer(EventLayer::RENDER)
 				)
 		{
 		}
 
-		virtual void merge(const IAYEvent& other) override
+		virtual void merge(const IEvent& other) override
 		{
 		}
 	};
 
 	REGISTER_EVENT_CLASS(AnEvent);
 
-	class EventWithInt :public IAYEvent
+	class EventWithInt :public ayt::engine::event::IEvent
 	{
 		DECLARE_EVENT_CLASS(EventWithInt, "EventWithInt");
 	public:
 		EventWithInt() :
-			IAYEvent(
-				IAYEvent::Builder()
+			IEvent(
+				IEvent::Builder()
 				.setPriority(1)
 				.setMerge(true)
 			)
 		{
 		}
-		virtual void merge(const IAYEvent& other) override
+		virtual void merge(const IEvent& other) override
 		{
 			this->value += static_cast<const EventWithInt&>(other).value;
 		}
@@ -105,16 +105,16 @@ namespace AYEventSystemUnitTest
 	{
 	public:
 		A() {
-			tokens.push_back(std::unique_ptr<AYEventToken>(
+			tokens.push_back(std::unique_ptr<EventToken>(
 				eventSystem->subscribe("AnEvent",
 					std::bind(&A::dosomthing,this,std::placeholders::_1))));
-			tokens.push_back(std::unique_ptr<AYEventToken>(
+			tokens.push_back(std::unique_ptr<EventToken>(
 				eventSystem->subscribe("MyEvent",
 					std::bind(&A::listen,this,std::placeholders::_1))));
-			tokens.push_back(std::unique_ptr<AYEventToken>(
+			tokens.push_back(std::unique_ptr<EventToken>(
 				eventSystem->subscribe("EventWithInt",
 					std::bind(&A::likeReduceHealth,this,std::placeholders::_1))));
-			tokens.push_back(std::unique_ptr<AYEventToken>(
+			tokens.push_back(std::unique_ptr<EventToken>(
 				eventSystem->subscribe("Event_Int",
 					std::bind(&A::likeReduceHealth,this,std::placeholders::_1))));
 
@@ -122,7 +122,7 @@ namespace AYEventSystemUnitTest
 		~A() {
 
 		}
-		void listen(const IAYEvent& in_event)
+		void listen(const IEvent& in_event)
 		{
 			static int count = 0;
 			auto _end = std::chrono::system_clock::now();
@@ -131,7 +131,7 @@ namespace AYEventSystemUnitTest
 			std::string str = "event message is : " + static_cast<const MyEvent&>(in_event).message + " " + std::to_string(++count) +"\n";
 			std::cout << str;
 		}
-		void dosomthing(const IAYEvent& in_event)
+		void dosomthing(const IEvent& in_event)
 		{
 			//这里局部静态变量是基于函数的，与实例无关
 			//因此，多个观察者实例同时订阅事件会同时增长该值，最好直接使用普通成员变量或者从其他类获取多线程安全的值
@@ -146,7 +146,7 @@ namespace AYEventSystemUnitTest
 			std::cout << "You dosomthing\n";
 		}
 
-		void likeReduceHealth(const IAYEvent& in_event)
+		void likeReduceHealth(const IEvent& in_event)
 		{
 			//这里局部静态变量是基于函数的，与实例无关
 			//因此，多个观察者实例同时订阅事件会同时增长该值，最好直接使用普通成员变量或者从其他类获取多线程安全的值
@@ -158,7 +158,7 @@ namespace AYEventSystemUnitTest
 
 		}
 	private:
-		std::vector<std::unique_ptr<AYEventToken>> tokens;
+		std::vector<std::unique_ptr<EventToken>> tokens;
 	};
 	
 	void benchmark_MultiThreadsHandleEvent1()
@@ -203,7 +203,7 @@ namespace AYEventSystemUnitTest
 	{
 		std::cout << "benchmark_PriorityQueueHandleEvent*************************************BEGIN\n";
 
-		std::shared_ptr<AYEventSystem_Mock> mockSystem = std::make_shared<AYEventSystem_Mock>();
+		std::shared_ptr<EventSystem_Mock> mockSystem = std::make_shared<EventSystem_Mock>();
 
 		auto event1 = MakeMUnique<MyEvent>();
 		event1->message = "benchmark_PriorityQueueHandleEvent";
@@ -228,7 +228,7 @@ namespace AYEventSystemUnitTest
 
 		for (int i = 0; i < 5; i++)
 		{
-			AYEventRegistry::publish("Event_Int", [](IAYEvent* event) {
+			EventRegistry::publish("Event_Int", [](IEvent* event) {
 				auto eI = static_cast<Event_Int*>(event);
 				eI->carryer = rand() % 10;
 				});
@@ -245,7 +245,7 @@ namespace AYEventSystemUnitTest
 			a.push_back(std::make_unique<A>());
 		for (int i = 0; i < 100000; i++)
 		{
-			AYEventRegistry::publish("Event_Int", [](IAYEvent* event) {
+			EventRegistry::publish("Event_Int", [](IEvent* event) {
 				auto eI = static_cast<Event_Int*>(event);
 				eI->carryer = rand() % 10;
 				});
@@ -254,7 +254,7 @@ namespace AYEventSystemUnitTest
 		}
 		for (int i = 0; i < 10000; i++)
 		{
-			AYEventRegistry::publish("Event_Int", [](IAYEvent* event) {
+			EventRegistry::publish("Event_Int", [](IEvent* event) {
 				auto eI = static_cast<Event_Int*>(event);
 				eI->carryer = rand() % 10;
 				});
@@ -311,26 +311,26 @@ namespace AYEventSystemUnitTest
 
 int main() {
 	std::cout << "start" << std::endl;
-	//auto manager = std::make_unique<AYEventSystemUnitTest::AYEventSystem_Mock>();
-	//AYEventSystemUnitTest::eventSystem = std::make_shared<AYEventSystem>(std::move(manager));
-	AYEventSystemUnitTest::eventSystem = GET_CAST_MODULE(AYEventSystem, "EventSystem");
+	//auto manager = std::make_unique<EventSystemUnitTest::EventSystem_Mock>();
+	//EventSystemUnitTest::eventSystem = std::make_shared<EventSystem>(std::move(manager));
+	EventSystemUnitTest::eventSystem = GET_CAST_MODULE(EventSystem, "EventSystem");
 
-	AYMemoryPoolProxy::initMemoryPool();
-	GET_CAST_MODULE(AYEventSystem, "EventSystem")->init();
+	MemoryPoolBaseProxy::initMemoryPool();
+	GET_CAST_MODULE(EventSystem, "EventSystem")->init();
 
-	//AYEventSystemUnitTest::benchmark_MultiThreadsHandleEvent1();
+	//EventSystemUnitTest::benchmark_MultiThreadsHandleEvent1();
 
-	//AYEventSystemUnitTest::benchmark_BatchHandleEvent();
+	//EventSystemUnitTest::benchmark_BatchHandleEvent();
 
-	//AYEventSystemUnitTest::benchmark_PriorityQueueHandleEvent();
+	//EventSystemUnitTest::benchmark_PriorityQueueHandleEvent();
 
-	//AYEventSystemUnitTest::benchmark_MergeEvent();
+	//EventSystemUnitTest::benchmark_MergeEvent();
 
-	AYEventSystemUnitTest::performance_EventWithMemoryPool();
-	//AYEventSystemUnitTest::performance_MemoryPool();
-	//AYEventSystemUnitTest::performance_NoMemoryPool();
+	EventSystemUnitTest::performance_EventWithMemoryPool();
+	//EventSystemUnitTest::performance_MemoryPool();
+	//EventSystemUnitTest::performance_NoMemoryPool();
 
-	AYEventSystemUnitTest::eventSystem->~AYEventSystem();
+	EventSystemUnitTest::eventSystem->~EventSystem();
 	std::cout << "end?\n";
 	getchar();
 	return 0;

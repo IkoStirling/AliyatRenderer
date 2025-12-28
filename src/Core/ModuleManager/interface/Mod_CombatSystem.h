@@ -1,8 +1,10 @@
 ﻿#pragma once
 #include "IAYModule.h"
-
-class Mod_CombatSystem : public IAYModule
+namespace ayt::engine::game
 {
-public:
+	class Mod_CombatSystem : public ayt::engine::modules::IModule
+	{
+	public:
 
-};
+	};
+}

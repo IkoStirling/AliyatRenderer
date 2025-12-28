@@ -80,7 +80,7 @@ int main() {
     // 创建纹理采样器Uniform（适配你的Shader中的s_texColor）
     bgfx::UniformHandle s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
     bgfx::UniformHandle u_uiParams = bgfx::createUniform("u_uiParams", bgfx::UniformType::Vec4);
-    bgfx::UniformHandle u_color = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
+    bgfx::UniformHandle u_color = bgfx::createUniform("u_uiElementColor", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_cornerParams = bgfx::createUniform("u_cornerParams", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_borderColor = bgfx::createUniform("u_borderColor", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_borderParams = bgfx::createUniform("u_borderParams", bgfx::UniformType::Vec4);

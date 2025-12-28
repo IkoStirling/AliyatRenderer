@@ -2,38 +2,40 @@
 #include "IAYCamera.h"
 #include "glm/gtc/matrix_transform.hpp"
 
-
-class AY2DCamera : public IAYCamera
+namespace ayt::engine::render
 {
-public:
-	IAYCamera::Type getType() const override
+	class AY2DCamera : public IAYCamera
 	{
-		return IAYCamera::Type::ORTHOGRAPHIC_2D;
-	}
+	public:
+		IAYCamera::Type getType() const override
+		{
+			return IAYCamera::Type::ORTHOGRAPHIC_2D;
+		}
 
-	void update(float delta_time);
+		void update(float delta_time);
 
-	AYMath::Matrix4 getViewMatrix() const override;
+		math::Matrix4 getViewMatrix() const override;
 
-	AYMath::Matrix4 getProjectionMatrix() const override;
+		math::Matrix4 getProjectionMatrix() const override;
 
-	void setViewBox(float near, float far);
+		void setViewBox(float near, float far);
 
-	// left, right, bottom, top
-	void setDeadzone(const AYMath::Vector4& zone); 
+		// left, right, bottom, top
+		void setDeadzone(const math::Vector4& zone);
 
-	void setTargetPosition(const AYMath::Vector2& targetPos); 
+		void setTargetPosition(const math::Vector2& targetPos);
 
-	void setCurrentPosition(const AYMath::Vector2& currentPos); 
+		void setCurrentPosition(const math::Vector2& currentPos);
 
-	void showDeadzone(bool switcher);
-private:
-	AYMath::Vector4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // 屏幕比例死区(摄像机不会跟随的四边形区域）
-	AYMath::Vector4 _mapBounds{ -500.f, 500.f, -500.f, 500.f };
-	float _moveSpeed = 5.f;
-	float _near = -500.f;
-	float _far = 500.f;
+		void showDeadzone(bool switcher);
+	private:
+		math::Vector4 _deadzone{ 0.3f, 0.7f, 0.3f, 0.7f }; // 屏幕比例死区(摄像机不会跟随的四边形区域）
+		math::Vector4 _mapBounds{ -500.f, 500.f, -500.f, 500.f };
+		float _moveSpeed = 5.f;
+		float _near = -500.f;
+		float _far = 500.f;
 
-	//debug
-	int _ddeadzone = 0;
-};
+		//debug
+		int _ddeadzone = 0;
+	};
+}

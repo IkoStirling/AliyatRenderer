@@ -2,18 +2,21 @@
 #include <string>
 #include <functional>
 
-class AYEventSystem;
-class IAYEvent;
-
-class AYEventToken
+namespace ayt::engine::event
 {
-public:
-	using EventHandler = std::function<void(IAYEvent&)>;
-public:
-	AYEventToken(AYEventSystem* system, const std::string& event_name, EventHandler event_callback);
-	~AYEventToken();
-private:
-	AYEventSystem* _eventSystem; //do not manage this ptr
-	std::string _eventName;
-	EventHandler _eventCallback;
-};
+	class EventSystem;
+	class IEvent;
+
+	class EventToken
+	{
+	public:
+		using EventHandler = std::function<void(IEvent&)>;
+	public:
+		EventToken(EventSystem* system, const std::string& event_name, EventHandler event_callback);
+		~EventToken();
+	private:
+		EventSystem* _eventSystem; //do not manage this ptr
+		std::string _eventName;
+		EventHandler _eventCallback;
+	};
+}

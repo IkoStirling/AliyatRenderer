@@ -1,4 +1,6 @@
 #pragma once
 #include "IAYModule.h"
-
-class Mod_ResourceManager : public IAYModule {};
+namespace ayt::engine::resource
+{
+	class Mod_ResourceManager : public ayt::engine::modules::IModule {};
+}

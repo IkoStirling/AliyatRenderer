@@ -4,83 +4,81 @@
 #include "ECRegisterModule.h"
 #include "Mod_EngineCore.h"
 
-class AYEventSystem;
-
-/*
-	这个类管理什么？
-	管理窗口和输入？
-			X
-	窗口由渲染模块进行处理，输入由输入系统进行处理
-
-*/
-class AYEngineCore
+namespace ayt::engine
 {
-private:
+	class EventSystem;
 
-public:
+	class Core
+	{
+	public:
+		static Core& getInstance();
 
-public:
-	static AYEngineCore& getInstance();
+		void init();
+		void start();
+		void update();
+		void close();
 
-	void init();
-	void start();
-	void update();
-	void close();
+	public:
+		void setLogger(std::unique_ptr<log::Logger>&& logger);
 
-public:
-	void setTargetFPS(float fps);
+	private:
+		std::unique_ptr<log::Logger> _logger;
 
-	void setTimeScale(float scale);
+	public:
+		void setTargetFPS(float fps);
 
-	float getCurrentFPS() const;
+		void setTimeScale(float scale);
 
-	float getDeltaTime() const;
+		float getCurrentFPS() const;
 
-	float getUnscaledDeltaTime() const;
+		float getDeltaTime() const;
 
-private:
-	AYEngineCore() = default;
-	~AYEngineCore();
-	AYEngineCore(const AYEngineCore&) = delete;
-	AYEngineCore(AYEngineCore&&) = delete;
+		float getUnscaledDeltaTime() const;
 
-private:
-	void _regulateFrameRate(std::chrono::high_resolution_clock::time_point frameStartTime);
+	private:
+		Core() = default;
+		~Core();
+		Core(const Core&) = delete;
+		Core(Core&&) = delete;
 
-	void _updateFPSStats(int& frameCount, std::chrono::steady_clock::time_point& lastFpsUpdate);
+	private:
+		void _regulateFrameRate(std::chrono::high_resolution_clock::time_point frameStartTime);
 
-private:
-	bool _shouldClosed = false;
+		void _updateFPSStats(int& frameCount, std::chrono::steady_clock::time_point& lastFpsUpdate);
 
-	bool _noLimitFPS = false;
-	float _targetFPS = 60.f;          // 目标帧率
-	float _invTargetFPS = 1.f / _targetFPS;			//帧率倒数，用作性能优化
-	float _currentFPS = 0.0f;          // 实时帧率统计
-	float _timeScale = 1.f;  // 时间缩放因子（0=暂停，0.5=慢放，2.0=加速）
-	float _unscaledDeltaTime = 0.0f;  // 未缩放的真实帧时间
+	private:
+		bool _shouldClosed = false;
 
-	std::atomic<float> _accumulatedTime{ 0.0f };  // 用于时间缩放累积
-	std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
-};
+		bool _noLimitFPS = false;
+		float _targetFPS = 60.f;          // 目标帧率
+		float _invTargetFPS = 1.f / _targetFPS;			//帧率倒数，用作性能优化
+		float _currentFPS = 0.0f;          // 实时帧率统计
+		float _timeScale = 1.f;  // 时间缩放因子（0=暂停，0.5=慢放，2.0=加速）
+		float _unscaledDeltaTime = 0.0f;  // 未缩放的真实帧时间
 
-class AYEngineCoreAdapter : public Mod_EngineCore
-{
-public:
-	void init() override {};
+		std::atomic<float> _accumulatedTime{ 0.0f };  // 用于时间缩放累积
+		std::chrono::time_point<std::chrono::high_resolution_clock> _lastFrameTime;
+	};
 
-	void update(float delta_time) override {};
+	class CoreAdapter : public Mod_EngineCore
+	{
+	public:
+		void init() override {};
 
-	void shutdown() override {};
+		void update(float delta_time) override {};
 
-	void setTargetFPS(float fps) override { AYEngineCore::getInstance().setTargetFPS(fps); }
+		void shutdown() override {};
 
-	void setTimeScale(float scale) override { AYEngineCore::getInstance().setTimeScale(scale); }
+		void setTargetFPS(float fps) override { Core::getInstance().setTargetFPS(fps); }
 
-	float getCurrentFPS() const override { return AYEngineCore::getInstance().getCurrentFPS(); }
+		void setTimeScale(float scale) override { Core::getInstance().setTimeScale(scale); }
 
-	float getDeltaTime() const override { return AYEngineCore::getInstance().getDeltaTime(); }
+		float getCurrentFPS() const override { return Core::getInstance().getCurrentFPS(); }
 
-	float getUnscaledDeltaTime() const override { return AYEngineCore::getInstance().getUnscaledDeltaTime(); }
-};
+		float getDeltaTime() const override { return Core::getInstance().getDeltaTime(); }
 
-REGISTER_MODULE_CLASS("EngineCore", AYEngineCoreAdapter)
+		float getUnscaledDeltaTime() const override { return Core::getInstance().getUnscaledDeltaTime(); }
+	};
+
+	REGISTER_MODULE_CLASS("EngineCore", CoreAdapter)
+}

@@ -1,98 +1,52 @@
 #pragma once
 #include "STTransform.h"
-#include "AYEventRegistry.h"
-#include "Event_CameraMove.h"
-#include <spdlog/spdlog.h>
 
-class IAYCamera {
-public:
-    virtual ~IAYCamera() = default;
+namespace ayt::engine::render
+{
+    class IAYCamera {
+    public:
+        virtual ~IAYCamera() = default;
 
-    // 获取视图矩阵（View Matrix）
-    virtual AYMath::Matrix4 getViewMatrix() const
-    {
-        return AYMath::Matrix4(1.f);
-    }
+        // 获取视图矩阵（View Matrix）
+        virtual math::Matrix4 getViewMatrix() const;
 
-    // 获取投影矩阵（Projection Matrix）
-    virtual AYMath::Matrix4 getProjectionMatrix() const
-    {
-        if (_dirtyProjection)
-        {
-            // 返回物理比例下的投影矩阵
-            float ppm = getPixelPerMeter();
-            ppm = 1;
-            float width = _viewport.z / ppm;
-            float height = _viewport.w / ppm;
+        // 获取投影矩阵（Projection Matrix）
+        virtual math::Matrix4 getProjectionMatrix() const;
 
-            _cachedProjection = glm::ortho(
-                0.0f,  // left
-                width,   // right
-                height,  // bottom 
-                0.0f,   // top
-                -1.0f,
-                1.0f
-            );
-            _dirtyProjection = false;
-        }
-        return _cachedProjection;
-    }
+        // 每帧更新（参数可扩展）
+        virtual void update(float delta_time);
 
-    // 每帧更新（参数可扩展）
-    virtual void update(float delta_time)
-    {
+        // 相机类型标识
+        enum class Type { DEFAULT_SCREEN, PERSPECTIVE_3D, ORTHOGRAPHIC_2D, CUSTOM };
+        virtual Type getType() const;
+        
+        // 视口控制
+        virtual void setViewport(const math::Vector4& viewport);
+        
+        //由摄像机决定渲染视口
+        math::Vector4 getViewport() const;
 
-    }
+        virtual void setZoom(float zoom);
 
-    // 相机类型标识
-    enum class Type { DEFAULT_SCREEN, PERSPECTIVE_3D, ORTHOGRAPHIC_2D, CUSTOM };
-    virtual Type getType() const
-    {
-        return Type::DEFAULT_SCREEN;
-    }
+        virtual float getPixelPerMeter() const;
 
-    // 视口控制
-    virtual void setViewport(const AYMath::Vector4& viewport) 
-    { 
-        _dirtyView = true;
-        _dirtyProjection = true;
-        _viewport = viewport; 
-    }   //由摄像机决定渲染视口
-    AYMath::Vector4 getViewport() const { return _viewport; }
+        virtual void setAdditionalOffset(const math::Vector2& offset);
 
-    virtual void setZoom(float zoom) { 
-        _dirtyView = true;
-        _dirtyProjection = true;
-        _zoom = glm::clamp(zoom, 0.1f, 10.0f);
-        spdlog::info("[IAYCamera] zoom: {}", _zoom);
-    }
-    virtual float getPixelPerMeter() const { return 66.7f; }
+        virtual const math::Vector3 getPosition() const;
 
-    virtual void setAdditionalOffset(const AYMath::Vector2& offset) { _additionalOffset = offset; }
+        virtual void onCameraMoved() const;
+    protected:
+        math::Transform _transform;
+        math::Transform _lastTransform;
+        math::Vector3 _targetPosition = math::Vector3(0.f);
+        math::Vector4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
+        math::Vector2 _additionalOffset{ 0.0f };
 
-    virtual const AYMath::Vector3 getPosition() const { return _transform.position / getPixelPerMeter(); }
+        float _zoom = 1.f;
 
-    virtual void onCameraMoved() const
-    {
-        if (_lastTransform == _transform)
-            return;
-        AYEventRegistry::publish(Event_CameraMove::staticGetType(),
-            [this](IAYEvent* event) {
-                auto eI = static_cast<Event_CameraMove*>(event);
-                eI->transform = _transform;
-            });
-    }
-protected:
-    STTransform _transform;
-    STTransform _lastTransform;
-    AYMath::Vector3 _targetPosition = AYMath::Vector3(0.f);
-    AYMath::Vector4 _viewport{ 0, 0, 1920, 1080 }; // x,y,width,height
-    AYMath::Vector2 _additionalOffset{ 0.0f };
-
-    float _zoom = 1.f;
-
-    mutable bool _dirtyView = true;
-    mutable bool _dirtyProjection = true;
-    mutable AYMath::Matrix4 _cachedView = AYMath::Matrix4(1.0);
-    mutable AYMath::Matrix4 _cachedProjection = AYMath::Matrix4(1.0);
-};
+        mutable bool _dirtyView = true;
+        mutable bool _dirtyProjection = true;
+        mutable math::Matrix4 _cachedView = math::Matrix4(1.0);
+        mutable math::Matrix4 _cachedProjection = math::Matrix4(1.0);
+    };
+}

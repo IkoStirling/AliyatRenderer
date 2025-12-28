@@ -1,8 +1,10 @@
 ﻿#pragma once
 #include "IAYModule.h"
-
-class Mod_ECSEngine : public IAYModule 
+namespace ayt::engine::ecs
 {
-public:
+	class Mod_ECSEngine : public ayt::engine::modules::IModule
+	{
+	public:
 
-};
+	};
+}

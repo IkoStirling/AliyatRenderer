@@ -1,4 +1,6 @@
 #pragma once
 #include "IAYModule.h"
-
-class Mod_CameraSystem : public IAYModule {};
+namespace ayt::engine::render
+{
+	class Mod_CameraSystem : public ayt::engine::modules::IModule {};
+}

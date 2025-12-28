@@ -1,9 +1,11 @@
 #pragma once
 #include "AYRenderContext.h"
-
-class IAYRenderable
+namespace ayt::engine::render
 {
-public:
-	virtual ~IAYRenderable() = default;
-	virtual void render(const AYRenderContext& context) = 0;
-};
+	class IAYRenderable
+	{
+	public:
+		virtual ~IAYRenderable() = default;
+		virtual void render(const AYRenderContext& context) = 0;
+	};
+}

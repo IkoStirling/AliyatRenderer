@@ -6,6 +6,9 @@
 #include <typeindex>
 #include <spdlog/spdlog.h>
 
+namespace ayt::engine::resource
+{
+
 #define DECLARE_RESOURCE_CLASS(CLASS_NAME, RESOURCE_TYPE_NAME) \
 public: \
     virtual std::string getType()const override { \
@@ -26,69 +29,71 @@ public: \
 #define REGISTER_RESOURCE_CLASS(CLASS_NAME, SIGN, ...) \
 struct CLASS_NAME##SIGN##_Register{ \
 	CLASS_NAME##SIGN##_Register(){ \
-		::AYResourceRegistry::getInstance().registerType<CLASS_NAME, ##__VA_ARGS__>(\
+		ayt::engine::resource::AYResourceRegistry::getInstance().registerType<CLASS_NAME, ##__VA_ARGS__>(\
             CLASS_NAME::staticGetType()\
         ); \
 	}\
 }; \
 static CLASS_NAME##SIGN##_Register CLASS_NAME##SIGN##_register; \
 
-class IAYResource
-{
-public:
-	using Tag = std::string;
-	using TagSet = std::unordered_set<Tag>;
-public:
 
-    //子类重载需要调用该方法
-    virtual bool load(const std::string& filepath)
+    class IAYResource
     {
-        _resourcePath = filepath;
-        return true;
-    }
+    public:
+        using Tag = std::string;
+        using TagSet = std::unordered_set<Tag>;
+    public:
 
-	virtual bool unload() = 0;
-    virtual bool reload(const std::string& filepath)
-    {
-        unload();
-        load(filepath);
-        return true;
-    }
-	virtual size_t sizeInBytes() = 0;
+        //子类重载需要调用该方法
+        virtual bool load(const std::string& filepath)
+        {
+            _resourcePath = filepath;
+            return true;
+        }
 
-    virtual bool isLoaded() {
-        return _loaded;
-    }
+        virtual bool unload() = 0;
+        virtual bool reload(const std::string& filepath)
+        {
+            unload();
+            load(filepath);
+            return true;
+        }
+        virtual size_t sizeInBytes() = 0;
 
-public:
-    void addTag(const Tag& tag) {
-        _tags.insert(tag);
-    }
+        virtual bool isLoaded() {
+            return _loaded;
+        }
 
-    void removeTag(const Tag& tag) {
-        _tags.erase(tag);
-    }
+    public:
+        void addTag(const Tag& tag) {
+            _tags.insert(tag);
+        }
 
-    bool hasTag(const Tag& tag) const {
-        return _tags.count(tag) > 0;
-    }
+        void removeTag(const Tag& tag) {
+            _tags.erase(tag);
+        }
 
-    const TagSet& getTags() const {
-        return _tags;
-    }
+        bool hasTag(const Tag& tag) const {
+            return _tags.count(tag) > 0;
+        }
 
-    const std::string& getPath() const
-    {
-        return _resourcePath;
-    }
+        const TagSet& getTags() const {
+            return _tags;
+        }
 
-protected:
-    TagSet _tags;
-    std::string _resourcePath;
-    bool _loaded = false;
+        const std::string& getPath() const
+        {
+            return _resourcePath;
+        }
 
-public:
-    virtual ~IAYResource() = default;
-    virtual std::string getType()const = 0;
-    virtual std::type_index getTypeIndex()const = 0;
-};
+    protected:
+        TagSet _tags;
+        std::string _resourcePath;
+        bool _loaded = false;
+
+    public:
+        virtual ~IAYResource() = default;
+        virtual std::string getType()const = 0;
+        virtual std::type_index getTypeIndex()const = 0;
+    };
+}

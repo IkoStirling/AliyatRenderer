@@ -6,38 +6,41 @@
 #include <mutex>
 
 #define GET_MODULE(MODULE_NAME) \
-	AYModuleManager::getInstance().getModule(MODULE_NAME)
+	::ayt::engine::modules::ModuleManager::getInstance().getModule(MODULE_NAME)
 
 #define GET_CAST_MODULE(CAST_TYPE, MODULE_NAME) \
-	std::dynamic_pointer_cast<CAST_TYPE>(AYModuleManager::getInstance().getModule(MODULE_NAME))
+	std::dynamic_pointer_cast<CAST_TYPE>(::ayt::engine::modules::ModuleManager::getInstance().getModule(MODULE_NAME))
 
-class IAYModule;
-
-class AYModuleManager
+namespace ayt::engine::modules
 {
-public:
-	static AYModuleManager& getInstance();
+	class IModule;
 
-	bool registerModule(const std::string& name, std::shared_ptr<IAYModule> module);
+	class ModuleManager
+	{
+	public:
+		static ModuleManager& getInstance();
 
-	std::shared_ptr<IAYModule> getModule(const std::string& name) const;
+		bool registerModule(const std::string& name, std::shared_ptr<IModule> module);
 
-	bool hasModule(const std::string& name) const;
+		std::shared_ptr<IModule> getModule(const std::string& name) const;
 
-	bool unregisterModule(const std::string& name);
+		bool hasModule(const std::string& name) const;
 
-	void allModuleInit();	//该函数已废弃
+		bool unregisterModule(const std::string& name);
 
-	void allModuleUpdate(float delta_time); //该函数已废弃
+		void allModuleInit();	//该函数已废弃
 
-	void allModuleShutdown();
+		void allModuleUpdate(float delta_time); //该函数已废弃
 
-private:
-	AYModuleManager() = default;
-	AYModuleManager(const AYModuleManager&) = delete;
-	AYModuleManager& operator=(const AYModuleManager&) = delete;
+		void allModuleShutdown();
 
-private:
-	std::unordered_map<std::string, std::shared_ptr<IAYModule>> _moduleMap;
-	mutable std::shared_mutex _moduleMutex; //mutable 让const方法可以使用锁
-};
+	private:
+		ModuleManager() = default;
+		ModuleManager(const ModuleManager&) = delete;
+		ModuleManager& operator=(const ModuleManager&) = delete;
+
+	private:
+		std::unordered_map<std::string, std::shared_ptr<IModule>> _moduleMap;
+		mutable std::shared_mutex _moduleMutex; //mutable 让const方法可以使用锁
+	};
+}

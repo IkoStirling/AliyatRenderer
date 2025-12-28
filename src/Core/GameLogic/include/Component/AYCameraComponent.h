@@ -3,39 +3,44 @@
 #include "BaseRendering/Camera/IAYCamera.h"
 #include "AYEntrant.h"
 
-class AYCameraComponent : public IAYComponent 
+namespace ayt::engine::game
 {
-public:
-    AYCameraComponent(IAYCamera* camera = nullptr);
+    using ::ayt::engine::render::IAYCamera;
 
-    void beginPlay() override;
+    class AYCameraComponent : public IAYComponent
+    {
+    public:
+        AYCameraComponent(IAYCamera* camera = nullptr);
 
-    void update(float delta_time) override;
+        void beginPlay() override;
 
-    void endPlay() override;
+        void update(float delta_time) override;
 
-    void bindCamera(IAYCamera* camera);
+        void endPlay() override;
 
-    void activate();
+        void bindCamera(IAYCamera* camera);
 
-    IAYCamera* getCamera() const;
+        void activate();
 
-    void shake(float intensity, float duration);
+        IAYCamera* getCamera() const;
 
-    void setZoom(float zoom);
+        void shake(float intensity, float duration);
 
-    void setupCamera(IAYCamera::Type type);
+        void setZoom(float zoom);
 
-private:
-    void _update2DCamera(const STTransform& ownerTrans);
+        void setupCamera(IAYCamera::Type type);
 
-    void _update3DCamera(const STTransform& ownerTrans);
+    private:
+        void _update2DCamera(const math::Transform& ownerTrans);
 
-    void _applyShakeEffect(float delta);
+        void _update3DCamera(const math::Transform& ownerTrans);
 
-    IAYCamera* _boundCamera = nullptr;
+        void _applyShakeEffect(float delta);
 
-    float _shakeIntensity = 0.0f;
-    float _shakeDuration = 0.0f;
-    float _shakeTimer = 0.0f;
-};
+        IAYCamera* _boundCamera = nullptr;
+
+        float _shakeIntensity = 0.0f;
+        float _shakeDuration = 0.0f;
+        float _shakeTimer = 0.0f;
+    };
+}

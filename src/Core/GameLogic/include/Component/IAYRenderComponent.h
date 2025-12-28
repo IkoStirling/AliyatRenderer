@@ -2,8 +2,12 @@
 #include "IAYComponent.h"
 #include "BaseRendering/IAYRenderable.h"
 
-class IAYRenderComponent : public IAYComponent, public IAYRenderable
+namespace ayt::engine::game 
 {
-public:
-	virtual void render(const AYRenderContext& context) = 0;
-};
+
+	class IAYRenderComponent : public IAYComponent, public ::ayt::engine::render::IAYRenderable
+	{
+	public:
+		virtual void render(const ::ayt::engine::render::AYRenderContext& context) = 0;
+	};
+}

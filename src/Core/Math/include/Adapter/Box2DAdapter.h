@@ -2,7 +2,7 @@
 #include "box2d/box2d.h"
 #include "AYMathType.h"
 
-namespace AYMath::Adapter {
+namespace ayt::engine::math::adapter {
     // Box2D → Engine
     inline Vector2 fromBox2DV2(const b2Vec2& v) {
         return Vector2(v.x, v.y);

@@ -17,13 +17,12 @@ add_library(${MODULE_NAME} STATIC
 )
 
 find_package(Iconv REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 
 target_include_directories(${MODULE_NAME} PUBLIC 
 	${CMAKE_CURRENT_SOURCE_DIR}/include 
 	)
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}
-	spdlog::spdlog_header_only
+	logger
 	configer
 	aymath_header_only
 )

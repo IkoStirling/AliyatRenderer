@@ -1,8 +1,10 @@
 ﻿#pragma once
 #include "IAYModule.h"
-
-class Mod_MaterialManager : public IAYModule
+namespace ayt::engine::render
 {
-public:
+	class Mod_MaterialManager : public ::ayt::engine::modules::IModule
+	{
+	public:
 
-};
+	};
+}

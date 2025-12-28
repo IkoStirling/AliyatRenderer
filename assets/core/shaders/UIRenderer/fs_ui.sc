@@ -1,5 +1,4 @@
-$input v_texcoord0, v_color0
-
+$input v_texcoord0, v_color0, v_size_pixel, v_edge_pixel, v_corner_radius_pixel
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
@@ -10,62 +9,67 @@ uniform vec4 u_borderColor; // 边框颜色(RGBA)
 uniform vec4 u_borderParams; // x: 边框宽度(比例), y: 边框抗锯齿, z: 是否启用边框, w: 保留
 uniform vec4 u_cornerParams; // x: 圆角半径(宽度x的比例), w: 长宽比(hight/width), z: 抗锯齿范围(0.005f最合适), w: 是否使用纹理
 
-float calculateRoundedCornerAlpha(vec2 uv, float radius, float ratio, float antiAlias, float scale) {
-    vec2 centeredUV = (uv - 0.5) / scale + 0.5;
+uniform vec4 u_uiElementColor;  // 背景色
+uniform vec4 u_uiStrokeColor;   // 描边色
+uniform sampler2D u_texture;   // 可选纹理（字体/图标）
+uniform bool u_useTexture;    // 是否启用纹理
+
+// 核心函数：计算“当前像素”到圆角矩形的“像素级SDF距离”（解决描边失真的核心）
+float rounded_rect_sdf(vec2 texcoord, vec2 size_pixel, float corner_radius_pixel) {
+    // 步骤1：将归一化纹理坐标（[0,1]）转换为“像素级坐标”（以UI中心为原点）
+    // 比如UI是200x100像素，texcoord=(0,0)→像素坐标=(-100,-50)，texcoord=(1,1)→(100,50)
+    vec2 pixel_coord = (texcoord - 0.5) * size_pixel;
     
-    // 只处理在缩放后图形内的像素
-    if (centeredUV.x < 0.0 || centeredUV.x > 1.0 || centeredUV.y < 0.0 || centeredUV.y > 1.0) {
-        return 0.0;
-    }
-    vec2 p          = abs(step(0.5, centeredUV) - centeredUV) * scale;
+    // 步骤2：限制圆角半径（避免圆角超过UI最小边长的一半，比如100x50的UI，最大圆角只能25）
+    float max_radius = min(size_pixel.x, size_pixel.y) * 0.5;
+    float radius = clamp(corner_radius_pixel, 0.0, max_radius);
     
-    float horizontal = 1.0 - smoothstep(radius - antiAlias, radius + antiAlias, p.x);
-    float vertical  = 1.0 - smoothstep(radius - antiAlias, radius + antiAlias, p.y * ratio);
-    float circle    = smoothstep(radius - antiAlias, radius + antiAlias, 
-                   length(vec2(p.x - radius, p.y * ratio - radius)));
+    // 步骤3：计算SDF距离（像素级）
+    // abs(pixel_coord)：转换为第一象限（对称）
+    // 减去（UI半尺寸 - 圆角半径）：得到到“圆角内矩形”的距离
+    vec2 dist = abs(pixel_coord) - (size_pixel * 0.5 - radius);
+    // length(max(dist, 0.0))：如果在圆角区域外，计算欧氏距离；否则为0
+    // 减去radius：最终得到“像素级SDF距离”（负值=在UI内，正值=在UI外）
+    float sdf = length(max(dist, 0.0)) - radius;
     
-    return 1.0 - horizontal * vertical * circle;
+    return sdf;
 }
 
 void main() {
-    float radius    = u_cornerParams.x;
-    float ratio     = u_cornerParams.y;
-    float aa        = u_cornerParams.z * ratio;
-    float useTexture = u_cornerParams.w;
-
-    float borderWidth = u_borderParams.x;
-    float borderAA  = u_borderParams.y;
-    bool useBorder  = u_borderParams.z > 0.5;
-
-    vec4 baseColor  = step(0.5, useTexture)* texture2D(s_texColor, v_texcoord0) + step(useTexture, 0.5) * vec4(1,1,1,1);
-    vec4 finalColor = baseColor * v_color0 * u_color;
-
-    float outerAlpha = calculateRoundedCornerAlpha(v_texcoord0, radius, ratio, aa, 1.0);
-    float innerAlpha = calculateRoundedCornerAlpha(v_texcoord0, radius * 0.8, ratio, aa, 1.0 - borderWidth);
-    float borderAlpha = outerAlpha - innerAlpha;
-
-    //finalColor      *= outerAlpha;
-
-
-    if (useBorder && borderAlpha > 0.01) {
-        // 边框抗锯齿
-        float borderSmooth = smoothstep(0.0, borderAA, borderAlpha);
-        finalColor = mix(finalColor, u_borderColor, borderSmooth);
-    } else {
-        finalColor.a *= outerAlpha;
+    // 1. 计算当前像素到UI的像素级SDF距离
+    float sdf = rounded_rect_sdf(v_texcoord0, v_size_pixel, v_corner_radius_pixel);
+    
+    // 2. 抗锯齿范围（1像素，适配像素密度，避免不同屏幕锯齿差异）
+    float aa_range = 1.0 / u_cornerParams.w;
+    
+    // 3. 计算背景色权重（smoothstep实现抗锯齿）
+    // sdf < -aa_range：完全在UI内，权重=1（实心）
+    // sdf > aa_range：完全在UI外，权重=0（透明）
+    // 中间范围：渐变过渡（抗锯齿）
+    float bg_alpha = smoothstep(aa_range, -aa_range, sdf);
+    
+    // 4. 计算描边权重（核心：像素级精确描边）
+    // 描边范围：sdf ∈ [0, v_edge_pixel]（UI边缘外0~描边宽度的像素）
+    // 用两个smoothstep相减，得到描边的渐变权重
+    float stroke_alpha = smoothstep(aa_range, -aa_range, sdf) - smoothstep(v_edge_pixel + aa_range, v_edge_pixel - aa_range, sdf);
+    
+    // 5. 纹理混合（可选：字体、图标）
+    vec4 tex_color = vec4(1.0);
+    if (u_useTexture) {
+        tex_color = texture2D(u_texture, v_texcoord0);
+        tex_color.a = tex_color.r;  // 字体纹理通常是单通道（r通道存亮度）
     }
-
-    if (finalColor.a < 0.01) discard;
-
-    gl_FragColor    = finalColor;
+    
+    // 6. 混合背景、描边、纹理（按权重叠加）
+    vec4 final_color = vec4(0.0);
+    // 先叠加描边
+    final_color = mix(final_color, u_uiStrokeColor * tex_color, stroke_alpha * u_uiStrokeColor.a);
+    // 再叠加背景（注意：背景权重要减去描边权重，避免重叠）
+    final_color = mix(final_color, u_uiElementColor * tex_color, bg_alpha * u_uiElementColor.a * (1.0 - stroke_alpha));
+    
+    // 7. 透明像素裁剪（减少过度绘制，提升性能）
+    if (final_color.a < 0.01) discard;
+    
+    // 输出最终像素颜色
+    gl_FragColor = final_color;
 }
-
-// 关于圆角逻辑迭代
-// 首先判断到边界距离是否大于半径， 然后判断像素到边界距离需要小于半径
-// float corner = step(radius, p.x) + step(radius, p.y) + step(length(vec2(p.x - radius, p.y - radius)), radius);
-// finalColor   *= step(corner, 0.99);
-// float corner = smoothstep(radius-aa,radius+aa, p.x) + smoothstep(radius-aa,radius+aa, p.y * ratio) + 1.0 - smoothstep(radius-aa,radius+aa, length(vec2(p.x - radius, p.y * ratio - radius)));
-// finalColor   *= clamp(0.0,1.0, corner);
-// float corner = (1.0 - smoothstep(radius-aa,radius+aa, p.x)) * (1.0 - smoothstep(radius-aa,radius+aa, p.y * ratio)) * smoothstep(radius-aa,radius+aa, length(vec2(p.x - radius, p.y * ratio - radius)));
-// finalColor   *= 1.0 - corner;
-

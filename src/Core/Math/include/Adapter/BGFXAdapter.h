@@ -2,7 +2,7 @@
 #include "bgfx/bgfx.h"
 #include "AYMathType.h"
 
-namespace AYMath::Adapter {
+namespace ayt::engine::math::adapter {
     // BGFX使用行优先矩阵，需要转换
     inline void toBGFX(const Matrix4& m, float* out) {
         // BGFX期望的格式

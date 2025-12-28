@@ -3,33 +3,39 @@
 #include "AYPhysicsSystem.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 
-class AYPhysicsComponent : public IAYComponent
+namespace ayt::engine::game
 {
-public:
-    virtual void beginPlay() override;
+    using ::ayt::engine::physics::IAYPhysicsBody;
+    using ::ayt::engine::physics::IAYCollider;
 
-    virtual void update(float delta_time) override; 
+    class AYPhysicsComponent : public IAYComponent
+    {
+    public:
+        virtual void beginPlay() override;
 
-    virtual void endPlay() override {}
+        virtual void update(float delta_time) override;
 
-    // 基础物理控制
-    IAYPhysicsBody* getPhysicsBody() { return _physicsBody; }
+        virtual void endPlay() override {}
 
-    void setBodyType(IAYPhysicsBody::BodyType type);
+        // 基础物理控制
+        IAYPhysicsBody* getPhysicsBody() { return _physicsBody; }
+
+        void setBodyType(IAYPhysicsBody::BodyType type);
 
 
-    void addCollider(std::shared_ptr<IAYCollider> collider);
+        void addCollider(std::shared_ptr<IAYCollider> collider);
 
 
-    void removeCollider(std::shared_ptr<IAYCollider> collider);
+        void removeCollider(std::shared_ptr<IAYCollider> collider);
 
-    void setPhysicsMode(bool is3D) { _is3D = is3D; }
+        void setPhysicsMode(bool is3D) { _is3D = is3D; }
 
-protected:
-    IAYPhysicsBody* _physicsBody = nullptr;
-    IAYPhysicsBody::BodyType _bodyType;
-    std::vector<std::shared_ptr<IAYCollider>> _colliders;
-    bool _is3D = false;
+    protected:
+        IAYPhysicsBody* _physicsBody = nullptr;
+        IAYPhysicsBody::BodyType _bodyType;
+        std::vector<std::shared_ptr<IAYCollider>> _colliders;
+        bool _is3D = false;
 
-    
-};
+
+    };
+}

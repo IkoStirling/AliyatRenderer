@@ -1,47 +1,49 @@
 #pragma once
 #include "2DPhy/Collision/Base/AYCircle2DCollider.h"
 #include "Box2DColliderBase.h"
-
-class Box2DCircleCollider : public AYCircle2DCollider, public Box2DColliderBase
+namespace ayt::engine::physics
 {
-public:
-    explicit Box2DCircleCollider(float radius = 0.5f) :
-        AYCircle2DCollider(radius) {
-    }
-
-    void setRadius(float radius) override
+    class Box2DCircleCollider : public AYCircle2DCollider, public Box2DColliderBase
     {
-        _radius = radius;
-        if (isValid()) updateShape(_shapeId);
-    }
+    public:
+        explicit Box2DCircleCollider(float radius = 0.5f) :
+            AYCircle2DCollider(radius) {
+        }
 
-    void setOffset(const AYMath::Vector2& offset) override
-    {
-        _offset = offset;
-        if (isValid()) updateShape(_shapeId);
-    }
+        void setRadius(float radius) override
+        {
+            _radius = radius;
+            if (isValid()) updateShape(_shapeId);
+        }
 
-    b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) override
-    {
-        b2Circle circle = createBox2DCircle();
-        return b2CreateCircleShape(bodyId, &shapeDef, &circle);
-    }
+        void setOffset(const math::Vector2& offset) override
+        {
+            _offset = offset;
+            if (isValid()) updateShape(_shapeId);
+        }
 
-    void updateShape(b2ShapeId shapeId) const override
-    {
-        if (B2_IS_NULL(shapeId)) return;
+        b2ShapeId createShape(b2BodyId bodyId, const b2ShapeDef& shapeDef) override
+        {
+            b2Circle circle = createBox2DCircle();
+            return b2CreateCircleShape(bodyId, &shapeDef, &circle);
+        }
 
-        b2Circle circle = createBox2DCircle();
-        b2Shape_SetCircle(shapeId, &circle);
-    }
+        void updateShape(b2ShapeId shapeId) const override
+        {
+            if (B2_IS_NULL(shapeId)) return;
 
-private:
-    b2Circle createBox2DCircle() const
-    {
-        b2Circle circle;
-        circle.center = { _offset.x, _offset.y };
-        circle.radius = _radius;
-        return circle;
-    }
+            b2Circle circle = createBox2DCircle();
+            b2Shape_SetCircle(shapeId, &circle);
+        }
 
-};
+    private:
+        b2Circle createBox2DCircle() const
+        {
+            b2Circle circle;
+            circle.center = { _offset.x, _offset.y };
+            circle.radius = _radius;
+            return circle;
+        }
+
+    };
+}

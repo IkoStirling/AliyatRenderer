@@ -1,4 +1,6 @@
 #pragma once
 #include "IAYModule.h"
-
-class Mod_MemoryPool : public IAYModule {};
+namespace ayt::engine::pool::memory
+{
+	class Mod_MemoryPool : public ::ayt::engine::modules::IModule {};
+}

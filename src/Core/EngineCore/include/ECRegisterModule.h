@@ -14,3 +14,4 @@
 #include "AYPhysicsSystem.h"
 #include "AYECSEngine.h"
 #include "AYCombatSystem.h"
+#include "AYLogger.h"

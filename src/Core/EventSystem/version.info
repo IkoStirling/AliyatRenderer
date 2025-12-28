@@ -18,7 +18,7 @@ version: 0.1.3
 				目前已支持事件优先级、合并事件、事件层级
 
 				扩展点：
-					a）重载new和delete运算符，由于IAYEvent类不能是模板类，
+					a）重载new和delete运算符，由于IEvent类不能是模板类，
 						所以要用到宏，与注册子类类型到父类中
 		
 		已知问题：
@@ -32,7 +32,7 @@ version: 0.1.3
 					举个例子：
 						当Player的两个实例PlayerA，PlayerB同时监听了扣血事件E，
 						PlayerB受伤了触发扣血事件，目前情况下PlayerA也会被扣血
-			4）事件监听通过IAYEventToken进行RAII处理，因此每个地方必须强制保存该Token
+			4）事件监听通过IEventToken进行RAII处理，因此每个地方必须强制保存该Token
 					在类似Object一样的最基类提供方法保存与释放Token（即监听与放弃监听）
 
 		短期期望：

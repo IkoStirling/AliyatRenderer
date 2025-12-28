@@ -1,9 +1,11 @@
 #pragma once
 #include "IAYModule.h"
-
-class Mod_PhysicsSystem : public IAYModule 
+namespace ayt::engine::physics
 {
-public:
+	class Mod_PhysicsSystem : public ayt::engine::modules::IModule
+	{
+	public:
 
-};
+	};
 
+}

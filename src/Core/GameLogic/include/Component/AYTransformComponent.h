@@ -3,23 +3,26 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>>
 
-class AYTransformComponent : public IAYComponent
+namespace ayt::engine::game
 {
-public:
-    virtual void beginPlay() override {}
-    virtual void update(float delta_time) override {}
-    virtual void endPlay() override {}
+    class AYTransformComponent : public IAYComponent
+    {
+    public:
+        virtual void beginPlay() override {}
+        virtual void update(float delta_time) override {}
+        virtual void endPlay() override {}
 
-    glm::vec3 position{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 rotation{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
+        glm::vec3 position{ 0.0f, 0.0f, 0.0f };
+        glm::vec3 rotation{ 0.0f, 0.0f, 0.0f };
+        glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
 
-    glm::mat4 getWorldMatrix() const {
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, position);
-        model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1, 0, 0));
-        // ...其他变换
-        model = glm::scale(model, scale);
-        return model;
-    }
-};
+        glm::mat4 getWorldMatrix() const {
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, position);
+            model = glm::rotate(model, glm::radians(rotation.x), glm::vec3(1, 0, 0));
+            // ...其他变换
+            model = glm::scale(model, scale);
+            return model;
+        }
+    };
+}

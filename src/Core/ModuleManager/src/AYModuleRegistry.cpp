@@ -1,80 +1,82 @@
 ﻿#include "AYModuleRegistry.h"
 #include "IAYModule.h"
-
-AYModuleManager& AYModuleManager::getInstance()
+namespace ayt::engine::modules
 {
-	static AYModuleManager mInstance;
-	return mInstance;
-}
-
-bool AYModuleManager::registerModule(const std::string& name, std::shared_ptr<IAYModule> module)
-{
-	std::unique_lock<std::shared_mutex> lock(_moduleMutex);
-	if (module)
+	ModuleManager& ModuleManager::getInstance()
 	{
-		_moduleMap[name] = std::move(module);
-		return true;
+		static ModuleManager mInstance;
+		return mInstance;
 	}
-	return false;
-}
 
-std::shared_ptr<IAYModule> AYModuleManager::getModule(const std::string& name) const
-{
-	std::shared_lock<std::shared_mutex> lock(_moduleMutex);
-	auto it = _moduleMap.find(name);
-	return it != _moduleMap.end() ? it->second : nullptr;
-}
+	bool ModuleManager::registerModule(const std::string& name, std::shared_ptr<IModule> module)
+	{
+		std::unique_lock<std::shared_mutex> lock(_moduleMutex);
+		if (module)
+		{
+			_moduleMap[name] = std::move(module);
+			return true;
+		}
+		return false;
+	}
 
-bool AYModuleManager::hasModule(const std::string& name) const
-{
-	std::shared_lock<std::shared_mutex> lock(_moduleMutex);
-	return _moduleMap.find(name) != _moduleMap.end();
-}
-
-bool AYModuleManager::unregisterModule(const std::string& name)
-{
-	std::unique_lock<std::shared_mutex> lock(_moduleMutex);
-	return _moduleMap.erase(name) > 0;
-}
-
-void AYModuleManager::allModuleInit()
-{
-	std::vector<std::shared_ptr<IAYModule>> modules;
+	std::shared_ptr<IModule> ModuleManager::getModule(const std::string& name) const
 	{
 		std::shared_lock<std::shared_mutex> lock(_moduleMutex);
+		auto it = _moduleMap.find(name);
+		return it != _moduleMap.end() ? it->second : nullptr;
+	}
 
-		if (hasModule("MemoryPool"))
-			_moduleMap["MemoryPool"]->init();
+	bool ModuleManager::hasModule(const std::string& name) const
+	{
+		std::shared_lock<std::shared_mutex> lock(_moduleMutex);
+		return _moduleMap.find(name) != _moduleMap.end();
+	}
 
-		if (hasModule("EventSystem"))
-			_moduleMap["EventSystem"]->init();
+	bool ModuleManager::unregisterModule(const std::string& name)
+	{
+		std::unique_lock<std::shared_mutex> lock(_moduleMutex);
+		return _moduleMap.erase(name) > 0;
+	}
 
-		for (auto& [name, module] : _moduleMap) {
-			if (module) modules.push_back(module);
+	void ModuleManager::allModuleInit()
+	{
+		std::vector<std::shared_ptr<IModule>> modules;
+		{
+			std::shared_lock<std::shared_mutex> lock(_moduleMutex);
+
+			if (hasModule("MemoryPool"))
+				_moduleMap["MemoryPool"]->init();
+
+			if (hasModule("EventSystem"))
+				_moduleMap["EventSystem"]->init();
+
+			for (auto& [name, module] : _moduleMap) {
+				if (module) modules.push_back(module);
+			}
+		}
+
+		for (auto& module : modules) {
+			module->init();
 		}
 	}
 
-	for (auto& module : modules) {
-		module->init();
-	}
-}
-
-void AYModuleManager::allModuleUpdate(float delta_time)
-{
-	std::shared_lock<std::shared_mutex> lock(_moduleMutex);
-	for (auto it = _moduleMap.begin(); it != _moduleMap.end(); it++)
+	void ModuleManager::allModuleUpdate(float delta_time)
 	{
-		if (it->second)
-			it->second->update(delta_time);
+		std::shared_lock<std::shared_mutex> lock(_moduleMutex);
+		for (auto it = _moduleMap.begin(); it != _moduleMap.end(); it++)
+		{
+			if (it->second)
+				it->second->update(delta_time);
+		}
 	}
-}
 
-void AYModuleManager::allModuleShutdown()
-{
-	std::unique_lock<std::shared_mutex> lock(_moduleMutex);
-	for (auto it = _moduleMap.begin(); it != _moduleMap.end(); it++)
+	void ModuleManager::allModuleShutdown()
 	{
-		if (it->second)
-			it->second->shutdown();
+		std::unique_lock<std::shared_mutex> lock(_moduleMutex);
+		for (auto it = _moduleMap.begin(); it != _moduleMap.end(); it++)
+		{
+			if (it->second)
+				it->second->shutdown();
+		}
 	}
 }
