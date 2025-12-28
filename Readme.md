@@ -100,8 +100,10 @@ Run the following commands:
               libarchive glm efsw assimp spdlog cpp-httplib soci \
               soci[mysql] soci[postgresql] soci[sqlite3] soci[odbc]
 ### Project Progress
-1. | Description               | Picture                                                                 |
-|--------------------|----------------------------------------------------------------------|
+1. Picture&&Description
+
+| Description               | Picture                                                                 
+|--------------------|----------------------------------------------------------------------
 | This Orc can move, turn, and attack, and it receives the left joystick axis value input from Gmaepad, as well as the "X" as the attack key. Of course, it is currently only an animation| ![pic](assets/core/.projectProgress/orc_controlled_by_gamepad.png)
 | The system now supports 3D camera functionality and equirectangular skyboxes, but there's a rendering issue with 2D sprites - they only appear at z=0 depth and remain fixed in screen space, causing them to stay in place even when the 3D camera moves.| ![pic](assets/core/.projectProgress/2D_orc&3D_Skybox.png)
 | The current architecture results in drawing 30000 instantiated graphics in one frame, causing the program to have a frame rate of only about 5fps. It is still unclear whether it is a CPU or GPU limitation, and it is difficult to fix such issues until the module is completed and disconnected from the main thread.| ![pic](assets/core/.projectProgress/A_problem_that_needs_to_be_solved.png)
@@ -113,12 +115,15 @@ Run the following commands:
 	   Use this in powershell under "src/Core/":
 	   Get-ChildItem -Recurse -Include *.cpp,*.h,*.cxx,*.hpp | ForEach-Object { (Get-Content $_).Count } | Measure-Object -Sum
 ### Problems to Solve
-| Description               | Picture                                                                 |
-|--------------------|----------------------------------------------------------------------|
+| Description               | Picture                                                                 
+|--------------------|----------------------------------------------------------------------
 | The memory consumption of the 10mb fbx model loaded in the assert library reaches 3.8GB. Although my computer has 64GB of memory, most computers still stay on 16GB of memory, which is obviously unacceptable. Of course, there may be a problem with the process of exporting fbx through pmx| ![pic](assets/core/.problems/p1_model_load.png)
 | When the device information switches to the 3060+AMD low-end CPU, it is only then that we realize the significant design flaws in the previous architecture. Afterwards, we will fully shift to a specialized multi platform rendering solution to avoid multiple repeated uploads of data| ![pic](assets/core/.problems/p2_render_thread.png)
 
 ### Project Update Logs
-| Version               | Discription                                                                 |
-|--------------------|----------------------------------------------------------------------|
-| 0.1.9 | The previous version created a lot of chaos, making it difficult for the project to continue. After refactoring the code, it will jump to version 2.0. Refactoring aims to complete 80% of the code style modifications|
+| Version               | Discription                                                                 
+|--------------------|----------------------------------------------------------------------
+| 0.1.9 | The previous version created a lot of chaos, making it difficult for the project to continue. After refactoring the code, it will jump to version 2.0. Refactoring aims to complete 80% of the code style modifications
+| |
+| |
+| |
