@@ -1,13 +1,7 @@
 #pragma once
-#include "Core.h"
-#include "AYPath.h"
 #include <unordered_set>
 #include <string>
 #include <typeindex>
-#include <spdlog/spdlog.h>
-
-namespace ayt::engine::resource
-{
 
 #define DECLARE_RESOURCE_CLASS(CLASS_NAME, RESOURCE_TYPE_NAME) \
 public: \
@@ -29,7 +23,7 @@ public: \
 #define REGISTER_RESOURCE_CLASS(CLASS_NAME, SIGN, ...) \
 struct CLASS_NAME##SIGN##_Register{ \
 	CLASS_NAME##SIGN##_Register(){ \
-		ayt::engine::resource::AYResourceRegistry::getInstance().registerType<CLASS_NAME, ##__VA_ARGS__>(\
+		::ayt::engine::resource::ResourceRegistry::getInstance().registerType<CLASS_NAME, ##__VA_ARGS__>(\
             CLASS_NAME::staticGetType()\
         ); \
 	}\
@@ -37,7 +31,10 @@ struct CLASS_NAME##SIGN##_Register{ \
 static CLASS_NAME##SIGN##_Register CLASS_NAME##SIGN##_register; \
 
 
-    class IAYResource
+namespace ayt::engine::resource
+{
+
+    class IResource
     {
     public:
         using Tag = std::string;
@@ -92,7 +89,7 @@ static CLASS_NAME##SIGN##_Register CLASS_NAME##SIGN##_register; \
         bool _loaded = false;
 
     public:
-        virtual ~IAYResource() = default;
+        virtual ~IResource() = default;
         virtual std::string getType()const = 0;
         virtual std::type_index getTypeIndex()const = 0;
     };

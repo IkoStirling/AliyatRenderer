@@ -1,0 +1,27 @@
+set(MODULE_NAME addition)
+
+set(SRC_FILES
+ "Command/AYCmdInterface.cpp"
+ "Sql/AYSqlConfig.cpp" "Sql/AYSqlConnection.cpp" "Sql/AYSqlPool.cpp")
+
+set(HEAD_FILES
+ "Sql/AYSqlConfig.h" "Sql/AYSqlConnection.h" "Sql/AYSqlPool.h" "Command/AYCmdInterface.h")
+
+add_library(${MODULE_NAME} STATIC ${SRC_FILES} ${HEAD_FILES})
+
+target_include_directories(${MODULE_NAME} PUBLIC 
+	${CMAKE_CURRENT_SOURCE_DIR}/Command
+	${CMAKE_CURRENT_SOURCE_DIR}/Sql
+)
+
+find_package(SOCI CONFIG REQUIRED)
+
+target_link_libraries(${MODULE_NAME}
+	PUBLIC
+	$<IF:$<TARGET_EXISTS:SOCI::soci_core>,SOCI::soci_core,SOCI::soci_core_static>
+	$<IF:$<TARGET_EXISTS:SOCI::soci_mysql>,SOCI::soci_mysql,SOCI::soci_mysql_static>
+	$<IF:$<TARGET_EXISTS:SOCI::soci_odbc>,SOCI::soci_odbc,SOCI::soci_odbc_static>
+	$<IF:$<TARGET_EXISTS:SOCI::soci_postgresql>,SOCI::soci_postgresql,SOCI::soci_postgresql_static>
+	$<IF:$<TARGET_EXISTS:SOCI::soci_sqlite3>,SOCI::soci_sqlite3,SOCI::soci_sqlite3_static>
+
+) 

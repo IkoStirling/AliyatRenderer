@@ -22,7 +22,5 @@ target_include_directories(${MODULE_NAME} PUBLIC
 	${CMAKE_CURRENT_SOURCE_DIR}/include 
 	)
 target_link_libraries(${MODULE_NAME} PUBLIC ${INTERFACE_NAME}
-	logger
-	configer
-	aymath_header_only
+	foundation
 )

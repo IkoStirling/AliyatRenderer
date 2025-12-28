@@ -6,17 +6,17 @@
 
 namespace ayt::engine::game
 {
-    AYGameObject::AYGameObject(const std::string& name) :
+    GameObject::GameObject(const std::string& name) :
         _name(name)
     {
     }
 
-    AYGameObject::~AYGameObject()
+    GameObject::~GameObject()
     {
         _components.clear();
     }
 
-    AYGameObject::AYGameObject(AYGameObject&& other) noexcept :
+    GameObject::GameObject(GameObject&& other) noexcept :
         _components(std::move(other._components)),
         _active(other._active)
     {
@@ -26,7 +26,7 @@ namespace ayt::engine::game
         }
     }
 
-    AYGameObject& AYGameObject::operator=(AYGameObject&& other) noexcept
+    GameObject& GameObject::operator=(GameObject&& other) noexcept
     {
         if (this != &other) {
             _components = std::move(other._components);
@@ -40,7 +40,7 @@ namespace ayt::engine::game
         return *this;
     }
 
-    void AYGameObject::update(float delta_time)
+    void GameObject::update(float delta_time)
     {
         if (!_active) return;
         for (auto& [type, component] : _components) {
@@ -48,7 +48,7 @@ namespace ayt::engine::game
         }
     }
 
-    void AYGameObject::beginPlay()
+    void GameObject::beginPlay()
     {
         if (!_active) return;
         for (auto& [type, component] : _components) {
@@ -56,7 +56,7 @@ namespace ayt::engine::game
         }
     }
 
-    void AYGameObject::endPlay()
+    void GameObject::endPlay()
     {
         if (!_active) return;
         for (auto& [type, component] : _components) {
@@ -64,7 +64,7 @@ namespace ayt::engine::game
         }
     }
 
-    void AYGameObject::setActive(bool active)
+    void GameObject::setActive(bool active)
     {
         if (_active == active) return;
 
@@ -78,13 +78,13 @@ namespace ayt::engine::game
             endPlay();
     }
 
-    void AYGameObject::_handleRenderComponents(bool shouldRegister)
+    void GameObject::_handleRenderComponents(bool shouldRegister)
     {
-        auto renderer = GET_CAST_MODULE(AYRendererManager, "Renderer");
+        auto renderer = GET_CAST_MODULE(RendererManager, "Renderer");
         if (!renderer) return;
 
         for (auto& comp : _components) {
-            if (auto* renderComp = dynamic_cast<IAYRenderComponent*>(comp.second.get())) {
+            if (auto* renderComp = dynamic_cast<IRenderComponent*>(comp.second.get())) {
                 if (shouldRegister) {
                     renderer->registerRenderable(renderComp);
                 }

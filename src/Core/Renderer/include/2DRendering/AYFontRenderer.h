@@ -11,7 +11,7 @@
 #include <boost/locale.hpp>
 namespace ayt::engine::render
 {
-    class AYRenderer;
+    class Renderer;
 
 #define ATEXT(str) std::string(reinterpret_cast<const char*>(str))
     static std::u32string utf8_to_utf32(const std::string& utf8) {
@@ -31,10 +31,10 @@ namespace ayt::engine::render
         尚未支持可变字体
         请直接使用系统字体
     */
-    class AYFontRenderer {
+    class FontRenderer {
     public:
-        AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer);
-        ~AYFontRenderer();
+        FontRenderer(RenderDevice* device, Renderer* renderer);
+        ~FontRenderer();
         void shutdown();
         /*
             加载整个字体文件
@@ -92,8 +92,8 @@ namespace ayt::engine::render
         void _reloadCharacters();   //清空所有图集，重新加载字符
 
     private:
-        AYRenderDevice* _device;
-        AYRenderer* _renderer;
+        RenderDevice* _device;
+        Renderer* _renderer;
         std::vector<TextureAtlas> _atlases;
         GLuint _vao, _vbo;
         GLuint _shaderProgram;

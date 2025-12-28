@@ -4,16 +4,16 @@
 
 namespace ayt::engine::game
 {
-	class Ground : public AYEntrant
+	class Ground : public Entrant
 	{
 	public:
 		Ground(const std::string& name = "Ground") :
-			AYEntrant(name)
+			Entrant(name)
 		{
-			_sprite = addComponent<AYSpriteRenderComponent>("Ground");
+			_sprite = addComponent<SpriteRenderComponent>("Ground");
 
-			auto physicsSystem = GET_CAST_MODULE(AYPhysicsSystem, "PhysicsSystem");
-			auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+			auto physicsSystem = GET_CAST_MODULE(PhysicsSystem, "PhysicsSystem");
+			auto renderManager = GET_CAST_MODULE(RendererManager, "Renderer");
 
 			auto ecsEngine = GET_CAST_MODULE(ECS, "ECSEngine");
 			auto entity2 = ecsEngine->createEntity();
@@ -21,20 +21,20 @@ namespace ayt::engine::game
 
 			auto collider = std::make_shared<Box2DBoxCollider>(glm::vec2(500, 1));
 			collider->setOffset(glm::vec2(0, -0.5f));
-			collider->setCategoryBits(AYCategoryBits::Ground); // 地面类别
-			collider->setMaskBits(AYCategoryBits::BlockAll);     // 与所有类别碰撞
+			collider->setCategoryBits(CategoryBits::Ground); // 地面类别
+			collider->setMaskBits(CategoryBits::BlockAll);     // 与所有类别碰撞
 			collider->setFriction(0.7f);       // 足够的摩擦力
 			collider->setRestitution(0.1f);    // 轻微的弹性
 			_physics->addCollider(collider);
-			_physics->setBodyType(IAYPhysicsBody::BodyType::Static);
+			_physics->setBodyType(IPhysicsBody::BodyType::Static);
 		}
 
 		virtual void beginPlay()override
 		{
-			AYEntrant::beginPlay();
-			auto& reousceManager = AYResourceManager::getInstance();
+			Entrant::beginPlay();
+			auto& reousceManager = ResourceManager::getInstance();
 			auto tex = reousceManager.load<AYTexture>("@textures/checkerboard.png");
-			auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+			auto renderManager = GET_CAST_MODULE(RendererManager, "Renderer");
 			auto device = renderManager->getRenderDevice();
 			_texID = device->createTexture2D(tex->getPixelData(), tex->getWidth(), tex->getHeight(), tex->getChannels());
 			_sprite->setup_picture(
@@ -69,6 +69,6 @@ namespace ayt::engine::game
 		}
 	private:
 		GLuint _texID;
-		AYSpriteRenderComponent* _sprite;
+		SpriteRenderComponent* _sprite;
 	};
 }

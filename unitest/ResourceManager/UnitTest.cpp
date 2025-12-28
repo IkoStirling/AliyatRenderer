@@ -11,31 +11,31 @@ namespace ResourceManager {
 	void benchmark_ResourceCount()
 	{
 		{
-			auto x = AYResourceManager::getInstance().loadAsync<AYTexture>("12345");
+			auto x = ResourceManager::getInstance().loadAsync<AYTexture>("12345");
 		}
 		ModuleManager::getInstance().getModule("EventSystem")->update(1);
 		std::this_thread::sleep_for(std::chrono::seconds(2));
-		AYResourceManager::getInstance().printStats();
+		ResourceManager::getInstance().printStats();
 
-		AYAsyncTracker::getInstance().update(1);
-		AYResourceManager::getInstance().printStats();	
+		AsyncTracker::getInstance().update(1);
+		ResourceManager::getInstance().printStats();	
 	}
 
 	void benchmark_Tags()
 	{
 		//已经缓存过的资源直接从缓存中获取
-		auto x = AYResourceManager::getInstance().load<AYTexture>("12345");
-		AYResourceManager::getInstance().tagResource("12345", "test");
-		AYResourceManager::getInstance().printTaggedStats("test");
+		auto x = ResourceManager::getInstance().load<AYTexture>("12345");
+		ResourceManager::getInstance().tagResource("12345", "test");
+		ResourceManager::getInstance().printTaggedStats("test");
 
-		AYResourceManager::getInstance().unpinResource("12345");
-		AYResourceManager::getInstance().printStats();
+		ResourceManager::getInstance().unpinResource("12345");
+		ResourceManager::getInstance().printStats();
 	}
 
 	void benchmark_Persistent()
 	{
-		AYResourceManager::getInstance().printStats();
-		auto x = AYResourceManager::getInstance().load<AYTexture>("12345");
+		ResourceManager::getInstance().printStats();
+		auto x = ResourceManager::getInstance().load<AYTexture>("12345");
 		
 	}
 }

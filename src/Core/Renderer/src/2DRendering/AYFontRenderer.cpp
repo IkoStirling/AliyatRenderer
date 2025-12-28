@@ -32,13 +32,13 @@ void main() {
 }
 )";
 
-    AYFontRenderer::AYFontRenderer(AYRenderDevice* device, AYRenderer* renderer) :
+    FontRenderer::FontRenderer(RenderDevice* device, Renderer* renderer) :
         _device(device),
         _renderer(renderer)
     {
         //初始化FT库
         if (FT_Init_FreeType(&_ftLibrary)) {
-            AYLOG_ERR("[AYFontRenderer] Could not init FreeType Library");
+            AYLOG_ERR("[FontRenderer] Could not init FreeType Library");
             return;
         }
 
@@ -57,12 +57,12 @@ void main() {
         _createNewAtlas();
     }
 
-    AYFontRenderer::~AYFontRenderer()
+    FontRenderer::~FontRenderer()
     {
 
     }
 
-    void AYFontRenderer::shutdown()
+    void FontRenderer::shutdown()
     {
         if (_currentFace) {
             FT_Done_Face(_currentFace);
@@ -76,11 +76,11 @@ void main() {
         glDeleteProgram(_shaderProgram);
     }
 
-    bool AYFontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize, const std::map<std::string, float>& axisValues)
+    bool FontRenderer::loadFont(const std::string& fontPath, unsigned int fontSize, const std::map<std::string, float>& axisValues)
     {
         //加载字体文件到_currentFace
         if (FT_New_Face(_ftLibrary, fontPath.c_str(), 0, &_currentFace)) {
-            AYLOG_ERR("[AYFontRenderer] Failed to load font");
+            AYLOG_ERR("[FontRenderer] Failed to load font");
             FT_Done_FreeType(_ftLibrary);
             return false;
         }
@@ -90,7 +90,7 @@ void main() {
             // 获取可变轴信息
             FT_MM_Var* mm_var = nullptr;
             if (FT_Get_MM_Var(_currentFace, &mm_var)) {
-                AYLOG_ERR("[AYFontRenderer] Could not get MM Var data");
+                AYLOG_ERR("[FontRenderer] Could not get MM Var data");
                 FT_Done_Face(_currentFace);
                 return false;
             }
@@ -119,7 +119,7 @@ void main() {
 
             // 设置可变轴值
             if (FT_Set_Var_Design_Coordinates(_currentFace, mm_var->num_axis, coords.data())) {
-                AYLOG_ERR("[AYFontRenderer] Could not set variation coordinates");
+                AYLOG_ERR("[FontRenderer] Could not set variation coordinates");
                 FT_Done_MM_Var(_ftLibrary, mm_var);
                 FT_Done_Face(_currentFace);
                 return false;
@@ -137,7 +137,7 @@ void main() {
         return true;
     }
 
-    void AYFontRenderer::renderText(const std::string& text, float x, float y, float scale, const math::Vector3& color)
+    void FontRenderer::renderText(const std::string& text, float x, float y, float scale, const math::Vector3& color)
     {
         glfwMakeContextCurrent(_device->getWindow());
 
@@ -172,10 +172,10 @@ void main() {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         //状态验证
-        AY_CHECK_GL_ERROR("AYFontRenderer found somthing wrong");
+        AY_CHECK_GL_ERROR("FontRenderer found somthing wrong");
     }
 
-    void AYFontRenderer::getCharacterQuatInfo(const Character& ch, math::Vector3& render_pos, std::vector<math::Vector3>& result_pos, std::vector<math::Vector2>& result_uv, float scale)
+    void FontRenderer::getCharacterQuatInfo(const Character& ch, math::Vector3& render_pos, std::vector<math::Vector3>& result_pos, std::vector<math::Vector2>& result_uv, float scale)
     {
         float xpos = render_pos.x + ch.bearing.x * scale;
         float ypos = render_pos.y - ch.bearing.y * scale;  // 修正Y坐标计算
@@ -207,7 +207,7 @@ void main() {
         render_pos.x += (ch.advance >> 6) * scale;
     }
 
-    void AYFontRenderer::_renderCharacter(const Character& ch, float& x, float& y, float scale) {
+    void FontRenderer::_renderCharacter(const Character& ch, float& x, float& y, float scale) {
         float xpos = x + ch.bearing.x * scale;
         float ypos = y - ch.bearing.y * scale;  // 修正Y坐标计算
 
@@ -265,7 +265,7 @@ void main() {
         x += (ch.advance >> 6) * scale;
     }
 
-    void AYFontRenderer::_createNewAtlas()
+    void FontRenderer::_createNewAtlas()
     {
         TextureAtlas newAtlas;
         newAtlas.width = _atlasSize;
@@ -287,7 +287,7 @@ void main() {
         _atlases.push_back(newAtlas);
     }
 
-    bool AYFontRenderer::loadChar(FT_Face face, char32_t charCode)
+    bool FontRenderer::loadChar(FT_Face face, char32_t charCode)
     {
         if (FT_Load_Char(face, charCode, FT_LOAD_RENDER)) {
             return false;
@@ -297,7 +297,7 @@ void main() {
         return true;
     }
 
-    void AYFontRenderer::_reloadCharacters()
+    void FontRenderer::_reloadCharacters()
     {
         // 清空现有图集
         for (auto& atlas : _atlases) {
@@ -319,7 +319,7 @@ void main() {
         }
     }
 
-    bool AYFontRenderer::findChar(Character& theChar, char32_t charCode)
+    bool FontRenderer::findChar(Character& theChar, char32_t charCode)
     {
         for (const auto& atlas : _atlases) {
             auto it = atlas.characters.find(charCode);
@@ -331,7 +331,7 @@ void main() {
         return false;
     }
 
-    void AYFontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
+    void FontRenderer::_addCharToAtlas(FT_Face face, char32_t charCode) {
         // 检查是否已存在
         for (auto& atlas : _atlases) {
             if (atlas.characters.find(charCode) != atlas.characters.end()) {
@@ -406,7 +406,7 @@ void main() {
         _addCharToAtlas(face, charCode);
     }
 
-    bool AYFontRenderer::setVariationAxis(const std::string& axisName, float value)
+    bool FontRenderer::setVariationAxis(const std::string& axisName, float value)
     {
         if (!FT_IS_VARIATION(_currentFace)) {
             return false;
@@ -457,12 +457,12 @@ void main() {
         return true;
     }
 
-    bool AYFontRenderer::getVariationAxisRange(const std::string& axisName, float& min, float& max, float& def)
+    bool FontRenderer::getVariationAxisRange(const std::string& axisName, float& min, float& max, float& def)
     {
         return false;
     }
 
-    void AYFontRenderer::_setupShader()
+    void FontRenderer::_setupShader()
     {
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &textVertexShader, NULL);
@@ -481,7 +481,7 @@ void main() {
         glDeleteShader(fragmentShader);
     }
 
-    void AYFontRenderer::saveAtlas()
+    void FontRenderer::saveAtlas()
     {
         static int count = 0;
         for (auto& a : _atlases)

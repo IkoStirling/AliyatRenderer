@@ -3,17 +3,17 @@
 #include "Component/AYPhysicsComponent.h"
 namespace ayt::engine::game
 {
-	using ayt::engine::ecs::ECS;
+	using ::ayt::engine::ecs::ECS;
 
-	class AYEntrant : public AYGameObject
+	class Entrant : public GameObject
 	{
 	public:
-		AYEntrant(const std::string& name = "Entrant");
-		~AYEntrant();
+		Entrant(const std::string& name = "Entrant");
+		~Entrant();
 
 		virtual void beginPlay() override
 		{
-			AYGameObject::beginPlay();
+			GameObject::beginPlay();
 		}
 
 		virtual const math::Transform& getTransform() const override
@@ -62,7 +62,7 @@ namespace ayt::engine::game
 
 		EntityID getEntityID() { return _entity; }
 	protected:
-		AYPhysicsComponent* _physics = nullptr;
+		PhysicsComponent* _physics = nullptr;
 		EntityID _entity;
 	};
 }

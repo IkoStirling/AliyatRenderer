@@ -4,9 +4,9 @@
 #include <string>
 namespace ayt::engine::resource
 {
-    class IAYResourceLoader {
+    class IResourceLoader {
     public:
-        virtual ~IAYResourceLoader() = default;
-        virtual std::shared_ptr<IAYResource> load(const std::string& path) = 0;
+        virtual ~IResourceLoader() = default;
+        virtual std::shared_ptr<IResource> load(const std::string& path) = 0;
     };
 }

@@ -24,8 +24,8 @@ namespace ayt::engine::physics
 			}
 		}
 
-		/*IAYPhysical* entityA;
-		IAYPhysical* entityB;*/
+		/*IPhysical* entityA;
+		IPhysical* entityB;*/
 	};
 
 	REGISTER_EVENT_CLASS(Event_PhysicsBeginContact);

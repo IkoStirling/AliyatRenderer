@@ -7,10 +7,10 @@
 #include <mutex>
 namespace ayt::engine::render
 {
-    class AYRenderDevice {
+    class RenderDevice {
     public:
-        AYRenderDevice();
-        ~AYRenderDevice();
+        RenderDevice();
+        ~RenderDevice();
         bool init(int width, int height);
         void shutdown();
 
@@ -55,7 +55,7 @@ namespace ayt::engine::render
             bool generateMipmap = false;
         };
 
-        AYTextureManager* getTextureManager() { return _textureManager.get(); }
+        TextureManager* getTextureManager() { return _textureManager.get(); }
 
         TextureParams getDefaultTextureParams(TextureType type);
         TextureParams getDefaultTextureParamsB(TextureType type);
@@ -138,7 +138,7 @@ namespace ayt::engine::render
         // gl states
         std::unique_ptr<AYGLStateManager> _stateManager;
         std::unique_ptr<AYShaderManager> _shaderManager;
-        std::unique_ptr<AYTextureManager> _textureManager;
+        std::unique_ptr<TextureManager> _textureManager;
 
         AYGLStateTracker _previousState;
 

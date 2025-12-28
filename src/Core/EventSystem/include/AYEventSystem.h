@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Mod_EventSystem.h"
-#include "AYEventThreadPoolManager.h"
+#include "AYEventPool.h"
 
 
 namespace ayt::engine::event

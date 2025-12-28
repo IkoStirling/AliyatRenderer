@@ -11,7 +11,7 @@ namespace ayt::engine::resource
 	/*
 		移除所有非OpenGL操作，仅提供原始数据
 	*/
-	class AYTexture : public IAYResource
+	class AYTexture : public IResource
 	{
 		SUPPORT_MEMORY_POOL(AYTexture)
 			DECLARE_RESOURCE_CLASS(AYTexture, "textures")
@@ -81,7 +81,7 @@ namespace ayt::engine::resource
 			_height = _imageData.rows;
 			_channels = _imageData.channels();
 
-			IAYResource::load(filepath);
+			IResource::load(filepath);
 
 			_loaded = true;
 			return true;
@@ -96,7 +96,7 @@ namespace ayt::engine::resource
 		}
 		virtual bool reload(const std::string& filepath)override
 		{
-			IAYResource::reload(filepath);
+			IResource::reload(filepath);
 
 			return true;
 		}

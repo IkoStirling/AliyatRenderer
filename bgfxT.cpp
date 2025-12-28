@@ -85,8 +85,8 @@ int main() {
     bgfx::UniformHandle u_borderColor = bgfx::createUniform("u_borderColor", bgfx::UniformType::Vec4);
     bgfx::UniformHandle u_borderParams = bgfx::createUniform("u_borderParams", bgfx::UniformType::Vec4);
 
-    // 初始化AYBgfxCreator并加载Shader
-    AYBgfxCreator creator;
+    // 初始化BgfxCreator并加载Shader
+    BgfxCreator creator;
     creator.getProgram("vs_ui.sc|fs_ui.sc");
     bgfx::TextureInfo info;
     bgfx::TextureHandle texture = creator.loadTexture(

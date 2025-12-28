@@ -1,22 +1,22 @@
 ﻿#include "BaseRendering/Camera/AYCameraSystem.h"
-#include "BaseRendering/Camera/AY3DCamera.h"
+#include "BaseRendering/Camera/AYCamera3D.h"
 namespace ayt::engine::render
 {
-    const std::string AYCameraSystem::SCREEN_SPACE_CAMERA = "default";
+    const std::string CameraSystem::SCREEN_SPACE_CAMERA = "default";
 
-    AYCameraSystem::AYCameraSystem()
+    CameraSystem::CameraSystem()
     {
-        createCamera<IAYCamera>(SCREEN_SPACE_CAMERA);
+        createCamera<ICamera>(SCREEN_SPACE_CAMERA);
         switchCamera(SCREEN_SPACE_CAMERA);
     }
 
-    void AYCameraSystem::shutdown()
+    void CameraSystem::shutdown()
     {
         _cameras.clear();
         _cameraMap.clear();
     }
 
-    void AYCameraSystem::update(float delta_time)
+    void CameraSystem::update(float delta_time)
     {
         for (auto& [name, camera] : _cameras)
         {
@@ -25,14 +25,14 @@ namespace ayt::engine::render
         _activeCamera->onCameraMoved();
     }
 
-    void AYCameraSystem::addCamera(const std::string& name, IAYCamera* camera)
+    void CameraSystem::addCamera(const std::string& name, ICamera* camera)
     {
-        _cameras[++_maxIndex] = std::unique_ptr<IAYCamera>(camera);
+        _cameras[++_maxIndex] = std::unique_ptr<ICamera>(camera);
         _cameraMap[name] = _maxIndex;
     }
 
 
-    void AYCameraSystem::removeCamera(const std::string& name)
+    void CameraSystem::removeCamera(const std::string& name)
     {
         auto id = _cameraMap[name];
         if (id)
@@ -45,7 +45,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYCameraSystem::switchCamera(uint32_t cameraID)
+    void CameraSystem::switchCamera(uint32_t cameraID)
     {
         if (auto it = _cameras.find(cameraID); it != _cameras.end()) {
             _activeCamera = it->second.get();
@@ -53,7 +53,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYCameraSystem::switchCamera(const std::string& name)
+    void CameraSystem::switchCamera(const std::string& name)
     {
         // c++17写法
         if (auto it = _cameraMap.find(name); it != _cameraMap.end()) {
@@ -61,24 +61,24 @@ namespace ayt::engine::render
         }
     }
 
-    void AYCameraSystem::setViewportAll(const glm::vec4& viewport)
+    void CameraSystem::setViewportAll(const glm::vec4& viewport)
     {
         for (auto it = _cameras.begin(); it != _cameras.end(); it++) {
             it->second.get()->setViewport(viewport);
         }
     }
 
-    IAYCamera* AYCameraSystem::getActiveCamera() const
+    ICamera* CameraSystem::getActiveCamera() const
     {
         return _activeCamera;
     }
 
-    uint32_t AYCameraSystem::getActiveCameraID() const
+    uint32_t CameraSystem::getActiveCameraID() const
     {
         return _currentIndex;
     }
 
-    uint32_t AYCameraSystem::getCameraID(const std::string& name) const
+    uint32_t CameraSystem::getCameraID(const std::string& name) const
     {
         if (auto it = _cameraMap.find(name); it != _cameraMap.end()) {
             return it->second;
@@ -86,7 +86,7 @@ namespace ayt::engine::render
         return 0;
     }
 
-    IAYCamera* AYCameraSystem::getCamera(uint32_t cameraID) const
+    ICamera* CameraSystem::getCamera(uint32_t cameraID) const
     {
         if (auto it = _cameras.find(cameraID); it != _cameras.end()) {
             return it->second.get();
@@ -94,7 +94,7 @@ namespace ayt::engine::render
         return nullptr;
     }
 
-    IAYCamera* AYCameraSystem::getCamera(const std::string& name) const
+    ICamera* CameraSystem::getCamera(const std::string& name) const
     {
         if (auto it = _cameraMap.find(name); it != _cameraMap.end()) {
             return getCamera(it->second);

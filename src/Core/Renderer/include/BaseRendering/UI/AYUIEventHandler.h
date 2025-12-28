@@ -5,10 +5,10 @@ namespace ayt::engine::render
     // 不推荐这样写，但是不这样写太麻烦了
     using namespace ::ayt::engine::event;
 
-    class AYUIEventHandler
+    class UIEventHandler
     {
     public:
-        AYUIEventHandler(AYUIRenderer* uiRenderer) :
+        UIEventHandler(UIRenderer* uiRenderer) :
             _uiRenderer(uiRenderer)
         {
 
@@ -17,7 +17,7 @@ namespace ayt::engine::render
         void handleMouseMove(Event_MouseMove& event) {
             //std::cout << "Mouse move!\n";
             for (size_t i = 0; i < _uiRenderer->_uiElements.size(); ++i) {
-                AYUIRenderer::UIElement& elem = _uiRenderer->_uiElements[i];
+                UIRenderer::UIElement& elem = _uiRenderer->_uiElements[i];
                 auto& renderData = elem.renderData;
                 auto& interaction = elem.interaction;
                 auto& callback = elem.callback;
@@ -52,7 +52,7 @@ namespace ayt::engine::render
             if (event.button != 0) return; // 假设只处理左键，button==0
 
             for (size_t i = 0; i < _uiRenderer->_uiElements.size(); ++i) {
-                AYUIRenderer::UIElement& elem = _uiRenderer->_uiElements[i];
+                UIRenderer::UIElement& elem = _uiRenderer->_uiElements[i];
                 auto& renderData = elem.renderData;
                 auto& interaction = elem.interaction;
                 auto& callback = elem.callback;
@@ -78,7 +78,7 @@ namespace ayt::engine::render
             if (event.button != 0) return; // 只处理左键
 
             for (size_t i = 0; i < _uiRenderer->_uiElements.size(); ++i) {
-                AYUIRenderer::UIElement& elem = _uiRenderer->_uiElements[i];
+                UIRenderer::UIElement& elem = _uiRenderer->_uiElements[i];
                 auto& renderData = elem.renderData;
                 auto& interaction = elem.interaction;
                 auto& callback = elem.callback;
@@ -139,6 +139,6 @@ namespace ayt::engine::render
 
     private:
         std::vector<std::unique_ptr<EventToken>> _eventTokens;
-        AYUIRenderer* _uiRenderer = nullptr;
+        UIRenderer* _uiRenderer = nullptr;
     };
 }

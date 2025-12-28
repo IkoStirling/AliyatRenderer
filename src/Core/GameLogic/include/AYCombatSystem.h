@@ -4,10 +4,10 @@
 
 namespace ayt::engine::game
 {
-	class AYCombatSystem : public Mod_CombatSystem
+	class CombatSystem : public Mod_CombatSystem
 	{
 	public:
-		AYCombatSystem();
+		CombatSystem();
 		/*
 		 * 1、基础攻击 STAttackComponent
 		 * 2、蓄力攻击 STChargeAttackComponent
@@ -21,5 +21,5 @@ namespace ayt::engine::game
 		void shutdown() override {}
 	};
 
-	REGISTER_MODULE_CLASS("CombatSystem", AYCombatSystem);
+	REGISTER_MODULE_CLASS("CombatSystem", CombatSystem);
 }

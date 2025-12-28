@@ -22,14 +22,15 @@
 */
 namespace ayt::engine::render
 {
-    using ayt::engine::resource::Mesh;
+    using ::ayt::engine::resource::Mesh;
+    using ::ayt::engine::resource::Material;
 
-    class AYRenderer;
-    class AYCoreRenderer
+    class Renderer;
+    class CoreRenderer
     {
     public:
-        AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer);
-        ~AYCoreRenderer();
+        CoreRenderer(RenderDevice* device, Renderer* renderer);
+        ~CoreRenderer();
         void shutdown();
 
         enum class Space
@@ -104,7 +105,7 @@ namespace ayt::engine::render
         {
             size_t operator()(const BatchKey& key) const
             {
-                return AYCoreRenderer::_computeBatchKeyHash(key);
+                return CoreRenderer::_computeBatchKeyHash(key);
             }
         };
 
@@ -282,8 +283,8 @@ namespace ayt::engine::render
         void uploadInstanceData(const std::vector<math::Matrix4>& instances);
         void uploadIndexData(const std::vector<uint32_t>& indices);
     private:
-        AYRenderDevice* _device;
-        AYRenderer* _renderer;
+        RenderDevice* _device;
+        Renderer* _renderer;
 
         void _setupDebugShader();
         void _switchVertexBuffer();

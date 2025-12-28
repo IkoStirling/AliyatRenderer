@@ -16,19 +16,19 @@ namespace ayt::engine::render
 	/*
 		后期优化策略：深度预缓冲-》延迟渲染，前提：完善渲染管线
 	*/
-	class AYRendererManager : public Mod_Renderer
+	class RendererManager : public Mod_Renderer
 	{
 
 	public:
 		using GLuint = unsigned int;
-		using DebugDrawFunc = std::function<void(AYRenderer*, AYRenderDevice*)>;
+		using DebugDrawFunc = std::function<void(Renderer*, RenderDevice*)>;
 	public:
-		AYRendererManager() = default;
+		RendererManager() = default;
 		void init() override;
 		void shutdown() override;
 		void update(float delta_time) override;
-		void registerRenderable(IAYRenderable* renderable) override;
-		void removeRenderable(IAYRenderable* renderable) override;
+		void registerRenderable(IRenderable* renderable) override;
+		void removeRenderable(IRenderable* renderable) override;
 		int addDebugDraw(bool isUI, DebugDrawFunc callback);
 		void removeDebugDraw(int callbackId);
 
@@ -36,15 +36,15 @@ namespace ayt::engine::render
 		void setScreenCleanColor(const math::Vector3& color);
 		void switchRenderModle(bool isBgfx);
 
-		AYRenderContext& getRenderContext();
-		AYRenderDevice* getRenderDevice() { return _device.get(); };
-		AYRenderer* getRenderer() { return _renderer.get(); };
-		AYAnimationManager* get2DAnimationManager() { return _animeMana.get(); }
-		AYCameraSystem* getCameraSystem() { return _renderer->getCameraSystem(); }
+		RenderContext& getRenderContext();
+		RenderDevice* getRenderDevice() { return _device.get(); };
+		Renderer* getRenderer() { return _renderer.get(); };
+		AnimationManager* get2DAnimationManager() { return _animeMana.get(); }
+		CameraSystem* getCameraSystem() { return _renderer->getCameraSystem(); }
 
 		GLuint loadTexture(const std::string& path);
 
-		AYAnimatedSprite* create2DSprite(std::shared_ptr<AYSpriteAtlas> atlas);
+		AnimatedSprite* create2DSprite(std::shared_ptr<SpriteAtlas> atlas);
 	private:
 		void _renderAll(float delta_time);
 		void _renderAllB(float delta_time);
@@ -59,12 +59,12 @@ namespace ayt::engine::render
 		int _debugDrawCount = 0;
 	private:
 		bool _useBgfx = false;
-		std::unique_ptr<AYRenderDevice> _device = nullptr;      // OpenGL上下文管理
-		std::unique_ptr<AYRenderer> _renderer = nullptr;        // 具体绘制逻辑
-		std::unique_ptr<AYAnimationManager> _animeMana = nullptr;
+		std::unique_ptr<RenderDevice> _device = nullptr;      // OpenGL上下文管理
+		std::unique_ptr<Renderer> _renderer = nullptr;        // 具体绘制逻辑
+		std::unique_ptr<AnimationManager> _animeMana = nullptr;
 
 		WindowCloseCallback _onWindowClosed;
-		std::vector<IAYRenderable*> _renderables; //不管理可渲染对象
+		std::vector<IRenderable*> _renderables; //不管理可渲染对象
 
 		//math::Vector3 _color = { 0.f,0.f,0.f };
 		math::Vector3 _color = { 0.2f,0.3f,0.3f };
@@ -74,11 +74,11 @@ namespace ayt::engine::render
 		GLuint tex_ID = 0;
 		GLuint tex_ID2 = 0;
 		float delta;
-		class AYAnimatedSprite* _character;
-		std::shared_ptr<AYAnimatedSprite> orcSprite;
+		class AnimatedSprite* _character;
+		std::shared_ptr<AnimatedSprite> orcSprite;
 		std::shared_ptr<AYVideo> videos;
 		std::shared_ptr<AYModel> modelPmx;
 	};
 
-	REGISTER_MODULE_CLASS("Renderer", AYRendererManager)
+	REGISTER_MODULE_CLASS("Renderer", RendererManager)
 }

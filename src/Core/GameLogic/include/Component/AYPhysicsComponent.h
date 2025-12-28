@@ -5,10 +5,10 @@
 
 namespace ayt::engine::game
 {
-    using ::ayt::engine::physics::IAYPhysicsBody;
-    using ::ayt::engine::physics::IAYCollider;
+    using ::ayt::engine::physics::IPhysicsBody;
+    using ::ayt::engine::physics::ICollider;
 
-    class AYPhysicsComponent : public IAYComponent
+    class PhysicsComponent : public IComponent
     {
     public:
         virtual void beginPlay() override;
@@ -18,22 +18,22 @@ namespace ayt::engine::game
         virtual void endPlay() override {}
 
         // 基础物理控制
-        IAYPhysicsBody* getPhysicsBody() { return _physicsBody; }
+        IPhysicsBody* getPhysicsBody() { return _physicsBody; }
 
-        void setBodyType(IAYPhysicsBody::BodyType type);
-
-
-        void addCollider(std::shared_ptr<IAYCollider> collider);
+        void setBodyType(IPhysicsBody::BodyType type);
 
 
-        void removeCollider(std::shared_ptr<IAYCollider> collider);
+        void addCollider(std::shared_ptr<ICollider> collider);
+
+
+        void removeCollider(std::shared_ptr<ICollider> collider);
 
         void setPhysicsMode(bool is3D) { _is3D = is3D; }
 
     protected:
-        IAYPhysicsBody* _physicsBody = nullptr;
-        IAYPhysicsBody::BodyType _bodyType;
-        std::vector<std::shared_ptr<IAYCollider>> _colliders;
+        IPhysicsBody* _physicsBody = nullptr;
+        IPhysicsBody::BodyType _bodyType;
+        std::vector<std::shared_ptr<ICollider>> _colliders;
         bool _is3D = false;
 
 

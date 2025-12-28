@@ -2,10 +2,10 @@
 #include "BasePhy/IAYCollider.h"
 namespace ayt::engine::physics
 {
-    class AYBox2DCollider : public IAYCollider
+    class Box2DCollider : public ICollider
     {
     public:
-        explicit AYBox2DCollider(const math::Vector2& size = { 1.0f, 1.0f });
+        explicit Box2DCollider(const math::Vector2& size = { 1.0f, 1.0f });
 
         // ÐÎ×´ÀàÐÍ
         ShapeType getShapeType() const override { return ShapeType::Box2D; }

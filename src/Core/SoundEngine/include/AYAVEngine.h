@@ -14,11 +14,11 @@
 #include <atomic>
 namespace ayt::engine::resource
 {
-    class AYAVEngine : public Mod_AVEngine
+    class AVEngine : public Mod_AVEngine
     {
     public:
-        AYAVEngine();
-        ~AYAVEngine();
+        AVEngine();
+        ~AVEngine();
 
         void init() override;
         void shutdown() override;
@@ -87,7 +87,7 @@ namespace ayt::engine::resource
     private:
         struct ActiveAudioSource {
             std::weak_ptr<IAYAudioSource> audio;
-            std::shared_ptr<AYAudioPlayer> player;
+            std::shared_ptr<AudioPlayer> player;
             bool isPersistent = false; // 标记是否持久化(如背景音乐)
             time_t startTime = 0;      // 开始播放时间
         };
@@ -108,10 +108,10 @@ namespace ayt::engine::resource
         const int maxAudioPlayerNum = 10;
 
 
-        std::unique_ptr<AYSpectrumAnalyzer> _analyzer;
+        std::unique_ptr<SpectrumAnalyzer> _analyzer;
         std::vector<float> _currentSpectrum;
 
-        std::vector<std::shared_ptr<AYAudioPlayer>> _players;
+        std::vector<std::shared_ptr<AudioPlayer>> _players;
         std::unordered_map<std::string, std::weak_ptr<IAYAudioSource>> _audioCache;
         std::unordered_map<std::string, std::weak_ptr<AYVideo>> _videoCache;
         std::vector<ActiveAudioSource> _activeAudios;
@@ -152,5 +152,5 @@ namespace ayt::engine::resource
         std::string _preloadPath;
     };
 
-    REGISTER_MODULE_CLASS("AVEngine", AYAVEngine)
+    REGISTER_MODULE_CLASS("AVEngine", AVEngine)
 }

@@ -3,14 +3,14 @@
 namespace ayt::engine::resource
 {
     template <typename T, typename... Args>
-    struct STResourceLoadRequest
+    struct ResourceLoadRequest
     {
         std::string mPath;
         std::shared_ptr<std::promise<std::shared_ptr<T>>> mPromise;
         std::function<void(std::shared_ptr<T>)> mCallback;
         std::tuple<Args...> mArgs;
 
-        STResourceLoadRequest(std::string path,
+        ResourceLoadRequest(std::string path,
             std::shared_ptr<std::promise<std::shared_ptr<T>>> promise,
             std::function<void(std::shared_ptr<T>)> callback,
             std::tuple<Args...> args)
@@ -27,7 +27,7 @@ namespace ayt::engine::resource
         }
 
         // 移动构造函数
-        STResourceLoadRequest(STResourceLoadRequest&& other) noexcept
+        ResourceLoadRequest(ResourceLoadRequest&& other) noexcept
             : mPath(std::move(other.mPath)),
             mPromise(std::move(other.mPromise)),
             mCallback(std::move(other.mCallback)),
@@ -35,7 +35,7 @@ namespace ayt::engine::resource
         }
 
         // 移动赋值运算符
-        STResourceLoadRequest& operator=(STResourceLoadRequest&& other) noexcept {
+        ResourceLoadRequest& operator=(ResourceLoadRequest&& other) noexcept {
             if (this != &other) {
                 mPath = std::move(other.mPath);
                 mPromise = std::move(other.mPromise);
@@ -46,7 +46,7 @@ namespace ayt::engine::resource
         }
 
         // 禁用拷贝（因为包含promise）
-        STResourceLoadRequest(const STResourceLoadRequest&) = delete;
-        STResourceLoadRequest& operator=(const STResourceLoadRequest&) = delete;
+        ResourceLoadRequest(const ResourceLoadRequest&) = delete;
+        ResourceLoadRequest& operator=(const ResourceLoadRequest&) = delete;
     };
 }

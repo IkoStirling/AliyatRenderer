@@ -26,7 +26,7 @@ namespace ayt::engine::physics
 
     void Box2DPhysicsBody::setType(BodyType type)
     {
-        IAYPhysicsBody::setType(type);
+        IPhysicsBody::setType(type);
         b2Body_SetType(_bodyId, convertBodyType(type));
     }
 
@@ -78,7 +78,7 @@ namespace ayt::engine::physics
         b2Body_ApplyTorque(_bodyId, torque, true);
     }
 
-    void Box2DPhysicsBody::addCollider(IAYCollider* collider) {
+    void Box2DPhysicsBody::addCollider(ICollider* collider) {
         if (!collider || _colliderShapes.count(collider)) return;
 
         if (b2ShapeId shapeId = _createShape(collider); B2_IS_NON_NULL(shapeId)) {
@@ -86,7 +86,7 @@ namespace ayt::engine::physics
         }
     }
 
-    void Box2DPhysicsBody::removeCollider(IAYCollider* collider) {
+    void Box2DPhysicsBody::removeCollider(ICollider* collider) {
         auto it = _colliderShapes.find(collider);
         if (it != _colliderShapes.end()) {
             b2DestroyShape(it->second, true);
@@ -103,7 +103,7 @@ namespace ayt::engine::physics
         b2Body_ApplyMassFromShapes(_bodyId);
     }
 
-    bool Box2DPhysicsBody::hasCollider(IAYCollider* collider) const
+    bool Box2DPhysicsBody::hasCollider(ICollider* collider) const
     {
         return _colliderShapes.find(collider) != _colliderShapes.end();
     }
@@ -137,9 +137,9 @@ namespace ayt::engine::physics
         // Box2D 新API中不支持动态修改
     }
 
-    const std::vector<IAYCollider*> Box2DPhysicsBody::getColliders() const
+    const std::vector<ICollider*> Box2DPhysicsBody::getColliders() const
     {
-        std::vector<IAYCollider*> result;
+        std::vector<ICollider*> result;
         for (auto& [collider, shapeId] : _colliderShapes) {
             result.push_back(collider);
         }
@@ -147,7 +147,7 @@ namespace ayt::engine::physics
     }
 
 
-    b2ShapeId Box2DPhysicsBody::_createShape(IAYCollider* collider)
+    b2ShapeId Box2DPhysicsBody::_createShape(ICollider* collider)
     {
         if (!collider) return b2_nullShapeId;
 
@@ -176,7 +176,7 @@ namespace ayt::engine::physics
         return shapeId;
     }
 
-    void Box2DPhysicsBody::_updateShapeProperties(b2ShapeId shapeId, IAYCollider* collider)
+    void Box2DPhysicsBody::_updateShapeProperties(b2ShapeId shapeId, ICollider* collider)
     {
         if (!B2_IS_NON_NULL(shapeId) || !collider) return;
 

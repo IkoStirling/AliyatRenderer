@@ -11,7 +11,7 @@ namespace ayt::engine::render
 		//math::Vector4 color;    //顶点颜色
 	};
 
-	class AYGraphicGenerator
+	class GraphicGenerator
 	{
 	public:
 		// -------------VertexInfo----------------

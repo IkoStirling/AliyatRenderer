@@ -11,13 +11,13 @@
 #define SUPPORT_MEMORY_POOL(CLASS_NAME) \
 public: \
 	void* operator new(size_t size){ \
-		void* ptr = ayt::engine::pool::memory::MemoryPoolBaseProxy::useMemoryPool(size); \
+		void* ptr = ::ayt::engine::pool::memory::MemoryPoolBaseProxy::useMemoryPool(size); \
 		if (!ptr) throw std::bad_alloc(); \
 		memset(ptr, 0, size); \
 		return ptr; \
 	} \
 	void operator delete(void* ptr){ \
-		ayt::engine::pool::memory::MemoryPoolBaseProxy::freeMomory(reinterpret_cast<void*>(ptr), sizeof(CLASS_NAME)); \
+		::ayt::engine::pool::memory::MemoryPoolBaseProxy::freeMomory(reinterpret_cast<void*>(ptr), sizeof(CLASS_NAME)); \
 	} \
 	static void* operator new(size_t size, void* ptr) noexcept { \
 		return ::operator new(size, ptr); \

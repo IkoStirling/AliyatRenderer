@@ -1,15 +1,15 @@
 #include "2DRendering/AYSpriteAtlas.h"
 namespace ayt::engine::render
 {
-    AYSpriteAtlas::AYSpriteAtlas(GLuint textureId,
+    SpriteAtlas::SpriteAtlas(GLuint textureId,
         const math::Vector2& spriteSize,
         const math::Vector2& atlasSize)
         : _texture(textureId), _spriteSize(spriteSize), _atlasSize(atlasSize)
     {
     }
 
-    bool AYSpriteAtlas::addAnimation(const std::string& name,
-        std::shared_ptr<AYAnimationClip> clip)
+    bool SpriteAtlas::addAnimation(const std::string& name,
+        std::shared_ptr<AnimationClip> clip)
     {
         if (hasAnimation(name)) {
             return false;
@@ -18,7 +18,7 @@ namespace ayt::engine::render
         return true;
     }
 
-    std::shared_ptr<AYAnimationClip> AYSpriteAtlas::getAnimation(const std::string& name) const
+    std::shared_ptr<AnimationClip> SpriteAtlas::getAnimation(const std::string& name) const
     {
         return hasAnimation(name) ? _animations.find(name)->second : nullptr;
     }

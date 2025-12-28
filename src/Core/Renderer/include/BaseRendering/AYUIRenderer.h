@@ -8,12 +8,12 @@
 #include <memory>
 namespace ayt::engine::render
 {
-    class AYRenderer;
-    class AYUIEventHandler;
-    class AYUIRenderer {
+    class Renderer;
+    class UIEventHandler;
+    class UIRenderer {
     public:
-        AYUIRenderer(AYRenderDevice* device, AYRenderer* renderer);
-        ~AYUIRenderer();
+        UIRenderer(RenderDevice* device, Renderer* renderer);
+        ~UIRenderer();
 
         void init();
         void shutdown();
@@ -164,15 +164,15 @@ namespace ayt::engine::render
             std::cout << "=====================" << std::endl;
         }
 
-        std::unique_ptr<AYUIEventHandler> _handler;
-        AYRenderDevice* _device;
-        AYRenderer* _renderer;
+        std::unique_ptr<UIEventHandler> _handler;
+        RenderDevice* _device;
+        Renderer* _renderer;
 
         GLuint _uiVAO;
         GLuint _uiVBO;
         GLuint _uiEBO; // 添加元素缓冲对象用于索引绘制
 
-        friend class AYUIEventHandler;
+        friend class UIEventHandler;
         std::vector<UIBatch> _uiBatches;         // 批处理数据
         std::vector<UIElement> _uiElements;      // UI元素数据
 

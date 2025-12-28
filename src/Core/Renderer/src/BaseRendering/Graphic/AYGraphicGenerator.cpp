@@ -2,7 +2,7 @@
 #define M_PI 3.141592659f
 namespace ayt::engine::render
 {
-	std::vector<VertexInfo> AYGraphicGenerator::createBox(const math::Vector3& half_extents, bool wireframe)
+	std::vector<VertexInfo> GraphicGenerator::createBox(const math::Vector3& half_extents, bool wireframe)
 	{
 		std::vector<VertexInfo> vertices;
 
@@ -77,7 +77,7 @@ namespace ayt::engine::render
 		return vertices;
 	}
 
-	std::vector<math::Vector3> AYGraphicGenerator::createCircleV(float radius, int segments)
+	std::vector<math::Vector3> GraphicGenerator::createCircleV(float radius, int segments)
 	{
 		std::vector<math::Vector3> circleVertices;
 		for (int i = 0; i <= segments; i++) {
@@ -91,7 +91,7 @@ namespace ayt::engine::render
 		return circleVertices;
 	}
 
-	std::vector<math::Vector3> AYGraphicGenerator::createBoxV(const math::Vector3& half_extents)
+	std::vector<math::Vector3> GraphicGenerator::createBoxV(const math::Vector3& half_extents)
 	{
 		std::vector<math::Vector3> boxVertices;
 		boxVertices = {
@@ -109,7 +109,7 @@ namespace ayt::engine::render
 		return boxVertices;
 	}
 
-	std::vector<math::Vector3> AYGraphicGenerator::createRectV()
+	std::vector<math::Vector3> GraphicGenerator::createRectV()
 	{
 		std::vector<math::Vector3> rectVertices;
 		rectVertices = {
@@ -121,7 +121,7 @@ namespace ayt::engine::render
 		return rectVertices;
 	}
 
-	std::vector<uint32_t> AYGraphicGenerator::createCircleI(bool filled, int segments)
+	std::vector<uint32_t> GraphicGenerator::createCircleI(bool filled, int segments)
 	{
 		std::vector<uint32_t> indices;
 		if (filled) {
@@ -137,7 +137,7 @@ namespace ayt::engine::render
 		return indices;
 	}
 
-	std::vector<uint32_t> AYGraphicGenerator::createBoxI(bool wireframe)
+	std::vector<uint32_t> GraphicGenerator::createBoxI(bool wireframe)
 	{
 		if (wireframe)
 		{
@@ -168,7 +168,7 @@ namespace ayt::engine::render
 	}
 
 
-	std::vector<uint32_t> AYGraphicGenerator::createRectI(bool filled)
+	std::vector<uint32_t> GraphicGenerator::createRectI(bool filled)
 	{
 		std::vector<uint32_t> indices;
 		if (filled) {
@@ -180,12 +180,12 @@ namespace ayt::engine::render
 		return indices;
 	}
 
-	math::Vector3 AYGraphicGenerator::create2DN()
+	math::Vector3 GraphicGenerator::create2DN()
 	{
 		return math::Vector3(0.0f, 0.0f, 1.0f);
 	}
 
-	std::vector<math::Vector3> AYGraphicGenerator::createBoxN()
+	std::vector<math::Vector3> GraphicGenerator::createBoxN()
 	{
 		std::vector<math::Vector3> normals;
 		normals = {
@@ -199,7 +199,7 @@ namespace ayt::engine::render
 		return normals;
 	}
 
-	std::vector<math::Vector2> AYGraphicGenerator::createRectT()
+	std::vector<math::Vector2> GraphicGenerator::createRectT()
 	{
 		return {
 			{0.0f, 0.0f},  // 左下

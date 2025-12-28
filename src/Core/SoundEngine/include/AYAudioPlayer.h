@@ -9,7 +9,7 @@ namespace ayt::engine::resource
         同一时间只能播放一个音源
         位于独立线程，与静态音源区分（静态是指内存加载方式，并非播放属性）
     */
-    class AYAudioPlayer
+    class AudioPlayer
     {
     public:
         using PlaybackFinishedCallback = std::function<void()>;
@@ -19,8 +19,8 @@ namespace ayt::engine::resource
             Paused
         };
 
-        explicit AYAudioPlayer(bool enable3D = false);
-        ~AYAudioPlayer();
+        explicit AudioPlayer(bool enable3D = false);
+        ~AudioPlayer();
 
         // 基础控制
         bool play(const std::shared_ptr<IAYAudioSource>& source, bool loop = false);

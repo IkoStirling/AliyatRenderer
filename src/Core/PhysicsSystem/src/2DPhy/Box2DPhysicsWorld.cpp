@@ -29,7 +29,7 @@ namespace ayt::engine::physics
         b2World_SetGravity(_worldId, b2Gravity);
     }
 
-    bool Box2DPhysicsWorld::raycast(const math::Vector3& start, const math::Vector3& end, STRaycastResult& hit)
+    bool Box2DPhysicsWorld::raycast(const math::Vector3& start, const math::Vector3& end, RaycastResult& hit)
     {
         b2Vec2 b2Start = { start.x, start.y };
         b2Vec2 b2End = { end.x, end.y };
@@ -47,7 +47,7 @@ namespace ayt::engine::physics
         return false;
     }
 
-    bool Box2DPhysicsWorld::raycast(const math::Vector3& start, const math::Vector3& end, std::function<bool(const STRaycastResult&)> callback)
+    bool Box2DPhysicsWorld::raycast(const math::Vector3& start, const math::Vector3& end, std::function<bool(const RaycastResult&)> callback)
     {
         b2Vec2 b2Start = { start.x, start.y };
         b2Vec2 b2End = { end.x, end.y };
@@ -61,7 +61,7 @@ namespace ayt::engine::physics
 
         if (result.hit)
         {
-            STRaycastResult hit;
+            RaycastResult hit;
             fillRaycastResult(result, hit);
             return callback(hit);
         }
@@ -69,7 +69,7 @@ namespace ayt::engine::physics
         return false;
     }
 
-    IAYPhysicsBody* Box2DPhysicsWorld::createBody(EntityID entity, const math::Vector3& position, float rotation, IAYPhysicsBody::BodyType type)
+    IPhysicsBody* Box2DPhysicsWorld::createBody(EntityID entity, const math::Vector3& position, float rotation, IPhysicsBody::BodyType type)
     {
         std::lock_guard<std::mutex> lock(_bbodyMutex);
         auto [iter, inserted] = _bodies.try_emplace(entity, std::make_unique<Box2DPhysicsBody>(_worldId, math::Vector2(position), rotation, type));
@@ -89,9 +89,9 @@ namespace ayt::engine::physics
         }
     }
 
-    std::vector<IAYPhysicsBody*> Box2DPhysicsWorld::getAllBodies()
+    std::vector<IPhysicsBody*> Box2DPhysicsWorld::getAllBodies()
     {
-        std::vector<IAYPhysicsBody*> res;
+        std::vector<IPhysicsBody*> res;
 
         for (auto& [id, body] : _bodies)
         {
@@ -111,7 +111,7 @@ namespace ayt::engine::physics
         return emptyTransform;
     }
 
-    Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IAYPhysicsBody* body, float maxDistance)
+    Box2DPhysicsWorld::GroundContactInfo Box2DPhysicsWorld::checkGroundContact(IPhysicsBody* body, float maxDistance)
     {
         GroundContactInfo info;
         info.isGrounded = false;
@@ -142,15 +142,15 @@ namespace ayt::engine::physics
 
             // 从形状获取刚体
             b2BodyId groundBodyId = b2Shape_GetBody(result.shapeId);
-            info.groundBody = static_cast<IAYPhysicsBody*>(b2Body_GetUserData(groundBodyId));
+            info.groundBody = static_cast<IPhysicsBody*>(b2Body_GetUserData(groundBodyId));
         }
 
         return info;
     }
 
-    STRaycastResult Box2DPhysicsWorld::raycastToGround(const math::Vector2& point, float maxDistance)
+    RaycastResult Box2DPhysicsWorld::raycastToGround(const math::Vector2& point, float maxDistance)
     {
-        STRaycastResult hit;
+        RaycastResult hit;
 
         // 向下发射射线
         b2Vec2 origin = { point.x, point.y };
@@ -183,12 +183,12 @@ namespace ayt::engine::physics
         return filter;
     }
 
-    void Box2DPhysicsWorld::fillRaycastResult(const b2RayResult& result, STRaycastResult& hit)
+    void Box2DPhysicsWorld::fillRaycastResult(const b2RayResult& result, RaycastResult& hit)
     {
         if (result.hit)
         {
             b2BodyId bodyId = b2Shape_GetBody(result.shapeId);
-            hit.body = static_cast<IAYPhysicsBody*>(b2Body_GetUserData(bodyId));
+            hit.body = static_cast<IPhysicsBody*>(b2Body_GetUserData(bodyId));
             hit.point = math::Vector3(result.point.x, result.point.y, 0);
             hit.normal = math::Vector3(result.normal.x, result.normal.y, 0);
             hit.fraction = result.fraction;

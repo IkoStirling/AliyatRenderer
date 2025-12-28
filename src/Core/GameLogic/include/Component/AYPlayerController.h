@@ -4,9 +4,9 @@
 
 namespace ayt::engine::game
 {
-    class AYPhysicsComponent;
+    class PhysicsComponent;
 
-    class AYPlayerController : public IAYComponent
+    class PlayerController : public IComponent
     {
     public:
         void beginPlay() override;
@@ -50,7 +50,7 @@ namespace ayt::engine::game
         bool _shouldJump = false;
 
     protected:
-        AYPhysicsComponent* _physics = nullptr;
+        PhysicsComponent* _physics = nullptr;
 
         void _updateState();
         

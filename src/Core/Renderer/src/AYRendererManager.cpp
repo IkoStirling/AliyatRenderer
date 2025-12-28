@@ -10,9 +10,9 @@ namespace ayt::engine::render
 	using namespace ::ayt::engine::modules;
 	using ::ayt::engine::path::Path;
 
-	void AYRendererManager::init()
+	void RendererManager::init()
 	{
-		_device = std::make_unique<AYRenderDevice>();
+		_device = std::make_unique<RenderDevice>();
 		if (!_device->init(1920, 1080))
 			return;
 
@@ -27,9 +27,9 @@ namespace ayt::engine::render
 
 		setScreenCleanColor(_color);
 
-		_renderer = std::make_unique<AYRenderer>(getRenderDevice());
+		_renderer = std::make_unique<Renderer>(getRenderDevice());
 
-		_animeMana = std::make_unique<AYAnimationManager>(getRenderDevice());
+		_animeMana = std::make_unique<AnimationManager>(getRenderDevice());
 
 		tex_ID = loadTexture("@textures/500_497.png");
 		tex_ID2 = loadTexture("@textures/1918_1100.png");
@@ -93,14 +93,14 @@ namespace ayt::engine::render
 		auto id = _renderer->getUIRenderer()->createRectangle(math::Vector3(1, 1, 0) * ppm, math::Vector3(3, 1, 0) * ppm, math::Vector4(1));
 		_renderer->getUIRenderer()->setText(id, "button");
 		_renderer->getUIRenderer()->setOnClicked(id, []() {
-			AYLOG_INFO("[AYRendererManager] clicked!");
+			AYLOG_INFO("[RendererManager] clicked!");
 			});
 		_renderer->getUIRenderer()->setOnUnhovered(id, [id, ui = _renderer->getUIRenderer()]() {
-			AYLOG_INFO("[AYRendererManager] unhovered!");
+			AYLOG_INFO("[RendererManager] unhovered!");
 			ui->setColor(id, math::Vector4(1, 1, 1, 1));
 			});
 		_renderer->getUIRenderer()->setOnHovered(id, [id, ui = _renderer->getUIRenderer()]() {
-			AYLOG_INFO("[AYRendererManager] hovered!");
+			AYLOG_INFO("[RendererManager] hovered!");
 			ui->setColor(id, math::Vector4(0, 0, 0, 1));
 			});
 		_renderer->getUIRenderer()->createText(str, math::Vector3(1, 1, 0) * ppm, math::Vector4(1, 1, 1, 1), 1.f);
@@ -111,7 +111,7 @@ namespace ayt::engine::render
 
 	}
 
-	void AYRendererManager::update(float delta_time)
+	void RendererManager::update(float delta_time)
 	{
 		if (glfwWindowShouldClose(_device->getWindow()))
 		{
@@ -141,14 +141,14 @@ namespace ayt::engine::render
 		glfwPollEvents();
 	}
 
-	void AYRendererManager::shutdown()
+	void RendererManager::shutdown()
 	{
 		_animeMana->shutdown();
 		_renderer->shutdown();
 		_device->shutdown();
 	}
 
-	void AYRendererManager::_renderAll(float delta_time)
+	void RendererManager::_renderAll(float delta_time)
 	{
 		_renderer->clearScreen(_color.x, _color.y, _color.z, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -171,7 +171,7 @@ namespace ayt::engine::render
 		_renderer->getUIRenderer()->endUIFrame();
 	}
 
-	void AYRendererManager::_renderAllB(float delta_time)
+	void RendererManager::_renderAllB(float delta_time)
 	{
 		bgfx::touch(0);
 
@@ -186,7 +186,7 @@ namespace ayt::engine::render
 		bgfx::frame();
 	}
 
-	void AYRendererManager::_updateCameraActive(float delta_time)
+	void RendererManager::_updateCameraActive(float delta_time)
 	{
 		auto* cameraSystem = getCameraSystem();
 		auto* camera = cameraSystem->getActiveCamera();
@@ -202,7 +202,7 @@ namespace ayt::engine::render
 		_device->getGLStateManager()->setViewport(viewport.x, viewport.y, viewport.z, viewport.w);
 	}
 
-	void AYRendererManager::_debugDraw(bool isUI)
+	void RendererManager::_debugDraw(bool isUI)
 	{
 		if (isUI)
 		{
@@ -221,17 +221,17 @@ namespace ayt::engine::render
 
 	}
 
-	void AYRendererManager::registerRenderable(IAYRenderable* renderable)
+	void RendererManager::registerRenderable(IRenderable* renderable)
 	{
 		_renderables.push_back(renderable);
 	}
 
-	void AYRendererManager::removeRenderable(IAYRenderable* renderable)
+	void RendererManager::removeRenderable(IRenderable* renderable)
 	{
 		std::erase(_renderables, renderable);
 	}
 
-	int AYRendererManager::addDebugDraw(bool isUI, DebugDrawFunc callback)
+	int RendererManager::addDebugDraw(bool isUI, DebugDrawFunc callback)
 	{
 		int id;
 		if (!_freeDebugDraws.empty())
@@ -250,7 +250,7 @@ namespace ayt::engine::render
 		return id;
 	}
 
-	void AYRendererManager::removeDebugDraw(int callbackId)
+	void RendererManager::removeDebugDraw(int callbackId)
 	{
 		if (auto it = _debugDrawsScreen.find(callbackId); it != _debugDrawsScreen.end())
 		{
@@ -264,12 +264,12 @@ namespace ayt::engine::render
 		}
 	}
 
-	void AYRendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClosed)
+	void RendererManager::setWindowCloseCallback(WindowCloseCallback onWindowClosed)
 	{
 		_onWindowClosed = onWindowClosed;
 	}
 
-	void AYRendererManager::setScreenCleanColor(const math::Vector3& color)
+	void RendererManager::setScreenCleanColor(const math::Vector3& color)
 	{
 		_color = color;
 		uint8_t r = static_cast<uint8_t>(color.r * 255.0f);
@@ -279,7 +279,7 @@ namespace ayt::engine::render
 		bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, r << 24 | g << 16 | b << 8 | a, 1.f, 0);
 	}
 
-	void AYRendererManager::switchRenderModle(bool isBgfx)
+	void RendererManager::switchRenderModle(bool isBgfx)
 	{
 		_useBgfx = isBgfx;
 		if (isBgfx)
@@ -294,16 +294,16 @@ namespace ayt::engine::render
 		}
 	}
 
-	AYRenderContext& AYRendererManager::getRenderContext()
+	RenderContext& RendererManager::getRenderContext()
 	{
 		return _renderer->getRenderContext();
 	}
 
-	GLuint AYRendererManager::loadTexture(const std::string& path)
+	GLuint RendererManager::loadTexture(const std::string& path)
 	{
-		auto tex = AYResourceManager::getInstance().load<AYTexture>(path);
+		auto tex = ResourceManager::getInstance().load<AYTexture>(path);
 		if (!tex || !tex->isLoaded()) {
-			AYLOG_ERR("[AYRendererManager] Failed to load texture: {}", path);
+			AYLOG_ERR("[RendererManager] Failed to load texture: {}", path);
 			return 0;
 		}
 		return _device->createTexture2D(
@@ -313,12 +313,12 @@ namespace ayt::engine::render
 			tex->getChannels());
 	}
 
-	AYAnimatedSprite* AYRendererManager::create2DSprite(std::shared_ptr<AYSpriteAtlas> atlas)
+	AnimatedSprite* RendererManager::create2DSprite(std::shared_ptr<SpriteAtlas> atlas)
 	{
-		return new AYAnimatedSprite(_renderer->getSpriteRenderer(), atlas);
+		return new AnimatedSprite(_renderer->getSpriteRenderer(), atlas);
 	}
 
-	void AYRendererManager::_displayDebugInfo()
+	void RendererManager::_displayDebugInfo()
 	{
 		constexpr float speed = 200.f;
 		static math::Vector2 pos = math::Vector2(200);
@@ -355,15 +355,15 @@ namespace ayt::engine::render
 		}
 		for (int i = 1; i < 20; i++) {
 			for (int j = 1; j < 20; j++) {
-				dr->drawBox3D({ math::Vector3(i * -10.f + 10.f, 0, j * -10.f + 10.f) }, math::Vector3(0.5f), mat3, false, AYCoreRenderer::Space::World);
+				dr->drawBox3D({ math::Vector3(i * -10.f + 10.f, 0, j * -10.f + 10.f) }, math::Vector3(0.5f), mat3, false, CoreRenderer::Space::World);
 			}
 		}
 
-		dr->drawArrow2D({}, math::Vector3(0), math::Vector3(2, 2, 0) * ppm, 0.3f * ppm, math::Vector4(1), AYCoreRenderer::Space::Screen);
+		dr->drawArrow2D({}, math::Vector3(0), math::Vector3(2, 2, 0) * ppm, 0.3f * ppm, math::Vector4(1), CoreRenderer::Space::Screen);
 		//dr->drawLine2D(math::Vector2(0), math::Vector2(5,5), math::Vector4(1));
 
 		// 死区框
-		//dr->drawRect2D({ math::Vector3(0, -0.5f, 0)}, math::Vector2(500, 1), mat2, true, AYCoreRenderer::Space::World);
+		//dr->drawRect2D({ math::Vector3(0, -0.5f, 0)}, math::Vector2(500, 1), mat2, true, CoreRenderer::Space::World);
 
 		//_renderer->getSpriteRenderer()->drawSprite(
 		//	tex_ID,
@@ -378,7 +378,7 @@ namespace ayt::engine::render
 		//	math::Vector2(0.5f, 0.5f)       // 原点(旋转中心)
 		//);
 
-		auto model = AYResourceManager::getInstance().load<AYModel>("@models/suzanne.fbx");
+		auto model = ResourceManager::getInstance().load<AYModel>("@models/suzanne.fbx");
 		for (int i = 1; i < 100; i++) {
 			_renderer->getCoreRenderer()->drawMesh(
 				{
@@ -387,7 +387,7 @@ namespace ayt::engine::render
 				},
 				model->getMeshes()[0],
 				false,
-				AYCoreRenderer::Space::World
+				CoreRenderer::Space::World
 			);
 		}
 
@@ -403,13 +403,13 @@ namespace ayt::engine::render
 					},
 					meshes[i],
 					false,
-					AYCoreRenderer::Space::World
+					CoreRenderer::Space::World
 				);
 			}
 		}
 
 
-		/*dr->drawCircle2D({ math::Vector3(50.f) }, 100.f, 2, 32, false, AYCoreRenderer::Space::World);
-		dr->drawCircle2D({ math::Vector3(-50.f) }, 100.f, 2, 32, true, AYCoreRenderer::Space::World);*/
+		/*dr->drawCircle2D({ math::Vector3(50.f) }, 100.f, 2, 32, false, CoreRenderer::Space::World);
+		dr->drawCircle2D({ math::Vector3(-50.f) }, 100.f, 2, 32, true, CoreRenderer::Space::World);*/
 	}
 }

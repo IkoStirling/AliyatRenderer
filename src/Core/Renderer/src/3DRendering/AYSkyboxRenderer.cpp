@@ -54,7 +54,7 @@ namespace ayt::engine::render
          1.0f, -1.0f,  1.0f
     };
 
-    AYSkyboxRenderer::AYSkyboxRenderer(AYRenderDevice* device, AYRenderer* renderer) :
+    SkyboxRenderer::SkyboxRenderer(RenderDevice* device, Renderer* renderer) :
         _device(device),
         _renderer(renderer),
         _configPath("@config/Renderer/SkyboxRenderer/config.ini")
@@ -65,11 +65,11 @@ namespace ayt::engine::render
         loadSkybox({ "@textures/skyBox.png" }, SkyboxType::Galaxy);
     }
 
-    AYSkyboxRenderer::~AYSkyboxRenderer()
+    SkyboxRenderer::~SkyboxRenderer()
     {
     }
 
-    void AYSkyboxRenderer::shutdown()
+    void SkyboxRenderer::shutdown()
     {
         _saveSkyboxRendererConfigINI();
         if (_skyboxVAO) glDeleteVertexArrays(1, &_skyboxVAO);
@@ -78,7 +78,7 @@ namespace ayt::engine::render
         if (_equirectangularTexture) glDeleteTextures(1, &_equirectangularTexture);
     }
 
-    bool AYSkyboxRenderer::loadSkybox(const std::vector<std::string>& faces, SkyboxType type)
+    bool SkyboxRenderer::loadSkybox(const std::vector<std::string>& faces, SkyboxType type)
     {
         setType(type);
 
@@ -102,7 +102,7 @@ namespace ayt::engine::render
         return false;
     }
 
-    void AYSkyboxRenderer::render(const AYRenderContext& context)
+    void SkyboxRenderer::render(const RenderContext& context)
     {
         if (_type == SkyboxType::Cube_6Faces && !_cubemapTexture) return;
         if (_type == SkyboxType::Equirectangular && !_equirectangularTexture) return;
@@ -136,7 +136,7 @@ namespace ayt::engine::render
             1, GL_FALSE, glm::value_ptr(view));
 
         math::Matrix4 projection;
-        if (camera->getType() == IAYCamera::Type::ORTHOGRAPHIC_2D) {
+        if (camera->getType() == ICamera::Type::ORTHOGRAPHIC_2D) {
             auto viewport = camera->getViewport();
             float aspect = viewport.z / viewport.w;
             projection = glm::perspective(glm::radians(90.0f), aspect, 0.1f, 1000.0f);
@@ -178,7 +178,7 @@ namespace ayt::engine::render
         _device->restoreGLState();
     }
 
-    void AYSkyboxRenderer::_setupSkyboxGeometry()
+    void SkyboxRenderer::_setupSkyboxGeometry()
     {
         _skyboxVBO = _device->createVertexBuffer(&skyboxVertices, sizeof(skyboxVertices));
         _skyboxVAO = _device->createVertexArray();
@@ -191,7 +191,7 @@ namespace ayt::engine::render
         glBindVertexArray(0);
     }
 
-    GLuint AYSkyboxRenderer::_loadCubemap(const std::vector<std::string>& faces)
+    GLuint SkyboxRenderer::_loadCubemap(const std::vector<std::string>& faces)
     {
         GLuint textureID;
         glGenTextures(1, &textureID);
@@ -199,7 +199,7 @@ namespace ayt::engine::render
 
         for (unsigned int i = 0; i < faces.size(); i++) {
             std::string rface = Path::resolve(faces[i]);
-            auto tex = AYResourceManager::getInstance().load<AYTexture>(rface);
+            auto tex = ResourceManager::getInstance().load<AYTexture>(rface);
             if (!tex || !tex->isLoaded()) {
                 std::cerr << "Failed to load texture: " << rface << std::endl;
                 return 0;
@@ -225,9 +225,9 @@ namespace ayt::engine::render
         return textureID;
     }
 
-    GLuint AYSkyboxRenderer::_loadEquirectangularMap(const std::string& path) {
+    GLuint SkyboxRenderer::_loadEquirectangularMap(const std::string& path) {
         std::string rpath = Path::resolve(path);
-        auto tex = AYResourceManager::getInstance().load<AYTexture>(rpath);
+        auto tex = ResourceManager::getInstance().load<AYTexture>(rpath);
         if (!tex || !tex->isLoaded()) {
             std::cerr << "Failed to load texture: " << rpath << std::endl;
             return 0;
@@ -246,12 +246,12 @@ namespace ayt::engine::render
         return textureID;
     }
 
-    GLuint AYSkyboxRenderer::_getSkyboxShader(bool reload)
+    GLuint SkyboxRenderer::_getSkyboxShader(bool reload)
     {
         return _device->getShaderV(_shaderName, reload, _vertexPath, _fragmentPath);
     }
 
-    void AYSkyboxRenderer::_loadSkyboxRendererConfigINI()
+    void SkyboxRenderer::_loadSkyboxRendererConfigINI()
     {
         _config.loadFromFile(_configPath, ConfigType::INI);
 
@@ -262,7 +262,7 @@ namespace ayt::engine::render
             Path::Engine::getPresetShaderPath() + std::string("SkyboxRenderer/skybox.frag"));
     }
 
-    void AYSkyboxRenderer::_saveSkyboxRendererConfigINI()
+    void SkyboxRenderer::_saveSkyboxRendererConfigINI()
     {
         _config.set("shader name.base", _shaderName);
         _config.set("shader path.base_vertex", _vertexPath);

@@ -8,14 +8,14 @@ namespace ayt::engine::game
     using namespace ::ayt::engine::physics;
     using namespace ::ayt::engine::input;
 
-    void AYPlayerController::beginPlay() {
-        _physics = getOwner()->getComponent<AYPhysicsComponent>();
+    void PlayerController::beginPlay() {
+        _physics = getOwner()->getComponent<PhysicsComponent>();
         if (!_physics) {
-            _physics = getOwner()->addComponent<AYPhysicsComponent>("_physics");
+            _physics = getOwner()->addComponent<PhysicsComponent>("_physics");
         }
     }
 
-    void AYPlayerController::update(float delta_time) {
+    void PlayerController::update(float delta_time) {
         if (!_physics) return;
 
         // 更新跳跃冷却时间
@@ -36,19 +36,19 @@ namespace ayt::engine::game
         _updateAnimation();
     }
 
-    void AYPlayerController::endPlay(){}
+    void PlayerController::endPlay(){}
 
-    void AYPlayerController::jump() { _shouldJump = true; }
+    void PlayerController::jump() { _shouldJump = true; }
 
-    void AYPlayerController::setMoveSpeed(float speed) { _moveSpeed = speed; }
-    void AYPlayerController::setRunSpeed(float speed) { _runSpeed = speed; }
-    void AYPlayerController::setJumpForce(float force) { _jumpForce = force; }
+    void PlayerController::setMoveSpeed(float speed) { _moveSpeed = speed; }
+    void PlayerController::setRunSpeed(float speed) { _runSpeed = speed; }
+    void PlayerController::setJumpForce(float force) { _jumpForce = force; }
 
-    void AYPlayerController::_updateState()
+    void PlayerController::_updateState()
     {
         _lastState = _currentState;
         auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
-        auto physicsSystem = GET_CAST_MODULE(AYPhysicsSystem, "PhysicsSystem");
+        auto physicsSystem = GET_CAST_MODULE(PhysicsSystem, "PhysicsSystem");
         auto* body = _physics->getPhysicsBody();
         if (auto* bbody = dynamic_cast<Box2DPhysicsBody*>(body))
         {
@@ -92,7 +92,7 @@ namespace ayt::engine::game
         }
     }
 
-    math::Vector2 AYPlayerController::_getMovementInput() {
+    math::Vector2 PlayerController::_getMovementInput() {
         auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
         float x = inputSystem->getAxisValue(GamepadAxisInput{ GamepadAxis::LeftX })
             + (inputSystem->getUniversalInputState(KeyboardInput{ GLFW_KEY_D }) ? 1.f : 0.f)
@@ -108,7 +108,7 @@ namespace ayt::engine::game
 
     }
 
-    void AYPlayerController::_updateMovement(const math::Vector2& input, float deltaTime) {
+    void PlayerController::_updateMovement(const math::Vector2& input, float deltaTime) {
         float targetSpeedX = input.x * (_currentState == PlayerState::Running ? _runSpeed : _moveSpeed);
 
         // 3. 平滑过渡当前速度
@@ -128,7 +128,7 @@ namespace ayt::engine::game
         {
             time -= 5.f;
             auto pos = _physics->getPhysicsBody()->getPosition();
-            AYLOG_INFO("[AYPlayerController] \tInput:({:.4f},{:.4f})\tVelocity:({:.4f},{:.4f})\tPosition({:.4f},{:.4f})",
+            AYLOG_INFO("[PlayerController] \tInput:({:.4f},{:.4f})\tVelocity:({:.4f},{:.4f})\tPosition({:.4f},{:.4f})",
                 input.x, input.y,
                 newVelX,
                 _physics->getPhysicsBody()->getLinearVelocity().y,
@@ -138,7 +138,7 @@ namespace ayt::engine::game
 
     }
 
-    bool AYPlayerController::_shouldJumpNow()
+    bool PlayerController::_shouldJumpNow()
     {
         auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
 
@@ -159,7 +159,7 @@ namespace ayt::engine::game
         return shouldJump;
     }
 
-    void AYPlayerController::_updateJump()
+    void PlayerController::_updateJump()
     {
 
         // 如果还在跳跃冷却中，不允许跳跃
@@ -179,7 +179,7 @@ namespace ayt::engine::game
         }
     }
 
-    void AYPlayerController::_updateAnimation()
+    void PlayerController::_updateAnimation()
     {
     }
 }

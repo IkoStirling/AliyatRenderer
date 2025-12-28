@@ -1,8 +1,8 @@
 ﻿#include "Component/AYCameraComponent.h"
 #include "AYEntrant.h"
 #include "AYRendererManager.h"
-#include "BaseRendering/Camera/AY2DCamera.h"
-#include "BaseRendering/Camera/AY3DCamera.h"
+#include "BaseRendering/Camera/AYCamera2D.h"
+#include "BaseRendering/Camera/AYCamera3D.h"
 #include <random>
 
 namespace {
@@ -18,107 +18,107 @@ namespace ayt::engine::game
 {
     using namespace render;
 
-    AYCameraComponent::AYCameraComponent(IAYCamera* camera) :
+    CameraComponent::CameraComponent(ICamera* camera) :
         _boundCamera(camera)
     {
-        auto cameraSystem = GET_CAST_MODULE(AYRendererManager, "Renderer")->getCameraSystem();
+        auto cameraSystem = GET_CAST_MODULE(RendererManager, "Renderer")->getCameraSystem();
 
         if (_boundCamera) {
             cameraSystem->addCamera(getOwner()->getName() + "_" + _name, _boundCamera);
         }
     }
 
-    void AYCameraComponent::beginPlay()
+    void CameraComponent::beginPlay()
     {
         if (!_boundCamera)
-            setupCamera(IAYCamera::Type::PERSPECTIVE_3D);
+            setupCamera(ICamera::Type::PERSPECTIVE_3D);
         switch (_boundCamera->getType()) {
-        case IAYCamera::Type::ORTHOGRAPHIC_2D:
-            static_cast<AY2DCamera*>(_boundCamera)->setCurrentPosition(static_cast<AYEntrant*>(getOwner())->getPosition());
+        case ICamera::Type::ORTHOGRAPHIC_2D:
+            static_cast<Camera2D*>(_boundCamera)->setCurrentPosition(static_cast<Entrant*>(getOwner())->getPosition());
             break;
-        case IAYCamera::Type::PERSPECTIVE_3D:
+        case ICamera::Type::PERSPECTIVE_3D:
             break;
         }
     }
 
-    void AYCameraComponent::update(float delta_time)
+    void CameraComponent::update(float delta_time)
     {
         if (!_boundCamera || !getOwner()) return;
 
         // 获取所有者变换
-        auto& trans = static_cast<AYEntrant*>(getOwner())->getTransform();
+        auto& trans = static_cast<Entrant*>(getOwner())->getTransform();
 
         // 根据相机类型更新
         switch (_boundCamera->getType()) {
-        case IAYCamera::Type::ORTHOGRAPHIC_2D:
-            _update2DCamera(trans);
+        case ICamera::Type::ORTHOGRAPHIC_2D:
+            _updateCamera2D(trans);
             break;
-        case IAYCamera::Type::PERSPECTIVE_3D:
+        case ICamera::Type::PERSPECTIVE_3D:
             _update3DCamera(trans);
             break;
         }
     }
 
-    void AYCameraComponent::endPlay()
+    void CameraComponent::endPlay()
     {
 
     }
 
-    void AYCameraComponent::bindCamera(IAYCamera* camera)
+    void CameraComponent::bindCamera(ICamera* camera)
     {
         _boundCamera = camera;
     }
 
-    void AYCameraComponent::activate()
+    void CameraComponent::activate()
     {
-        auto cameraSystem = GET_CAST_MODULE(AYRendererManager, "Renderer")->getCameraSystem();
+        auto cameraSystem = GET_CAST_MODULE(RendererManager, "Renderer")->getCameraSystem();
         cameraSystem->switchCamera(getOwner()->getName() + "_" + _name);
     }
 
-    IAYCamera* AYCameraComponent::getCamera() const
+    ICamera* CameraComponent::getCamera() const
     {
         return _boundCamera;
     }
 
-    void AYCameraComponent::shake(float intensity, float duration)
+    void CameraComponent::shake(float intensity, float duration)
     {
         _shakeIntensity = intensity;
         _shakeDuration = duration;
         _shakeTimer = 0.0f;
     }
 
-    void AYCameraComponent::setZoom(float zoom)
+    void CameraComponent::setZoom(float zoom)
     {
         if (!_boundCamera) return;
         _boundCamera->setZoom(zoom);
     }
 
-    void AYCameraComponent::setupCamera(IAYCamera::Type type)
+    void CameraComponent::setupCamera(ICamera::Type type)
     {
-        auto cameraSystem = GET_CAST_MODULE(AYRendererManager, "Renderer")->getCameraSystem();
+        auto cameraSystem = GET_CAST_MODULE(RendererManager, "Renderer")->getCameraSystem();
 
         switch (type)
         {
-        case IAYCamera::Type::PERSPECTIVE_3D:
-            _boundCamera = cameraSystem->createCamera<AY3DCamera>(
+        case ICamera::Type::PERSPECTIVE_3D:
+            _boundCamera = cameraSystem->createCamera<Camera3D>(
                 getOwner()->getName() + "_" + _name
             );
             break;
-        case IAYCamera::Type::ORTHOGRAPHIC_2D:
-            _boundCamera = cameraSystem->createCamera<AY2DCamera>(
+        case ICamera::Type::ORTHOGRAPHIC_2D:
+            _boundCamera = cameraSystem->createCamera<Camera2D>(
                 getOwner()->getName() + "_" + _name
             );
             break;
-        case IAYCamera::Type::CUSTOM:
+        case ICamera::Type::CUSTOM:
             break;
         default:
             break;
         }
     }
 
-    void AYCameraComponent::_update2DCamera(const math::Transform& ownerTrans)
+    void CameraComponent::_updateCamera2D(const math::Transform& ownerTrans)
     {
-        auto* cam2D = dynamic_cast<AY2DCamera*>(_boundCamera);
+        auto* cam2D = dynamic_cast<Camera2D*>(_boundCamera);
         if (!cam2D) return;
 
         // 直接同步位置（可根据需求添加偏移）
@@ -126,16 +126,16 @@ namespace ayt::engine::game
         cam2D->setTargetPosition(glm::vec2(pos.x, pos.y));
     }
 
-    void AYCameraComponent::_update3DCamera(const math::Transform& ownerTrans)
+    void CameraComponent::_update3DCamera(const math::Transform& ownerTrans)
     {
-        auto* cam3D = dynamic_cast<AY3DCamera*>(_boundCamera);
+        auto* cam3D = dynamic_cast<Camera3D*>(_boundCamera);
         if (!cam3D) return;
 
         // 示例：第三人称跟随
         auto& pos = ownerTrans.position;
         glm::vec3 offset(0, 20.0f, -500.0f); // 后方上方偏移
         //glm::vec3 tp(pos + offset); // 后方上方偏移
-        //std::cout << "[AYCameraComponent] camera target location [" << tp.x << ", " << tp.y << ", " << tp.z << "]\n";
+        //std::cout << "[CameraComponent] camera target location [" << tp.x << ", " << tp.y << ", " << tp.z << "]\n";
         cam3D->setTargetPosition(pos + offset);
         cam3D->setLookAt(
             pos + offset,
@@ -144,7 +144,7 @@ namespace ayt::engine::game
         );
     }
 
-    void AYCameraComponent::_applyShakeEffect(float delta)
+    void CameraComponent::_applyShakeEffect(float delta)
     {
         _shakeTimer += delta;
         float progress = _shakeTimer / _shakeDuration;

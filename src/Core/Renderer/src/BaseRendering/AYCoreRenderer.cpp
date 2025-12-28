@@ -26,7 +26,7 @@ namespace ayt::engine::render
         return oss.str();
     }
 
-    AYCoreRenderer::AYCoreRenderer(AYRenderDevice* device, AYRenderer* renderer) :
+    CoreRenderer::CoreRenderer(RenderDevice* device, Renderer* renderer) :
         _device(device),
         _renderer(renderer),
         _configPath("@config/Renderer/CoreRenderer/config.ini")
@@ -37,16 +37,16 @@ namespace ayt::engine::render
         _renderBatches.reserve(8);
     }
 
-    AYCoreRenderer::~AYCoreRenderer()
+    CoreRenderer::~CoreRenderer()
     {
     }
 
-    void AYCoreRenderer::shutdown()
+    void CoreRenderer::shutdown()
     {
         _saveCoreRendererConfigINI();
     }
 
-    bool AYCoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices)
+    bool CoreRenderer::ensureVertexBufferCapacity(size_t requiredVertices)
     {
         if (requiredVertices > _vertexBufferSize) {
             // 按vector类似方案扩容
@@ -64,7 +64,7 @@ namespace ayt::engine::render
         return false;
     }
 
-    bool AYCoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
+    bool CoreRenderer::ensureInstanceBufferCapacity(size_t requiredInstances)
     {
         if (requiredInstances > _instanceBufferSize) {
             _instanceBufferSize = std::max(_instanceBufferSize * 2,
@@ -82,7 +82,7 @@ namespace ayt::engine::render
         return false;
     }
 
-    bool AYCoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
+    bool CoreRenderer::ensureIndexBufferCapacity(size_t requiredIndices)
     {
         if (requiredIndices > _indexBufferSize) {
             _indexBufferSize = std::max(_indexBufferSize * 2,
@@ -100,7 +100,7 @@ namespace ayt::engine::render
         return false;
     }
 
-    void AYCoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices)
+    void CoreRenderer::uploadVertexData(const std::vector<VertexInfo>& vertices)
     {
         if (vertices.empty()) return;
 
@@ -122,7 +122,7 @@ namespace ayt::engine::render
         AY_CHECK_GL_ERROR("Upload Vertex Data failed");
     }
 
-    void AYCoreRenderer::uploadInstanceData(const std::vector<math::Matrix4>& instances)
+    void CoreRenderer::uploadInstanceData(const std::vector<math::Matrix4>& instances)
     {
         if (instances.empty()) return;
 
@@ -143,7 +143,7 @@ namespace ayt::engine::render
         AY_CHECK_GL_ERROR("Upload Instance Data failed");
     }
 
-    void AYCoreRenderer::uploadIndexData(const std::vector<uint32_t>& indices)
+    void CoreRenderer::uploadIndexData(const std::vector<uint32_t>& indices)
     {
         if (indices.empty()) return;
 
@@ -166,7 +166,7 @@ namespace ayt::engine::render
         AY_CHECK_GL_ERROR("Upload Index Data failed");
     }
 
-    AYCoreRenderer::InstanceGroup* AYCoreRenderer::findOrCreateInstanceGroup(
+    CoreRenderer::InstanceGroup* CoreRenderer::findOrCreateInstanceGroup(
         InstanceType type,
         int expectedVertexCount,
         int expectedIndexCount,
@@ -194,13 +194,13 @@ namespace ayt::engine::render
         return &_currentBatch->instanceGroups.back();
     }
 
-    void AYCoreRenderer::addVertexData(const std::vector<VertexInfo>& vertices, InstanceGroup* group)
+    void CoreRenderer::addVertexData(const std::vector<VertexInfo>& vertices, InstanceGroup* group)
     {
         group->vertexCount = vertices.size();
         _currentBatch->vertices.insert(_currentBatch->vertices.end(), vertices.begin(), vertices.end());
     }
 
-    void AYCoreRenderer::addIndexData(const std::vector<uint32_t>& indices, InstanceGroup* group) const
+    void CoreRenderer::addIndexData(const std::vector<uint32_t>& indices, InstanceGroup* group) const
     {
         // 调整索引偏移量
         auto indicesC = indices;
@@ -213,19 +213,19 @@ namespace ayt::engine::render
         _currentBatch->indices.insert(_currentBatch->indices.end(), indicesC.begin(), indicesC.end());
     }
 
-    void AYCoreRenderer::drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space)
+    void CoreRenderer::drawLine2D(const VertexInfo& start, const VertexInfo& end, Space space)
     {
         switchBatchDraw(space, PrimitiveType::Lines, false);
         _currentBatch->vertices.push_back(start);
         _currentBatch->vertices.push_back(end);
     }
 
-    void AYCoreRenderer::drawLine2D(const math::Vector2& start, const math::Vector2& end, const math::Vector4& color)
+    void CoreRenderer::drawLine2D(const math::Vector2& start, const math::Vector2& end, const math::Vector4& color)
     {
         drawLine2D({ {start,0},color }, { {end,0},color }, Space::Screen);
     }
 
-    void AYCoreRenderer::drawTriangle(const VertexInfo& p1,
+    void CoreRenderer::drawTriangle(const VertexInfo& p1,
         const VertexInfo& p2,
         const VertexInfo& p3,
         Space space)
@@ -236,7 +236,7 @@ namespace ayt::engine::render
         _currentBatch->vertices.push_back(p3);
     }
 
-    void AYCoreRenderer::drawTriangle(const VertexInfo* vertices,
+    void CoreRenderer::drawTriangle(const VertexInfo* vertices,
         const std::vector<std::array<int, 3>>& indices,
         Space space)
     {
@@ -251,7 +251,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYCoreRenderer::drawArrow2D(const math::Transform& transform,
+    void CoreRenderer::drawArrow2D(const math::Transform& transform,
         const math::Vector3& from,
         const math::Vector3& to,
         float headSize,
@@ -274,7 +274,7 @@ namespace ayt::engine::render
     }
 
 
-    void AYCoreRenderer::drawRect2D(const math::Transform& transform,
+    void CoreRenderer::drawRect2D(const math::Transform& transform,
         const math::Vector2& size,
         uint32_t materialID,
         bool wireframe,
@@ -298,19 +298,19 @@ namespace ayt::engine::render
         if (group->vertexCount == -1)
         {
             std::vector<VertexInfo> vertices;
-            auto rectPoints = AYGraphicGenerator::createRectV();
-            auto normal = AYGraphicGenerator::create2DN();
+            auto rectPoints = GraphicGenerator::createRectV();
+            auto normal = GraphicGenerator::create2DN();
             for (const auto& point : rectPoints) {
                 vertices.push_back({ point, normal });
             }
             addVertexData(vertices, group);
 
-            auto indices = AYGraphicGenerator::createRectI(!wireframe);
+            auto indices = GraphicGenerator::createRectI(!wireframe);
             addIndexData(indices, group);
         }
     }
 
-    void AYCoreRenderer::drawCircle2D(const math::Transform& transform,
+    void CoreRenderer::drawCircle2D(const math::Transform& transform,
         float radius,
         uint32_t materialID,
         int segments,
@@ -334,21 +334,21 @@ namespace ayt::engine::render
 
         if (group->vertexCount == -1)
         {
-            auto normal = AYGraphicGenerator::create2DN();
+            auto normal = GraphicGenerator::create2DN();
             std::vector<VertexInfo> vertices;
             vertices.push_back({ math::Vector3(0.0f, 0.0f, 0.0f), normal }); // 中心点
-            auto circlePoints = AYGraphicGenerator::createCircleV(radius, segments);
+            auto circlePoints = GraphicGenerator::createCircleV(radius, segments);
             for (const auto& point : circlePoints) {
                 vertices.push_back({ point, normal });
             }
             addVertexData(vertices, group);
 
-            auto indices = AYGraphicGenerator::createCircleI(!wireframe, segments);
+            auto indices = GraphicGenerator::createCircleI(!wireframe, segments);
             addIndexData(indices, group);
         }
     }
 
-    void AYCoreRenderer::drawBox3D(const math::Transform& transform,
+    void CoreRenderer::drawBox3D(const math::Transform& transform,
         const math::Vector3& half_extents,
         uint32_t materialID,
         bool wireframe,
@@ -371,15 +371,15 @@ namespace ayt::engine::render
 
         if (group->vertexCount == -1)
         {
-            auto vertices = AYGraphicGenerator::createBox(half_extents, wireframe);
+            auto vertices = GraphicGenerator::createBox(half_extents, wireframe);
             addVertexData(vertices, group);
 
-            auto indices = AYGraphicGenerator::createBoxI(wireframe);
+            auto indices = GraphicGenerator::createBoxI(wireframe);
             addIndexData(indices, group);
         }
     }
 
-    void AYCoreRenderer::drawMesh(const math::Transform& transform,
+    void CoreRenderer::drawMesh(const math::Transform& transform,
         const Mesh& mesh,
         bool wireframe,
         Space space)
@@ -432,46 +432,46 @@ namespace ayt::engine::render
         }
     }
 
-    //void AYCoreRenderer::drawSphere3D(const math::Transform& transform, float radius, const math::Vector4& color, int segments)
+    //void CoreRenderer::drawSphere3D(const math::Transform& transform, float radius, const math::Vector4& color, int segments)
     //{
     //}
     //
-    //void AYCoreRenderer::drawCapsule3D(const math::Transform& transform, float radius, float half_height, const math::Vector4& color, int segments)
+    //void CoreRenderer::drawCapsule3D(const math::Transform& transform, float radius, float half_height, const math::Vector4& color, int segments)
     //{
     //}
     //
-    //void AYCoreRenderer::drawCylinder3D(const math::Transform& transform, float radius, float halfHeight, const math::Vector4& color, int segments)
+    //void CoreRenderer::drawCylinder3D(const math::Transform& transform, float radius, float halfHeight, const math::Vector4& color, int segments)
     //{
     //}
     //
-    //void AYCoreRenderer::drawMesh3D(const math::Transform& transform, const std::vector<math::Vector3>& vertices, const std::vector<uint32_t>& indices, const math::Vector4& color, bool wireframe)
+    //void CoreRenderer::drawMesh3D(const math::Transform& transform, const std::vector<math::Vector3>& vertices, const std::vector<uint32_t>& indices, const math::Vector4& color, bool wireframe)
     //{
     //}
 
-    void AYCoreRenderer::beginDraw()
+    void CoreRenderer::beginDraw()
     {
         _switchVertexBuffer();
         _renderBatches.clear();
         _currentBatch = nullptr;
     }
 
-    void AYCoreRenderer::endDraw()
+    void CoreRenderer::endDraw()
     {
         endBatchDraw();
 
         flushWithRecover();
     }
 
-    uint32_t AYCoreRenderer::getCurrentCameraID(Space space)
+    uint32_t CoreRenderer::getCurrentCameraID(Space space)
     {
         uint32_t id = 0;
         auto& context = _renderer->getRenderContext();
         switch (space)
         {
-        case AYCoreRenderer::Space::Screen:
-            id = _renderer->getCameraSystem()->getCameraID(AYCameraSystem::SCREEN_SPACE_CAMERA);
+        case CoreRenderer::Space::Screen:
+            id = _renderer->getCameraSystem()->getCameraID(CameraSystem::SCREEN_SPACE_CAMERA);
             break;
-        case AYCoreRenderer::Space::World:
+        case CoreRenderer::Space::World:
             id = context.currentCameraID;
             break;
         default:
@@ -480,7 +480,7 @@ namespace ayt::engine::render
         return id;
     }
 
-    void AYCoreRenderer::switchBatchDraw(Space space,
+    void CoreRenderer::switchBatchDraw(Space space,
         PrimitiveType p_type,
         bool useInstanced,
         Material::Type m_type,
@@ -512,11 +512,11 @@ namespace ayt::engine::render
         }
     }
 
-    void AYCoreRenderer::endBatchDraw()
+    void CoreRenderer::endBatchDraw()
     {
     }
 
-    void AYCoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batch)
+    void CoreRenderer::flushInstanced(const BatchKey& key, const RenderBatch& batch)
     {
         if (batch.vertices.empty())
             return;
@@ -622,7 +622,7 @@ namespace ayt::engine::render
         _device->restoreGLState();
     }
 
-    void AYCoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batch)
+    void CoreRenderer::flushImmediate(const BatchKey& key, const RenderBatch& batch)
     {
         if (batch.vertices.empty())
             return;
@@ -653,7 +653,7 @@ namespace ayt::engine::render
         _device->restoreGLState();
     }
 
-    void AYCoreRenderer::flushWithRecover()
+    void CoreRenderer::flushWithRecover()
     {
         // 先渲染不透明物体
         for (auto& [key, batch] : _renderBatches) {
@@ -666,12 +666,12 @@ namespace ayt::engine::render
 
     }
 
-    void AYCoreRenderer::renderTransparentMesh(const TransparentMeshInstance& transMesh)
+    void CoreRenderer::renderTransparentMesh(const TransparentMeshInstance& transMesh)
     {
 
     }
 
-    void AYCoreRenderer::_loadCoreRendererConfigINI()
+    void CoreRenderer::_loadCoreRendererConfigINI()
     {
         _config.loadFromFile(_configPath, ConfigType::INI);
 
@@ -687,7 +687,7 @@ namespace ayt::engine::render
             Path::Engine::getPresetShaderPath() + std::string("CoreRenderer/base.frag"));
     }
 
-    void AYCoreRenderer::_saveCoreRendererConfigINI()
+    void CoreRenderer::_saveCoreRendererConfigINI()
     {
         _config.set("shader name.instance", _instance);
         _config.set("shader name.base", _base);
@@ -699,17 +699,17 @@ namespace ayt::engine::render
         _config.saveConfig(_configPath);
     }
 
-    GLuint AYCoreRenderer::_getBaseShader(bool reload)
+    GLuint CoreRenderer::_getBaseShader(bool reload)
     {
         return _device->getShaderV(_base, reload, _baseVertexPath, _baseFragmentPath);
     }
 
-    GLuint AYCoreRenderer::_getInstanceShader(bool reload)
+    GLuint CoreRenderer::_getInstanceShader(bool reload)
     {
         return _device->getShaderV(_instance, reload, _instanceVertexPath, _instanceFragmentPath);
     }
 
-    void AYCoreRenderer::_setupDebugShader()
+    void CoreRenderer::_setupDebugShader()
     {
         const size_t INITIAL_VERTEX_BUFFER_SIZE = sizeof(VertexInfo) * _vertexBufferSize;
         const size_t INITIAL_INSTANCE_BUFFER_SIZE = sizeof(math::Matrix4) * _instanceBufferSize;
@@ -729,7 +729,7 @@ namespace ayt::engine::render
         _switchVertexBuffer();
     }
 
-    void AYCoreRenderer::_switchVertexBuffer()
+    void CoreRenderer::_switchVertexBuffer()
     {
         // 切换当前缓冲区索引
         _vbo = _vboDouble[_currentBufferIndex];
@@ -762,7 +762,7 @@ namespace ayt::engine::render
         glBindVertexArray(0);
     }
 
-    size_t AYCoreRenderer::_computeBatchKeyHash(const BatchKey& key)
+    size_t CoreRenderer::_computeBatchKeyHash(const BatchKey& key)
     {
         size_t seed = 0;
 

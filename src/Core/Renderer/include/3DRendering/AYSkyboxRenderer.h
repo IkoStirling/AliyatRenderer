@@ -6,13 +6,13 @@
 #include <string>
 namespace ayt::engine::render
 {
-    class AYRenderer;
-    class AYRenderContext;
+    class Renderer;
+    class RenderContext;
 
-    class AYSkyboxRenderer {
+    class SkyboxRenderer {
     public:
-        AYSkyboxRenderer(AYRenderDevice* device, AYRenderer* renderer);
-        ~AYSkyboxRenderer();
+        SkyboxRenderer(RenderDevice* device, Renderer* renderer);
+        ~SkyboxRenderer();
         void shutdown();
     public:
         enum class SkyboxType {
@@ -22,15 +22,15 @@ namespace ayt::engine::render
             Galaxy
         };
 
-        void render(const AYRenderContext& context);
+        void render(const RenderContext& context);
 
         bool loadSkybox(const std::vector<std::string>& faces, SkyboxType type = SkyboxType::Cube_6Faces);
 
         void setType(SkyboxType type) { _type = type; }
         SkyboxType getType() const { return _type; }
     private:
-        AYRenderDevice* _device;
-        AYRenderer* _renderer;
+        RenderDevice* _device;
+        Renderer* _renderer;
         SkyboxType _type;
 
         GLuint _cubemapTexture = 0;

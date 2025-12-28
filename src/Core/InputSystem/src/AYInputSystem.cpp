@@ -5,13 +5,13 @@ namespace ayt::engine::input
 	using namespace ::ayt::engine::event;
 	using ayt::engine::render::Mod_Renderer;
 
-	AYInputSystem::AYInputSystem() :
+	InputSystem::InputSystem() :
 		_currentMousePos(0.f),
 		_lastMousePos(0.f)
 	{
 	}
 
-	AYInputSystem::~AYInputSystem()
+	InputSystem::~InputSystem()
 	{
 		if (auto window = _device->getWindow()) {
 			glfwSetKeyCallback(window, nullptr);
@@ -21,7 +21,7 @@ namespace ayt::engine::input
 		}
 	}
 
-	void AYInputSystem::init()
+	void InputSystem::init()
 	{
 		_device = GET_CAST_MODULE(Mod_Renderer, "Renderer")->getRenderDevice();
 		if (!_device)
@@ -34,17 +34,17 @@ namespace ayt::engine::input
 		//glfwSetWindowUserPointer(window, this); 跟随窗口实例全局唯一，可能在多处使用造成管理混乱
 
 		// 设置GLFW回调
-		glfwSetKeyCallback(window, &AYInputSystem::keyCallbackWrapper);
-		glfwSetMouseButtonCallback(window, &AYInputSystem::mouseButtonCallbackWrapper);
-		glfwSetCursorPosCallback(window, &AYInputSystem::cursorPosCallbackWrapper);
-		glfwSetScrollCallback(window, &AYInputSystem::scrollCallbackWrapper);
+		glfwSetKeyCallback(window, &InputSystem::keyCallbackWrapper);
+		glfwSetMouseButtonCallback(window, &InputSystem::mouseButtonCallbackWrapper);
+		glfwSetCursorPosCallback(window, &InputSystem::cursorPosCallbackWrapper);
+		glfwSetScrollCallback(window, &InputSystem::scrollCallbackWrapper);
 
 		initGamepad();
 		for (int i = 0; i < GLFW_GAMEPAD_BUTTON_DPAD_LEFT + 1; i++)
 			getInputState(GamepadButtonInput{ i });
 	}
 
-	void AYInputSystem::update(float delta_time)
+	void InputSystem::update(float delta_time)
 	{
 		_lastMousePos = _currentMousePos;
 
@@ -64,7 +64,7 @@ namespace ayt::engine::input
 
 	}
 
-	void AYInputSystem::shutdown()
+	void InputSystem::shutdown()
 	{
 		std::unordered_map<
 			UniversalInput,
@@ -72,7 +72,7 @@ namespace ayt::engine::input
 			UniversalInputHash,
 			UniversalInputEqual
 		> is;
-		std::unordered_map<std::string, std::shared_ptr<AYInputBinding>> kb;
+		std::unordered_map<std::string, std::shared_ptr<InputBinding>> kb;
 		std::unordered_map<int, bool> gs;
 
 		kb.swap(_keyBindings);
@@ -80,7 +80,7 @@ namespace ayt::engine::input
 		gs.swap(_gamepadStatusCache);
 	}
 
-	InputState& AYInputSystem::getInputState(const UniversalInput& input)
+	InputState& InputSystem::getInputState(const UniversalInput& input)
 	{
 		auto& state = _inputStates[input];
 
@@ -95,26 +95,26 @@ namespace ayt::engine::input
 		return state;
 	}
 
-	const InputState* AYInputSystem::findInputState(const UniversalInput& input) const
+	const InputState* InputSystem::findInputState(const UniversalInput& input) const
 	{
 		auto it = _inputStates.find(input);
 		return it != _inputStates.end() ? &it->second : nullptr;
 	}
 
-	bool AYInputSystem::isKeyPressed(int key) const
+	bool InputSystem::isKeyPressed(int key) const
 	{
 		return getUniversalInputState(KeyboardInput{ key });
 	}
 
-	void AYInputSystem::addInputMapping(const std::string& name, std::shared_ptr<AYInputBinding> binding) {
+	void InputSystem::addInputMapping(const std::string& name, std::shared_ptr<InputBinding> binding) {
 		_keyBindings[name] = binding;
 	}
 
-	void AYInputSystem::removeInputMapping(const std::string& name) {
+	void InputSystem::removeInputMapping(const std::string& name) {
 		_keyBindings.erase(name);
 	}
 
-	bool AYInputSystem::isActionActive(const std::string& bindingName, const std::string& actionName) const {
+	bool InputSystem::isActionActive(const std::string& bindingName, const std::string& actionName) const {
 		auto it = _keyBindings.find(bindingName);
 		if (it != _keyBindings.end()) {
 			return it->second->isActive(actionName, *this);
@@ -122,7 +122,7 @@ namespace ayt::engine::input
 		return false;
 	}
 
-	bool AYInputSystem::isActionActive(const std::string& fullActionName) const
+	bool InputSystem::isActionActive(const std::string& fullActionName) const
 	{
 		if (size_t dotPos = fullActionName.find('.'); dotPos != std::string::npos) {
 			std::string bindingName = fullActionName.substr(0, dotPos);
@@ -132,7 +132,7 @@ namespace ayt::engine::input
 		return false;
 	}
 
-	float AYInputSystem::getLongPressHoldTime(const std::string& bindingName, const std::string& actionName) const
+	float InputSystem::getLongPressHoldTime(const std::string& bindingName, const std::string& actionName) const
 	{
 		if (auto it = _keyBindings.find(bindingName); it != _keyBindings.end()) {
 			if (!it->second->hasAction(actionName))
@@ -143,7 +143,7 @@ namespace ayt::engine::input
 		return 0.0f;
 	}
 
-	float AYInputSystem::getLongPressHoldTime(const std::string& fullActionName) const
+	float InputSystem::getLongPressHoldTime(const std::string& fullActionName) const
 	{
 		if (size_t dotPos = fullActionName.find('.'); dotPos != std::string::npos) {
 			std::string bindingName = fullActionName.substr(0, dotPos);
@@ -153,7 +153,7 @@ namespace ayt::engine::input
 		return 0.0f;
 	}
 
-	bool AYInputSystem::isActionJustReleased(const std::string& bindingName, const std::string& actionName) const
+	bool InputSystem::isActionJustReleased(const std::string& bindingName, const std::string& actionName) const
 	{
 		if (auto it = _keyBindings.find(bindingName); it != _keyBindings.end()) {
 			if (!it->second->hasAction(actionName))
@@ -164,7 +164,7 @@ namespace ayt::engine::input
 		return false;
 	}
 
-	bool AYInputSystem::isActionJustReleased(const std::string& fullActionName) const
+	bool InputSystem::isActionJustReleased(const std::string& fullActionName) const
 	{
 		if (size_t dotPos = fullActionName.find('.'); dotPos != std::string::npos) {
 			std::string bindingName = fullActionName.substr(0, dotPos);
@@ -174,7 +174,7 @@ namespace ayt::engine::input
 		return false;
 	}
 
-	float AYInputSystem::getUniversalDuration(const UniversalInput& input) const
+	float InputSystem::getUniversalDuration(const UniversalInput& input) const
 	{
 		if (const InputState* state = findInputState(input)) {
 			return state->duration;
@@ -182,7 +182,7 @@ namespace ayt::engine::input
 		return 0.0f;
 	}
 
-	bool AYInputSystem::getUniversalInputState(const UniversalInput& input) const
+	bool InputSystem::getUniversalInputState(const UniversalInput& input) const
 	{
 		if (const InputState* state = findInputState(input)) {
 			return state->current;
@@ -190,7 +190,7 @@ namespace ayt::engine::input
 		return false;
 	}
 
-	bool AYInputSystem::getPreviousUniversalInputState(const UniversalInput& input) const
+	bool InputSystem::getPreviousUniversalInputState(const UniversalInput& input) const
 	{
 		if (const InputState* state = findInputState(input)) {
 			return state->previous;
@@ -198,7 +198,7 @@ namespace ayt::engine::input
 		return false;
 	}
 
-	float AYInputSystem::getAxisValue(const UniversalInput& input) const
+	float InputSystem::getAxisValue(const UniversalInput& input) const
 	{
 		return std::visit([this](auto&& arg) -> float {
 			using T = std::decay_t<decltype(arg)>;
@@ -233,7 +233,7 @@ namespace ayt::engine::input
 			}, input);
 	}
 
-	float AYInputSystem::getScrollDelta(const UniversalInput& input)
+	float InputSystem::getScrollDelta(const UniversalInput& input)
 	{
 		return std::visit([this](auto&& arg) -> float {
 			using T = std::decay_t<decltype(arg)>;
@@ -255,7 +255,7 @@ namespace ayt::engine::input
 			}, input);
 	}
 
-	float AYInputSystem::getPreviousAxisValue(const UniversalInput& input) const
+	float InputSystem::getPreviousAxisValue(const UniversalInput& input) const
 	{
 		auto it = _inputStates.find(input);
 		if (it != _inputStates.end()) {
@@ -281,7 +281,7 @@ namespace ayt::engine::input
 			}, input);
 	}
 
-	glm::vec2 AYInputSystem::getVector2Axis(const std::string& fullActionName) const
+	glm::vec2 InputSystem::getVector2Axis(const std::string& fullActionName) const
 	{
 		size_t dotPos = fullActionName.find('.');
 		if (dotPos == std::string::npos)
@@ -321,16 +321,16 @@ namespace ayt::engine::input
 
 	}
 
-	void AYInputSystem::initGamepad(int joystickId)
+	void InputSystem::initGamepad(int joystickId)
 	{
 		glfwSetJoystickCallback([](int jid, int event) {
 			if (event == GLFW_CONNECTED)
 			{
-				AYLOG_INFO("[AYInputSystem] joystick {} connected", jid);
+				AYLOG_INFO("[InputSystem] joystick {} connected", jid);
 			}
 			else if (event == GLFW_DISCONNECTED)
 			{
-				AYLOG_INFO("[AYInputSystem] joystick {} disconnected", jid);
+				AYLOG_INFO("[InputSystem] joystick {} disconnected", jid);
 			}
 			});
 
@@ -340,7 +340,7 @@ namespace ayt::engine::input
 		}
 	}
 
-	bool AYInputSystem::isGamepadConnected(int joystickId) const {
+	bool InputSystem::isGamepadConnected(int joystickId) const {
 		double currentTime = glfwGetTime();
 
 		// 每0.5秒刷新一次状态（避免高频查询）
@@ -358,7 +358,7 @@ namespace ayt::engine::input
 		return _gamepadStatusCache.count(joystickId) ? _gamepadStatusCache.at(joystickId) : false;
 	}
 
-	std::vector<int> AYInputSystem::getConnectedGamepads() const
+	std::vector<int> InputSystem::getConnectedGamepads() const
 	{
 		std::vector<int> result;
 		for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; ++jid)
@@ -370,52 +370,52 @@ namespace ayt::engine::input
 		return result;
 	}
 
-	bool AYInputSystem::isKeyJustPressed(int key) const
+	bool InputSystem::isKeyJustPressed(int key) const
 	{
 		auto helper = KeyboardInput{ key };
 		return getUniversalInputState(helper) && !getPreviousUniversalInputState(helper);
 	}
 
-	bool AYInputSystem::isKeyReleased(int key) const
+	bool InputSystem::isKeyReleased(int key) const
 	{
 		auto helper = KeyboardInput{ key };
 		return !getUniversalInputState(helper) && getPreviousUniversalInputState(helper);
 	}
 
-	bool AYInputSystem::isKeyRepeated(int key) const
+	bool InputSystem::isKeyRepeated(int key) const
 	{
 		auto helper = KeyboardInput{ key };
 		return getUniversalInputState(helper) && getPreviousUniversalInputState(helper);
 	}
 
-	bool AYInputSystem::isMouseButtonDown(int button) const
+	bool InputSystem::isMouseButtonDown(int button) const
 	{
 		return getUniversalInputState(MouseButtonInput{ button });
 	}
 
-	bool AYInputSystem::isMouseButtonJustPressed(int button) const
+	bool InputSystem::isMouseButtonJustPressed(int button) const
 	{
 		auto helper = MouseButtonInput{ button };
 		return getUniversalInputState(helper) && !getPreviousUniversalInputState(helper);
 	}
 
-	bool AYInputSystem::isMouseButtonReleased(int button) const
+	bool InputSystem::isMouseButtonReleased(int button) const
 	{
 		auto helper = MouseButtonInput{ button };
 		return !getUniversalInputState(helper) && getPreviousUniversalInputState(helper);
 	}
 
-	glm::vec2 AYInputSystem::getMousePosition() const
+	glm::vec2 InputSystem::getMousePosition() const
 	{
 		return _currentMousePos;
 	}
 
-	glm::vec2 AYInputSystem::getMouseDelta() const
+	glm::vec2 InputSystem::getMouseDelta() const
 	{
 		return _currentMousePos - _lastMousePos;
 	}
 
-	glm::vec2 AYInputSystem::getMouseButtonPressPosition(int button) const
+	glm::vec2 InputSystem::getMouseButtonPressPosition(int button) const
 	{
 		// 没有实现
 		auto helper = MouseButtonInput{ button };
@@ -424,28 +424,28 @@ namespace ayt::engine::input
 	}
 
 	// 高级输入功能
-	int AYInputSystem::getKeyPressCount(int key) const
+	int InputSystem::getKeyPressCount(int key) const
 	{
 		auto helper = KeyboardInput{ key };
 		const InputState* state = findInputState(helper);
 		return state ? state->pressCount : 0;
 	}
 
-	float AYInputSystem::getLastPressInterval(int key) const
+	float InputSystem::getLastPressInterval(int key) const
 	{
 		auto helper = KeyboardInput{ key };
 		const InputState* state = findInputState(helper);
 		return state ? (float)glfwGetTime() - state->lastPressTime : FLT_MAX;
 	}
 
-	float AYInputSystem::getKeyDuration(int key) const
+	float InputSystem::getKeyDuration(int key) const
 	{
 		auto helper = KeyboardInput{ key };
 		const InputState* state = findInputState(helper);
 		return state ? state->duration : 0.f;
 	}
 
-	float AYInputSystem::getMouseButtonDuration(int button) const
+	float InputSystem::getMouseButtonDuration(int button) const
 	{
 		auto helper = MouseButtonInput{ button };
 		const InputState* state = findInputState(helper);
@@ -453,25 +453,25 @@ namespace ayt::engine::input
 	}
 
 	// 输入修饰键
-	bool AYInputSystem::isShiftPressed() const
+	bool InputSystem::isShiftPressed() const
 	{
 		return glfwGetKey(_device->getWindow(), GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
 			glfwGetKey(_device->getWindow(), GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS;
 	}
 
-	bool AYInputSystem::isCtrlPressed() const
+	bool InputSystem::isCtrlPressed() const
 	{
 		return glfwGetKey(_device->getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
 			glfwGetKey(_device->getWindow(), GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
 	}
 
-	bool AYInputSystem::isAltPressed() const
+	bool InputSystem::isAltPressed() const
 	{
 		return glfwGetKey(_device->getWindow(), GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
 			glfwGetKey(_device->getWindow(), GLFW_KEY_RIGHT_ALT) == GLFW_PRESS;
 	}
 
-	void AYInputSystem::_updateUniversalInputState(float delta_time)
+	void InputSystem::_updateUniversalInputState(float delta_time)
 	{
 		GLFWwindow* window = _device->getWindow();
 		if (!window)
@@ -494,7 +494,7 @@ namespace ayt::engine::input
 		}
 	}
 
-	void AYInputSystem::_updateAxisStates(float delta_time)
+	void InputSystem::_updateAxisStates(float delta_time)
 	{
 		// 更新鼠标位置轴
 		getInputState(MouseAxisInput{ MouseAxis::PositionX }).value = _currentMousePos.x;
@@ -516,7 +516,7 @@ namespace ayt::engine::input
 		}
 	}
 
-	void AYInputSystem::_updateGamepadState(float delta_time)
+	void InputSystem::_updateGamepadState(float delta_time)
 	{
 		if (!isGamepadConnected(_activeGamepad))
 		{
@@ -552,7 +552,7 @@ namespace ayt::engine::input
 
 #include "Event_InputPackages.h"
 
-	void AYInputSystem::handleKey(int key, int scancode, int action, int mods)
+	void InputSystem::handleKey(int key, int scancode, int action, int mods)
 	{
 		UniversalInput input = KeyboardInput{ key };
 		auto& state = getInputState(input);
@@ -580,7 +580,7 @@ namespace ayt::engine::input
 		}
 	}
 
-	void AYInputSystem::handleMouseButton(int button, int action, int mods)
+	void InputSystem::handleMouseButton(int button, int action, int mods)
 	{
 		UniversalInput input = MouseButtonInput{ button };
 		auto& state = getInputState(input);
@@ -612,7 +612,7 @@ namespace ayt::engine::input
 		}
 	}
 
-	void AYInputSystem::handleMousePosition(double x, double y)
+	void InputSystem::handleMousePosition(double x, double y)
 	{
 		_currentMousePos = glm::vec2((float)x, (float)y);
 
@@ -623,7 +623,7 @@ namespace ayt::engine::input
 			});
 	}
 
-	void AYInputSystem::handleScroll(double xoffset, double yoffset)
+	void InputSystem::handleScroll(double xoffset, double yoffset)
 	{
 		_scrollDelta = glm::vec2(xoffset, yoffset);
 
@@ -642,27 +642,27 @@ namespace ayt::engine::input
 			});
 	}
 
-	void AYInputSystem::keyCallbackWrapper(GLFWwindow* window, int key, int scancode, int action, int mods)
+	void InputSystem::keyCallbackWrapper(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{
-		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+		auto inputSystem = GET_CAST_MODULE(InputSystem, "InputSystem");
 		if (inputSystem) inputSystem->handleKey(key, scancode, action, mods);
 	}
 
-	void AYInputSystem::mouseButtonCallbackWrapper(GLFWwindow* window, int button, int action, int mods)
+	void InputSystem::mouseButtonCallbackWrapper(GLFWwindow* window, int button, int action, int mods)
 	{
-		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+		auto inputSystem = GET_CAST_MODULE(InputSystem, "InputSystem");
 		if (inputSystem) inputSystem->handleMouseButton(button, action, mods);
 	}
 
-	void AYInputSystem::cursorPosCallbackWrapper(GLFWwindow* window, double xpos, double ypos)
+	void InputSystem::cursorPosCallbackWrapper(GLFWwindow* window, double xpos, double ypos)
 	{
-		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+		auto inputSystem = GET_CAST_MODULE(InputSystem, "InputSystem");
 		if (inputSystem) inputSystem->handleMousePosition(xpos, ypos);
 	}
 
-	void AYInputSystem::scrollCallbackWrapper(GLFWwindow* window, double xoffset, double yoffset)
+	void InputSystem::scrollCallbackWrapper(GLFWwindow* window, double xoffset, double yoffset)
 	{
-		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
+		auto inputSystem = GET_CAST_MODULE(InputSystem, "InputSystem");
 		if (inputSystem) inputSystem->handleScroll(xoffset, yoffset);
 	}
 }

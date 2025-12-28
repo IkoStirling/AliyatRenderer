@@ -16,9 +16,9 @@ namespace ayt::engine::render
     /*
         ¶¯»­ÇÐÆ¬£¬°üº¬¶àÖ¡£¬
     */
-    class AYAnimationClip {
+    class AnimationClip {
     public:
-        AYAnimationClip(const std::string& name, bool isLoop = true);
+        AnimationClip(const std::string& name, bool isLoop = true);
 
         void addFrame(const AYAnimationFrame& frame);
         const AYAnimationFrame& getFrame(size_t index) const;

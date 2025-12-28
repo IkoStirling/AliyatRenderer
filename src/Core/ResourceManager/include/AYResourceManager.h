@@ -19,11 +19,11 @@
 
 namespace ayt::engine::resource
 {
-    using namespace ayt::engine::event;
+    using namespace ::ayt::engine::event;
     using ::ayt::engine::path::Path;
 
     template <typename T>
-    class AYResourceHandle;
+    class ResourceHandle;
 
 
     /*
@@ -34,12 +34,12 @@ namespace ayt::engine::resource
     */
 
 
-    class AYResourceManager {
+    class ResourceManager {
     public:
         using Tag = std::string;
         using TagSet = std::unordered_set<Tag>;
     public:
-        static AYResourceManager& getInstance();
+        static ResourceManager& getInstance();
     public:
         /*
             立即加载资源（异步加载中加载功能，由该函数实现）
@@ -80,7 +80,7 @@ namespace ayt::engine::resource
                 a）通过资源句柄创建的资源，将脱离缓存，需要手动管理，但可以实现延迟加载
         */
         template <typename T>
-        std::shared_ptr<AYResourceHandle<T>> createHandle(const std::string& filepath);
+        std::shared_ptr<ResourceHandle<T>> createHandle(const std::string& filepath);
 
 
         /*
@@ -106,7 +106,7 @@ namespace ayt::engine::resource
             该函数实现功能：
                 a）将资源加入强缓存
         */
-        void pinResource(const std::string& filepath, const std::shared_ptr<IAYResource>& res);
+        void pinResource(const std::string& filepath, const std::shared_ptr<IResource>& res);
 
 
         /*
@@ -155,7 +155,7 @@ namespace ayt::engine::resource
         void shutdown();
 
         /*
-           手动注册要纳入管理的资源类型（继承自IAYResource，与资源类型的自动注册是两码事）
+           手动注册要纳入管理的资源类型（继承自IResource，与资源类型的自动注册是两码事）
            该函数实现功能：（在异步加载事件完成时执行以下操作）
                a) 完成异步承诺，异步加载得到的future会得到结果
                b）执行回调通知，如果异步加载设置有回调会执行
@@ -168,13 +168,13 @@ namespace ayt::engine::resource
             底层接口，不建议调用
             默认不解析路径
          */
-        std::shared_ptr<IAYResource> getResourceByPath(const std::string& filepath);
+        std::shared_ptr<IResource> getResourceByPath(const std::string& filepath);
 
         void tagResource(const std::string& filepath, const Tag& tag);
 
         void untagResource(const std::string& filepath, const Tag& tag);
 
-        std::vector<std::shared_ptr<IAYResource>> getResourcesWithTag(const Tag& tag);
+        std::vector<std::shared_ptr<IResource>> getResourcesWithTag(const Tag& tag);
 
         void unloadTag(const Tag& tag);
 
@@ -183,9 +183,9 @@ namespace ayt::engine::resource
         void savePersistentCache(const std::string& savePath);
         void loadPersistentCache(const std::string& loadPath);
 
-        ~AYResourceManager();
+        ~ResourceManager();
     private:
-        AYResourceManager();
+        ResourceManager();
 
         /*
             清理失效的weakCache
@@ -193,7 +193,7 @@ namespace ayt::engine::resource
         void _cleanupResources();
     private:
         struct STCacheEntry {
-            std::shared_ptr<IAYResource> resource;
+            std::shared_ptr<IResource> resource;
             size_t size;
             std::chrono::steady_clock::time_point lastUsed;
         };
@@ -205,7 +205,7 @@ namespace ayt::engine::resource
             std::string typeName;
         };
 
-        std::unordered_map<std::string, std::weak_ptr<IAYResource>> _weakCache;
+        std::unordered_map<std::string, std::weak_ptr<IResource>> _weakCache;
         std::unordered_map<std::string, STCacheEntry> _strongCache;
 
         size_t _maxItemCount = 200;           // 最大缓存个数
@@ -237,7 +237,7 @@ namespace ayt::engine::resource
 #include "AYResourceHandle.h"
 
     template<typename T, typename ...Args>
-    inline std::shared_ptr<T> AYResourceManager::load(const std::string& filepath, Args && ...args)
+    inline std::shared_ptr<T> ResourceManager::load(const std::string& filepath, Args && ...args)
     {
         std::string rpath = Path::resolve(filepath);
         auto strongIt = _strongCache.find(rpath);
@@ -260,7 +260,7 @@ namespace ayt::engine::resource
 
         try {
             // 使用资源注册表创建资源实例
-            auto resource = AYResourceRegistry::getInstance().create<T>(T::staticGetType(), std::forward<Args>(args)...);
+            auto resource = ResourceRegistry::getInstance().create<T>(T::staticGetType(), std::forward<Args>(args)...);
             if (!resource) {
                 // 如果注册表中没有找到，回退到直接创建
                 resource = std::shared_ptr<T>(new T(std::forward<Args>(args)...));
@@ -277,14 +277,14 @@ namespace ayt::engine::resource
         }
         catch (const std::exception& e)
         {
-            spdlog::error("[AYResourceManager] Error loading resource: {}", e.what());
+            spdlog::error("[ResourceManager] Error loading resource: {}", e.what());
             return nullptr;
         }
     }
 
 
     template<typename T, typename ...Args>
-    inline std::shared_future<std::shared_ptr<T>> AYResourceManager::loadAsync(
+    inline std::shared_future<std::shared_ptr<T>> ResourceManager::loadAsync(
         const std::string& filepath,
         Args&&... args,
         std::function<void(std::shared_ptr<T>)> callback
@@ -294,22 +294,22 @@ namespace ayt::engine::resource
         auto promise = std::make_shared<std::promise<std::shared_ptr<T>>>();
         auto future = promise->get_future().share();
 
-        auto castPromise = std::make_shared<std::promise<std::shared_ptr<IAYResource>>>();
+        auto castPromise = std::make_shared<std::promise<std::shared_ptr<IResource>>>();
         auto castFuture = castPromise->get_future().share();
 
         auto castCallback = [castPromise, callback](std::shared_ptr<T> result) {
-            castPromise->set_value(std::static_pointer_cast<IAYResource>(result));
+            castPromise->set_value(std::static_pointer_cast<IResource>(result));
             if (callback) callback(result);
             };
 
-        auto request = std::make_shared<STResourceLoadRequest<T, Args...>>(
+        auto request = std::make_shared<ResourceLoadRequest<T, Args...>>(
             filepath,
             promise,
             castCallback,
             std::make_tuple(std::forward<Args>(args)...)
         );
 
-        AYAsyncTracker::getInstance().addTask(
+        AsyncTracker::getInstance().addTask(
             filepath,
             castFuture,
             nullptr,
@@ -327,16 +327,16 @@ namespace ayt::engine::resource
 
 
     template<typename T>
-    inline std::shared_ptr<AYResourceHandle<T>> AYResourceManager::createHandle(const std::string& filepath)
+    inline std::shared_ptr<ResourceHandle<T>> ResourceManager::createHandle(const std::string& filepath)
     {
         std::string rpath = Path::resolve(filepath);
-        return std::shared_ptr<AYResourceHandle<T>>(rpath);
+        return std::shared_ptr<ResourceHandle<T>>(rpath);
     }
 
 
 
     template<typename T, typename ...Args>
-    inline void AYResourceManager::registerResourceType()
+    inline void ResourceManager::registerResourceType()
     {
         auto loader = [this](const IEvent& in_event)
             {
@@ -376,16 +376,16 @@ namespace ayt::engine::resource
     }
 
 
-    class AYResourceManagerAdapter : public Mod_ResourceManager
+    class ResourceManagerAdapter : public Mod_ResourceManager
     {
     public:
-        void init() override { AYResourceManager::getInstance().init(); }
-        void shutdown() override { AYResourceManager::getInstance().shutdown(); }
-        void update(float delta_time) override { AYResourceManager::getInstance().update(delta_time); }
+        void init() override { ResourceManager::getInstance().init(); }
+        void shutdown() override { ResourceManager::getInstance().shutdown(); }
+        void update(float delta_time) override { ResourceManager::getInstance().update(delta_time); }
 
     public:
-        static AYResourceManager& getInstance() { return AYResourceManager::getInstance(); }
+        static ResourceManager& getInstance() { return ResourceManager::getInstance(); }
     };
 
-    REGISTER_MODULE_CLASS("ResourceManager", AYResourceManagerAdapter)
+    REGISTER_MODULE_CLASS("ResourceManager", ResourceManagerAdapter)
 }

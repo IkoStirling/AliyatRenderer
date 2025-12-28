@@ -7,12 +7,12 @@ namespace ayt::engine::render
 {
     using namespace ::ayt::engine::event;
 
-	math::Matrix4 IAYCamera::getViewMatrix() const
+	math::Matrix4 ICamera::getViewMatrix() const
 	{
 		return math::Matrix4(1.f);
 	}
 
-	math::Matrix4 IAYCamera::getProjectionMatrix() const
+	math::Matrix4 ICamera::getProjectionMatrix() const
     {
         if (_dirtyProjection)
         {
@@ -35,42 +35,42 @@ namespace ayt::engine::render
         return _cachedProjection;
     }
 
-    void IAYCamera::update(float delta_time)
+    void ICamera::update(float delta_time)
     {
 
     }
 
-    IAYCamera::Type IAYCamera::getType() const
+    ICamera::Type ICamera::getType() const
     {
         return Type::DEFAULT_SCREEN;
     }
 
-    void IAYCamera::setViewport(const math::Vector4& viewport)
+    void ICamera::setViewport(const math::Vector4& viewport)
     {
         _dirtyView = true;
         _dirtyProjection = true;
         _viewport = viewport;
     }
 
-    math::Vector4 IAYCamera::getViewport() const
+    math::Vector4 ICamera::getViewport() const
     {
         return _viewport;
     }
 
-    void IAYCamera::setZoom(float zoom) {
+    void ICamera::setZoom(float zoom) {
         _dirtyView = true;
         _dirtyProjection = true;
         _zoom = glm::clamp(zoom, 0.1f, 10.0f);
-        AYLOG_INFO("[IAYCamera] zoom: {}", _zoom);
+        AYLOG_INFO("[ICamera] zoom: {}", _zoom);
     }
 
-    float IAYCamera::getPixelPerMeter() const { return 66.7f; }
+    float ICamera::getPixelPerMeter() const { return 66.7f; }
 
-    void IAYCamera::setAdditionalOffset(const math::Vector2& offset) { _additionalOffset = offset; }
+    void ICamera::setAdditionalOffset(const math::Vector2& offset) { _additionalOffset = offset; }
 
-    const math::Vector3 IAYCamera::getPosition() const { return _transform.position / getPixelPerMeter(); }
+    const math::Vector3 ICamera::getPosition() const { return _transform.position / getPixelPerMeter(); }
 
-    void IAYCamera::onCameraMoved() const
+    void ICamera::onCameraMoved() const
     {
         if (_lastTransform == _transform)
             return;

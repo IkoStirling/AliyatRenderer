@@ -11,16 +11,16 @@
 
 namespace ayt::engine::game
 {
-    using AYRendererManager = ayt::engine::render::AYRendererManager;
+    using RendererManager = ::ayt::engine::render::RendererManager;
 
-    class AYGameObject : public ::ayt::engine::physics::IAYPhysical
+    class GameObject : public ::ayt::engine::physics::IPhysical
     {
     public:
-        AYGameObject(const std::string& name = "GameObject");
-        ~AYGameObject();
+        GameObject(const std::string& name = "GameObject");
+        ~GameObject();
 
-        AYGameObject(AYGameObject&&) noexcept;
-        AYGameObject& operator=(AYGameObject&&) noexcept;
+        GameObject(GameObject&&) noexcept;
+        GameObject& operator=(GameObject&&) noexcept;
 
         template<typename T, typename... Args>
         T* addComponent(const std::string& name, Args&&... args);
@@ -52,29 +52,29 @@ namespace ayt::engine::game
 
     protected:
         std::string _name;
-        std::unordered_multimap<std::type_index, std::unique_ptr<IAYComponent>> _components;
+        std::unordered_multimap<std::type_index, std::unique_ptr<IComponent>> _components;
         bool _active = true;
 
     private:
-        AYGameObject(const AYGameObject&) = delete;
-        AYGameObject& operator=(const AYGameObject&) = delete;
+        GameObject(const GameObject&) = delete;
+        GameObject& operator=(const GameObject&) = delete;
 
         void _handleRenderComponents(bool shouldRegister);
     };
 
     template<typename T, typename ...Args>
-    inline T* AYGameObject::addComponent(const std::string& name, Args && ...args)
+    inline T* GameObject::addComponent(const std::string& name, Args && ...args)
     {
-        static_assert(std::is_base_of_v<IAYComponent, T>, "T must inherit from IAYComponent");
+        static_assert(std::is_base_of_v<IComponent, T>, "T must inherit from IComponent");
 
         auto component = std::make_unique<T>(std::forward<Args>(args)...);
         component->setOwner(this);
         component->setName(name);
         T* rawPtr = component.get();
 
-        if constexpr (std::is_base_of_v<IAYRenderComponent, T>)
+        if constexpr (std::is_base_of_v<IRenderComponent, T>)
         {
-            GET_CAST_MODULE(AYRendererManager, "Renderer")->registerRenderable(rawPtr);
+            GET_CAST_MODULE(RendererManager, "Renderer")->registerRenderable(rawPtr);
         }
 
         _components.emplace(std::type_index(typeid(T)), std::move(component));
@@ -83,9 +83,9 @@ namespace ayt::engine::game
     }
 
     template<typename T>
-    inline std::vector<T*> AYGameObject::getComponents() const
+    inline std::vector<T*> GameObject::getComponents() const
     {
-        static_assert(std::is_base_of_v<IAYComponent, T>, "T must inherit from IAYComponent");
+        static_assert(std::is_base_of_v<IComponent, T>, "T must inherit from IComponent");
 
         std::vector<T*> result;
         auto range = _components.equal_range(std::type_index(typeid(T)));
@@ -98,33 +98,33 @@ namespace ayt::engine::game
     }
 
     template<typename T>
-    inline T* AYGameObject::getComponent() const
+    inline T* GameObject::getComponent() const
     {
         auto components = getComponents<T>();
         return components.empty() ? nullptr : components.front();
     }
 
     template<typename T>
-    inline bool AYGameObject::hasComponent() const
+    inline bool GameObject::hasComponent() const
     {
         return _components.count(std::type_index(typeid(T))) > 0;
     }
 
     template<typename T>
-    inline void AYGameObject::removeComponents()
+    inline void GameObject::removeComponents()
     {
-        if constexpr (std::is_base_of_v<IAYRenderComponent, T>)
+        if constexpr (std::is_base_of_v<IRenderComponent, T>)
         {
             auto components = getComponents<T>();
             for (auto component : components)
-                GET_CAST_MODULE(AYRendererManager, "Renderer")->removeRenderable(component);
+                GET_CAST_MODULE(RendererManager, "Renderer")->removeRenderable(component);
         }
 
         _components.erase(std::type_index(typeid(T)));
     }
 
     template<typename T>
-    inline void AYGameObject::removeComponent(const std::string& name)
+    inline void GameObject::removeComponent(const std::string& name)
     {
 
     }

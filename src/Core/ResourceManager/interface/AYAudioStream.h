@@ -5,7 +5,7 @@
 #include "IAYAudioSource.h"
 namespace ayt::engine::resource
 {
-    class AYAudioStream : public IAYResource, public IAYAudioSource
+    class AYAudioStream : public IResource, public IAYAudioSource
     {
         SUPPORT_MEMORY_POOL(AYAudioStream)
             DECLARE_RESOURCE_CLASS(AYAudioStream, "audiostream")

@@ -14,14 +14,14 @@ namespace ayt::engine::render
     //    float intensity = 1.0f;
     //};
 
-    struct STDirectionalLight
+    struct DirectionalLight
     {
         math::Vector3 color = math::Vector3(1.0f);
         float intensity = 1.0f;
         math::Vector3 direction = math::Vector3(0.0f, -1.0f, 0.0f);
     };
 
-    struct STPointLight
+    struct PointLight
     {
         math::Vector3 color = math::Vector3(1.0f);
         float intensity = 1.0f;
@@ -34,7 +34,7 @@ namespace ayt::engine::render
         float quadratic = 0.032f;
     };
 
-    struct STSpotLight //¾Û¹âµÆ
+    struct SpotLight //¾Û¹âµÆ
     {
         math::Vector3 color = math::Vector3(1.0f);
         float intensity = 1.0f;

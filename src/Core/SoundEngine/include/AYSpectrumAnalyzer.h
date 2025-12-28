@@ -3,12 +3,12 @@
 #include <vector>
 namespace ayt::engine::resource
 {
-    class AYSpectrumAnalyzer
+    class SpectrumAnalyzer
     {
     public:
-        AYSpectrumAnalyzer(size_t fftSize = 2048);
+        SpectrumAnalyzer(size_t fftSize = 2048);
 
-        ~AYSpectrumAnalyzer();
+        ~SpectrumAnalyzer();
 
         void analyze(const std::vector<float>& samples);
 

@@ -1,8 +1,9 @@
 ﻿#include "AYAudio.h"
+#include "AYPath.h"
 
 namespace ayt::engine::resource
 {
-    using ayt::engine::path::Path;
+    using ::ayt::engine::path::Path;
 
     AYAudio::AYAudio() :
         _sampleRate(0),
@@ -26,7 +27,7 @@ namespace ayt::engine::resource
         // 解码音频并提取 PCM
         if (!decodeFullAudio(rpath)) return false;
 
-        IAYResource::load(rpath);
+        IResource::load(rpath);
         _loaded = true;
         return true;
     }

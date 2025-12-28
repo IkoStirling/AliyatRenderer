@@ -3,7 +3,7 @@
 #include "Box2DPhysicsBody.h"
 namespace ayt::engine::physics
 {
-    class Box2DPhysicsWorld : public IAYPhysicsWorld
+    class Box2DPhysicsWorld : public IPhysicsWorld
     {
     private:
 
@@ -15,19 +15,19 @@ namespace ayt::engine::physics
 
         void setGravity(const math::Vector3& gravity) override;
 
-        bool raycast(const math::Vector3& start, const math::Vector3& end, STRaycastResult& hit);
+        bool raycast(const math::Vector3& start, const math::Vector3& end, RaycastResult& hit);
 
         bool raycast(const math::Vector3& start, const math::Vector3& end,
-            std::function<bool(const STRaycastResult&)> callback) override;
+            std::function<bool(const RaycastResult&)> callback) override;
 
-        IAYPhysicsBody* createBody(EntityID entity,
+        IPhysicsBody* createBody(EntityID entity,
             const math::Vector3& position,
             float rotation,
-            IAYPhysicsBody::BodyType type) override;
+            IPhysicsBody::BodyType type) override;
 
         void setTransform(EntityID entity, const math::Transform& transform) override;
 
-        std::vector<IAYPhysicsBody*> getAllBodies() override;
+        std::vector<IPhysicsBody*> getAllBodies() override;
 
         const math::Transform& getTransform(EntityID entity) override;
 
@@ -38,13 +38,13 @@ namespace ayt::engine::physics
             float distanceToGround;     // 到地面的距离
             math::Vector2 contactPoint;     // 接触点
             math::Vector2 contactNormal;    // 接触法线
-            IAYPhysicsBody* groundBody; // 接触的地面物体
+            IPhysicsBody* groundBody; // 接触的地面物体
         };
 
-        GroundContactInfo checkGroundContact(IAYPhysicsBody* body, float maxDistance = 1.0f);
+        GroundContactInfo checkGroundContact(IPhysicsBody* body, float maxDistance = 1.0f);
 
         // 检测特定点的地面碰撞
-        STRaycastResult raycastToGround(const math::Vector2& point, float maxDistance = 1.0f);
+        RaycastResult raycastToGround(const math::Vector2& point, float maxDistance = 1.0f);
 
     private:
         b2WorldId _worldId = b2_nullWorldId;
@@ -57,6 +57,6 @@ namespace ayt::engine::physics
         b2QueryFilter getGroundFilter() const;
 
         // 从射线结果中提取信息
-        void fillRaycastResult(const b2RayResult& result, STRaycastResult& hit);
+        void fillRaycastResult(const b2RayResult& result, RaycastResult& hit);
     };
 }

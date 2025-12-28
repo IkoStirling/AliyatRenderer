@@ -4,12 +4,12 @@
 #include "AYSpriteAtlas.h"
 namespace ayt::engine::render
 {
-    class AYAnimatedSprite {
+    class AnimatedSprite {
     public:
         /*
             要求默认至少拥有一个精灵图集
         */
-        AYAnimatedSprite(AYSpriteRenderer* renderer, std::shared_ptr<AYSpriteAtlas> atlas);
+        AnimatedSprite(SpriteRenderer* renderer, std::shared_ptr<SpriteAtlas> atlas);
 
         void playAnimation(const std::string& name, bool forceRestart = false);
         void queueAnimation(const std::string& name);
@@ -25,15 +25,15 @@ namespace ayt::engine::render
             const math::Vector3& origin = math::Vector3(0.5f)
         );
 
-        void addAtlas(std::shared_ptr<AYSpriteAtlas> atlas);
+        void addAtlas(std::shared_ptr<SpriteAtlas> atlas);
 
-        AYAnimationController& getController();
+        AnimationController& getController();
 
     private:
-        std::shared_ptr<AYAnimationClip> _findClip(const std::string& name);
-        AYSpriteRenderer* _renderer;
-        AYAnimationController _controller;
-        std::vector<std::shared_ptr<AYSpriteAtlas>> _atlases;
+        std::shared_ptr<AnimationClip> _findClip(const std::string& name);
+        SpriteRenderer* _renderer;
+        AnimationController _controller;
+        std::vector<std::shared_ptr<SpriteAtlas>> _atlases;
         int _curAtlas = 0; //默认使用第一个精灵图集
     };
 }

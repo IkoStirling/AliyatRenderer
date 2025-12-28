@@ -1,7 +1,7 @@
 #include "2DRendering/AYAnimationController.h"
 namespace ayt::engine::render
 {
-    void AYAnimationController::play(std::shared_ptr<AYAnimationClip> clip, bool forceRestart)
+    void AnimationController::play(std::shared_ptr<AnimationClip> clip, bool forceRestart)
     {
         while (!_animationQueue.empty()) _animationQueue.pop();
 
@@ -13,7 +13,7 @@ namespace ayt::engine::render
         _state = State::Playing;
     }
 
-    void AYAnimationController::queueAnimation(std::shared_ptr<AYAnimationClip> clip)
+    void AnimationController::queueAnimation(std::shared_ptr<AnimationClip> clip)
     {
         if (!_currentClip) {
             play(clip);
@@ -23,7 +23,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYAnimationController::update(float deltaTime) {
+    void AnimationController::update(float deltaTime) {
         if (!_currentClip || _state != State::Playing) return;
 
         _frameTimer += deltaTime;
@@ -65,34 +65,34 @@ namespace ayt::engine::render
         }
     }
 
-    void AYAnimationController::pause()
+    void AnimationController::pause()
     {
         _state = State::Paused;
     }
 
-    void AYAnimationController::resume()
+    void AnimationController::resume()
     {
         _state = State::Playing;
     }
 
-    void AYAnimationController::stop() {
+    void AnimationController::stop() {
         _state = State::Idle;
         //重置智能指针,即清空当前对象
         _currentClip.reset();
-        std::queue<std::shared_ptr<AYAnimationClip>> queue;
+        std::queue<std::shared_ptr<AnimationClip>> queue;
         _animationQueue.swap(queue);
     }
 
-    const AYAnimationFrame& AYAnimationController::getCurrentFrame() const {
+    const AYAnimationFrame& AnimationController::getCurrentFrame() const {
         static AYAnimationFrame defaultFrame;
         return _currentClip ? _currentClip->getFrame(_currentFrame) : defaultFrame;
     }
 
-    bool AYAnimationController::isPlaying() const {
+    bool AnimationController::isPlaying() const {
         return _currentClip != nullptr;
     }
 
-    bool AYAnimationController::isCurrentAnimationDone() const
+    bool AnimationController::isCurrentAnimationDone() const
     {
         if (_currentClip && _currentClip->isLoop)
             return true;

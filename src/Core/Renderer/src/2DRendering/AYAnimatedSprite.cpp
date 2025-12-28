@@ -2,38 +2,38 @@
 
 namespace ayt::engine::render
 {
-    AYAnimatedSprite::AYAnimatedSprite(AYSpriteRenderer* renderer, std::shared_ptr<AYSpriteAtlas> atlas) :
+    AnimatedSprite::AnimatedSprite(SpriteRenderer* renderer, std::shared_ptr<SpriteAtlas> atlas) :
         _renderer(renderer)
     {
         addAtlas(atlas);
     }
 
-    void AYAnimatedSprite::playAnimation(const std::string& name, bool forceRestart)
+    void AnimatedSprite::playAnimation(const std::string& name, bool forceRestart)
     {
         auto clip = _findClip(name);
         if (clip)
             _controller.play(clip, forceRestart);
     }
 
-    void AYAnimatedSprite::queueAnimation(const std::string& name)
+    void AnimatedSprite::queueAnimation(const std::string& name)
     {
         auto clip = _findClip(name);
         if (clip)
             _controller.queueAnimation(clip);
     }
 
-    bool AYAnimatedSprite::isCurrentAnimationDone() const
+    bool AnimatedSprite::isCurrentAnimationDone() const
     {
         return _controller.isCurrentAnimationDone();
     }
 
 
-    void AYAnimatedSprite::update(float deltaTime)
+    void AnimatedSprite::update(float deltaTime)
     {
         _controller.update(deltaTime);
     }
 
-    void AYAnimatedSprite::render(
+    void AnimatedSprite::render(
         const math::Transform& transform,
         const math::Vector3& size,
         const math::Vector4& color,
@@ -58,18 +58,18 @@ namespace ayt::engine::render
         );
     }
 
-    void AYAnimatedSprite::addAtlas(std::shared_ptr<AYSpriteAtlas> atlas)
+    void AnimatedSprite::addAtlas(std::shared_ptr<SpriteAtlas> atlas)
     {
         if (atlas)
             _atlases.push_back(atlas);
     }
 
-    AYAnimationController& AYAnimatedSprite::getController()
+    AnimationController& AnimatedSprite::getController()
     {
         return _controller;
     }
 
-    std::shared_ptr<AYAnimationClip> AYAnimatedSprite::_findClip(const std::string& name)
+    std::shared_ptr<AnimationClip> AnimatedSprite::_findClip(const std::string& name)
     {
         for (int i = 0; i < _atlases.size(); i++)
         {

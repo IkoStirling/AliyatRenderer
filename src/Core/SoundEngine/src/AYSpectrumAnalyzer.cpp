@@ -3,7 +3,7 @@
 #define PI 3.1415926535f
 namespace ayt::engine::resource
 {
-    AYSpectrumAnalyzer::AYSpectrumAnalyzer(size_t fftSize) : _fftSize(fftSize) {
+    SpectrumAnalyzer::SpectrumAnalyzer(size_t fftSize) : _fftSize(fftSize) {
         _input = fftwf_alloc_real(_fftSize);
         _output = fftwf_alloc_complex(_fftSize / 2 + 1);
         _plan = fftwf_plan_dft_r2c_1d(_fftSize, _input, _output, FFTW_ESTIMATE);
@@ -15,14 +15,14 @@ namespace ayt::engine::resource
         }
     }
 
-    AYSpectrumAnalyzer::~AYSpectrumAnalyzer()
+    SpectrumAnalyzer::~SpectrumAnalyzer()
     {
         fftwf_destroy_plan(_plan);
         fftwf_free(_input);
         fftwf_free(_output);
     }
 
-    void AYSpectrumAnalyzer::analyze(const std::vector<float>& samples)
+    void SpectrumAnalyzer::analyze(const std::vector<float>& samples)
     {
         // Ó¦ÓÃ´°º¯Êý
         for (size_t i = 0; i < _fftSize; ++i) {
@@ -32,7 +32,7 @@ namespace ayt::engine::resource
         fftwf_execute(_plan);
     }
 
-    std::vector<float> AYSpectrumAnalyzer::getBandEnergies(int numBands)
+    std::vector<float> SpectrumAnalyzer::getBandEnergies(int numBands)
     {
         std::vector<float> bands(numBands, 0.0f);
         float maxEnergy = 0.0f;

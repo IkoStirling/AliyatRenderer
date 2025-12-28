@@ -3,22 +3,22 @@
 #include "Box2DColliderBase.h"
 namespace ayt::engine::physics
 {
-    class Box2DPolygonCollider : public AYPolygon2DCollider, public Box2DColliderBase
+    class Box2DPolygonCollider : public Polygon2DCollider, public Box2DColliderBase
     {
     public:
         explicit Box2DPolygonCollider(const std::vector<math::Vector2>& vertices = {}) :
-            AYPolygon2DCollider(vertices) {
+            Polygon2DCollider(vertices) {
         }
 
         void setVertices(const std::vector<math::Vector2>& vertices) override
         {
-            AYPolygon2DCollider::setVertices(vertices);
+            Polygon2DCollider::setVertices(vertices);
             if (isValid()) updateShape(_shapeId);
         }
 
         void addVertex(const math::Vector2& vertex) override
         {
-            AYPolygon2DCollider::addVertex(vertex);
+            Polygon2DCollider::addVertex(vertex);
             if (isValid()) updateShape(_shapeId);
         }
 
@@ -33,13 +33,13 @@ namespace ayt::engine::physics
 
         void clearVertices() override
         {
-            AYPolygon2DCollider::clearVertices();
+            Polygon2DCollider::clearVertices();
             if (isValid()) updateShape(_shapeId);
         }
 
         void setOffset(const math::Vector2& offset) override
         {
-            AYPolygon2DCollider::setOffset(offset);
+            Polygon2DCollider::setOffset(offset);
             if (isValid()) updateShape(_shapeId);
         }
 

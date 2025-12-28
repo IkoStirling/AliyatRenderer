@@ -5,11 +5,11 @@ namespace ayt::engine::game
 {
     using namespace ::ayt::engine::ecs;
 
-    AYCombatSystem::AYCombatSystem()
+    CombatSystem::CombatSystem()
     {
     }
 
-    void AYCombatSystem::update(float delta_time)
+    void CombatSystem::update(float delta_time)
     {
         auto ecs = GET_CAST_MODULE(ECS, "ECSEngine");
 

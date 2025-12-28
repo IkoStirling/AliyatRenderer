@@ -2,9 +2,9 @@
 #include "BasePhy/IAYCollider.h"
 namespace ayt::engine::physics
 {
-    class AYPolygon2DCollider : public IAYCollider {
+    class Polygon2DCollider : public ICollider {
     public:
-        explicit AYPolygon2DCollider(const std::vector<math::Vector2>& vertices = {});
+        explicit Polygon2DCollider(const std::vector<math::Vector2>& vertices = {});
 
         // ÐÎ×´ÀàÐÍ
         ShapeType getShapeType() const override { return ShapeType::Polygon2D; }

@@ -2,9 +2,9 @@
 #include "AYInputType.h"
 namespace ayt::engine::input
 {
-    class AYInputSystem;
+    class InputSystem;
 
-    class AYInputAction {
+    class InputAction {
     public:
         enum class Type
         {
@@ -15,11 +15,11 @@ namespace ayt::engine::input
             LongPress
         };
 
-        AYInputAction() = delete;
+        InputAction() = delete;
 
-        AYInputAction(Type type, UniversalInput input, float long_pressDuration = 0.3f, float double_pressDuration = 0.3f);
+        InputAction(Type type, UniversalInput input, float long_pressDuration = 0.3f, float double_pressDuration = 0.3f);
 
-        bool evaluate(const AYInputSystem& input) const;
+        bool evaluate(const InputSystem& input) const;
 
         void rebind(UniversalInput input);
 

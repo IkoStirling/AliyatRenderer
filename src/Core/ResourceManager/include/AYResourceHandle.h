@@ -6,10 +6,10 @@ namespace ayt::engine::resource
 {
     //防止资源在类内部异步操作前因使用裸指针被析构，在内部也使用shared_ptr进行延长生命周期
     template<typename T>
-    class AYResourceHandle : public std::enable_shared_from_this<AYResourceHandle<T>>
+    class ResourceHandle : public std::enable_shared_from_this<ResourceHandle<T>>
     {
     public:
-        AYResourceHandle(const std::string& path, bool isLazyLoad = true);
+        ResourceHandle(const std::string& path, bool isLazyLoad = true);
 
         std::shared_ptr<T> get();
 
@@ -30,31 +30,31 @@ namespace ayt::engine::resource
 
 
 
-    //AYResourceHandle.inl
+    //ResourceHandle.inl
 #include "AYResourceManager.h"
     template<typename T>
-    inline AYResourceHandle<T>::AYResourceHandle(const std::string& path, bool isLazyLoad)
+    inline ResourceHandle<T>::ResourceHandle(const std::string& path, bool isLazyLoad)
         :
         _path(path)
     {
         if (!isLazyLoad)
         {
-            _resource = AYResourceManager::getInstance().load<T>(_path);
+            _resource = ResourceManager::getInstance().load<T>(_path);
         }
     }
 
     template<typename T>
-    inline std::shared_ptr<T> AYResourceHandle<T>::get()
+    inline std::shared_ptr<T> ResourceHandle<T>::get()
     {
         if (!_resource)
         {
-            _resource = AYResourceManager::getInstance().load<T>(_path);
+            _resource = ResourceManager::getInstance().load<T>(_path);
         }
         return _resource;
     }
 
     template<typename T>
-    inline T* AYResourceHandle<T>::operator->()
+    inline T* ResourceHandle<T>::operator->()
     {
         return get().get();
     }

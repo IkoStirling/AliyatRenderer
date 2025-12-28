@@ -2,20 +2,20 @@
 #include "AYInputSystem.h"
 namespace ayt::engine::input
 {
-    AYInputBinding::~AYInputBinding()
+    InputBinding::~InputBinding()
     {
     }
 
-    void AYInputBinding::addAction(const std::string& name,
-        AYInputAction::Type type,
+    void InputBinding::addAction(const std::string& name,
+        InputAction::Type type,
         UniversalInput input,
         float long_pressDuration,
         float double_pressDuration)
     {
-        _actions.emplace(name, AYInputAction(type, input, long_pressDuration, double_pressDuration));
+        _actions.emplace(name, InputAction(type, input, long_pressDuration, double_pressDuration));
     }
 
-    bool AYInputBinding::isActive(const std::string& name, const AYInputSystem& input) const
+    bool InputBinding::isActive(const std::string& name, const InputSystem& input) const
     {
         if (auto it = _actions.find(name); it != _actions.end()) {
             return it->second.evaluate(input);
@@ -23,14 +23,14 @@ namespace ayt::engine::input
         return false;
     }
 
-    void AYInputBinding::rebindAction(const std::string& name, UniversalInput input)
+    void InputBinding::rebindAction(const std::string& name, UniversalInput input)
     {
         if (auto it = _actions.find(name); it != _actions.end()) {
             it->second.rebind(input);
         }
     }
 
-    std::vector<std::string> AYInputBinding::getActionNames() const
+    std::vector<std::string> InputBinding::getActionNames() const
     {
         std::vector<std::string> names;
         for (auto& pair : _actions)
@@ -40,12 +40,12 @@ namespace ayt::engine::input
         return names;
     }
 
-    const std::unordered_map<std::string, AYInputAction>& AYInputBinding::getActions() const
+    const std::unordered_map<std::string, InputAction>& InputBinding::getActions() const
     {
         return _actions;
     }
 
-    const AYInputAction& AYInputBinding::getAction(const std::string& name) const
+    const InputAction& InputBinding::getAction(const std::string& name) const
     {
         if (auto it = _actions.find(name); it != _actions.end())
         {
@@ -54,7 +54,7 @@ namespace ayt::engine::input
         throw std::out_of_range("[InputAction] Action '" + name + "' not found");
     }
 
-    bool AYInputBinding::hasAction(const std::string& name) const
+    bool InputBinding::hasAction(const std::string& name) const
     {
         return  _actions.find(name) != _actions.end();
     }

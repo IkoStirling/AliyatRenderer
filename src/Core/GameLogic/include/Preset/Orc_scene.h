@@ -3,7 +3,7 @@
 #include "Orc.h"
 #include "Ground.h"
 
-class Orc_scene : public IAYScene
+class Orc_scene : public IScene
 {
 public:
     virtual void load()

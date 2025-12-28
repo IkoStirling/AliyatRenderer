@@ -3,33 +3,33 @@
 #include "Box2DColliderBase.h"
 namespace ayt::engine::physics
 {
-    class Box2DEdgeCollider : public AYEdge2DCollider, public Box2DColliderBase
+    class Box2DEdgeCollider : public Edge2DCollider, public Box2DColliderBase
     {
     public:
         explicit Box2DEdgeCollider(const math::Vector2& size = { 1.0f, 1.0f }) :
-            AYEdge2DCollider(size) {
+            Edge2DCollider(size) {
         }
 
         void setOffset(const math::Vector2& offset) override {
-            AYEdge2DCollider::setOffset(offset);
+            Edge2DCollider::setOffset(offset);
             if (isValid()) updateShape(_shapeId);
         }
 
         void setVertices(const math::Vector2& v1, const math::Vector2& v2) override
         {
-            AYEdge2DCollider::setVertices(v1, v2);
+            Edge2DCollider::setVertices(v1, v2);
             if (isValid()) updateShape(_shapeId);
         }
 
         void setOneSided(bool oneSided) override
         {
-            AYEdge2DCollider::setOneSided(oneSided);
+            Edge2DCollider::setOneSided(oneSided);
             if (isValid()) updateShape(_shapeId);
         }
 
         void setAdjacentVertices(const math::Vector2& prevVertex, const math::Vector2& nextVertex) override
         {
-            AYEdge2DCollider::setAdjacentVertices(prevVertex, nextVertex);
+            Edge2DCollider::setAdjacentVertices(prevVertex, nextVertex);
             if (isValid()) updateShape(_shapeId);
         }
 

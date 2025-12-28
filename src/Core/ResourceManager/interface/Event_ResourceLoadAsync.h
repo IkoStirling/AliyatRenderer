@@ -29,17 +29,17 @@ namespace ayt::engine::resource
         {
         }
 
-        Event_ResourceLoadAsync(STResourceLoadRequest<T, Args...>&& request)
-            : mRequest(std::make_shared<STResourceLoadRequest<T, Args...>>(std::move(request)))
+        Event_ResourceLoadAsync(ResourceLoadRequest<T, Args...>&& request)
+            : mRequest(std::make_shared<ResourceLoadRequest<T, Args...>>(std::move(request)))
         {
         }
 
-        explicit Event_ResourceLoadAsync(std::shared_ptr<STResourceLoadRequest<T, Args...>> request)
+        explicit Event_ResourceLoadAsync(std::shared_ptr<ResourceLoadRequest<T, Args...>> request)
             : mRequest(std::move(request)) {
         }
 
     public:
-        std::shared_ptr<STResourceLoadRequest<T, Args...>> mRequest;
+        std::shared_ptr<ResourceLoadRequest<T, Args...>> mRequest;
     };
 
     REGISTER_TEMPLATE_EVENT_CLASS(Event_ResourceLoadAsync, AYTexture)

@@ -3,14 +3,14 @@
 #include "AYLogger.h"
 namespace ayt::engine::render
 {
-	bx::FileReader AYBgfxCreator::_reader;
-	bx::DefaultAllocator AYBgfxCreator::_defaultAllocator;
+	bx::FileReader BgfxCreator::_reader;
+	bx::DefaultAllocator BgfxCreator::_defaultAllocator;
 
-	void AYBgfxCreator::update(float delta_time) {
+	void BgfxCreator::update(float delta_time) {
 
 	}
 
-	bgfx::ProgramHandle AYBgfxCreator::getProgram(const std::string& key)
+	bgfx::ProgramHandle BgfxCreator::getProgram(const std::string& key)
 	{
 		static int count = 0;
 		AYLOG_INFO("getProgram call: {}times", ++count);
@@ -31,7 +31,7 @@ namespace ayt::engine::render
 		return loadProgram(vsPath.c_str(), fsPath.c_str());
 	}
 
-	const char* AYBgfxCreator::convertShaderPath(const bx::StringView& _name)
+	const char* BgfxCreator::convertShaderPath(const bx::StringView& _name)
 	{
 		bx::FilePath filePath("include/generated/shaders/");
 
@@ -62,7 +62,7 @@ namespace ayt::engine::render
 		return filePath.getCPtr();
 	}
 
-	void AYBgfxCreator::setUniformAndBind(const std::string& key, BgfxUniformCallback callback)
+	void BgfxCreator::setUniformAndBind(const std::string& key, BgfxUniformCallback callback)
 	{
 		if (auto it = _shaderCache.find(key); callback && it != _shaderCache.end())
 		{
@@ -71,7 +71,7 @@ namespace ayt::engine::render
 		}
 	}
 
-	const bgfx::Memory* AYBgfxCreator::loadMem(const bx::FilePath& _filePath)
+	const bgfx::Memory* BgfxCreator::loadMem(const bx::FilePath& _filePath)
 	{
 		if (bx::open(&_reader, _filePath))
 		{
@@ -87,7 +87,7 @@ namespace ayt::engine::render
 		return NULL;
 	}
 
-	void* AYBgfxCreator::loadMem(const bx::FilePath& _filePath, uint32_t* _size)
+	void* BgfxCreator::loadMem(const bx::FilePath& _filePath, uint32_t* _size)
 	{
 		if (bx::open(&_reader, _filePath))
 		{
@@ -107,7 +107,7 @@ namespace ayt::engine::render
 		return NULL;
 	}
 
-	bgfx::ShaderHandle AYBgfxCreator::loadShader(const bx::StringView& _name)
+	bgfx::ShaderHandle BgfxCreator::loadShader(const bx::StringView& _name)
 	{
 		bgfx::ShaderHandle handle = bgfx::createShader(loadMem(convertShaderPath(_name)));
 		bgfx::setName(handle, _name.getPtr(), _name.getLength());
@@ -115,7 +115,7 @@ namespace ayt::engine::render
 		return handle;
 	}
 
-	bgfx::ProgramHandle AYBgfxCreator::loadProgram(const std::string& _vsName, const std::string& _fsName)
+	bgfx::ProgramHandle BgfxCreator::loadProgram(const std::string& _vsName, const std::string& _fsName)
 	{
 		bgfx::ShaderHandle vsh = loadShader(_vsName.c_str());
 		bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
@@ -142,7 +142,7 @@ namespace ayt::engine::render
 		return pro;
 	}
 
-	void AYBgfxCreator::imageReleaseCb(void* _ptr, void* _userData)
+	void BgfxCreator::imageReleaseCb(void* _ptr, void* _userData)
 	{
 		BX_UNUSED(_ptr);
 		bimg::ImageContainer* imageContainer = (bimg::ImageContainer*)_userData;
@@ -150,7 +150,7 @@ namespace ayt::engine::render
 	}
 
 
-	bgfx::TextureHandle AYBgfxCreator::loadTexture(const bx::FilePath& _filePath, uint64_t _flags, uint8_t _skip, bgfx::TextureInfo* _info, bimg::Orientation::Enum* _orientation)
+	bgfx::TextureHandle BgfxCreator::loadTexture(const bx::FilePath& _filePath, uint64_t _flags, uint8_t _skip, bgfx::TextureInfo* _info, bimg::Orientation::Enum* _orientation)
 	{
 		BX_UNUSED(_skip);
 		bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
@@ -237,7 +237,7 @@ namespace ayt::engine::render
 		return handle;
 	}
 
-	bimg::ImageContainer* AYBgfxCreator::imageLoad(const bx::FilePath& _filePath, bgfx::TextureFormat::Enum _dstFormat)
+	bimg::ImageContainer* BgfxCreator::imageLoad(const bx::FilePath& _filePath, bgfx::TextureFormat::Enum _dstFormat)
 	{
 		uint32_t size = 0;
 		void* data = loadMem(_filePath, &size);
@@ -245,11 +245,11 @@ namespace ayt::engine::render
 		return bimg::imageParse(&_defaultAllocator, data, size, bimg::TextureFormat::Enum(_dstFormat));
 	}
 
-	void AYBgfxCreator::calcTangents(void* _vertices, uint16_t _numVertices, bgfx::VertexLayout _layout, const uint16_t* _indices, uint32_t _numIndices)
+	void BgfxCreator::calcTangents(void* _vertices, uint16_t _numVertices, bgfx::VertexLayout _layout, const uint16_t* _indices, uint32_t _numIndices)
 	{
 	}
 
-	void* AYBgfxCreator::load(const bx::FilePath& _filePath, uint32_t* _size)
+	void* BgfxCreator::load(const bx::FilePath& _filePath, uint32_t* _size)
 	{
 		if (bx::open(&_reader, _filePath))
 		{
@@ -276,7 +276,7 @@ namespace ayt::engine::render
 		return NULL;
 	}
 
-	void AYBgfxCreator::unload(void* _ptr)
+	void BgfxCreator::unload(void* _ptr)
 	{
 		bx::free(&_defaultAllocator, _ptr);
 	}

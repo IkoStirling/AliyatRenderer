@@ -8,10 +8,10 @@ namespace ayt::engine::render
     using namespace ::ayt::engine::config;
     using ayt::engine::path::Path;
 
-    AYUIRenderer::AYUIRenderer(AYRenderDevice* device, AYRenderer* renderer) :
+    UIRenderer::UIRenderer(RenderDevice* device, Renderer* renderer) :
         _device(device),
         _renderer(renderer),
-        _handler(std::make_unique<AYUIEventHandler>(this)),
+        _handler(std::make_unique<UIEventHandler>(this)),
         _nextElementId(1),
         _vertexBufferDirty(false),
         _configPath("@config/Renderer/UIRenderer/config.ini")
@@ -20,10 +20,10 @@ namespace ayt::engine::render
         init();
     }
 
-    AYUIRenderer::~AYUIRenderer() {
+    UIRenderer::~UIRenderer() {
     }
 
-    void AYUIRenderer::init() {
+    void UIRenderer::init() {
         setupUIBuffers();
         _handler->subscribeToInputEvents();
 
@@ -33,14 +33,14 @@ namespace ayt::engine::render
         _vertexBufferDirty = true;
     }
 
-    void AYUIRenderer::shutdown() {
+    void UIRenderer::shutdown() {
         if (_uiVAO) glDeleteVertexArrays(1, &_uiVAO);
         if (_uiVBO) glDeleteBuffers(1, &_uiVBO);
         if (_uiEBO) glDeleteBuffers(1, &_uiEBO);
         _saveUIRendererConfigINI();
     }
 
-    uint32_t AYUIRenderer::createRectangle(const math::Vector3& position, const math::Vector3& size,
+    uint32_t UIRenderer::createRectangle(const math::Vector3& position, const math::Vector3& size,
         const math::Vector4& color, GLuint texture, bool is3D,
         const math::Vector3& rotation, const math::Vector3& scale)
     {
@@ -64,7 +64,7 @@ namespace ayt::engine::render
         return element.id;
     }
 
-    uint32_t AYUIRenderer::createText(const std::string& text, const math::Vector3& position,
+    uint32_t UIRenderer::createText(const std::string& text, const math::Vector3& position,
         const math::Vector4& color, float scale, bool is3D)
     {
         UIElement element;
@@ -90,7 +90,7 @@ namespace ayt::engine::render
         return element.id;
     }
 
-    void AYUIRenderer::setPosition(uint32_t elementId, const math::Vector3& position) {
+    void UIRenderer::setPosition(uint32_t elementId, const math::Vector3& position) {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
             if (_uiElements[index].renderData.position != position) {
@@ -102,7 +102,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setSize(uint32_t elementId, const math::Vector3& size) {
+    void UIRenderer::setSize(uint32_t elementId, const math::Vector3& size) {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
             if (_uiElements[index].renderData.size != size) {
@@ -114,7 +114,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setColor(uint32_t elementId, const math::Vector4& color) {
+    void UIRenderer::setColor(uint32_t elementId, const math::Vector4& color) {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
             if (_uiElements[index].renderData.color != color) {
@@ -126,7 +126,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setText(uint32_t elementId, const std::string& text) {
+    void UIRenderer::setText(uint32_t elementId, const std::string& text) {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
             if (_uiElements[index].text != text) {
@@ -138,7 +138,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setVisible(uint32_t elementId, bool visible) {
+    void UIRenderer::setVisible(uint32_t elementId, bool visible) {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
             if (_uiElements[index].renderData.visible != visible) {
@@ -150,7 +150,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setRotation(uint32_t elementId, const math::Vector3& rotation)
+    void UIRenderer::setRotation(uint32_t elementId, const math::Vector3& rotation)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -163,7 +163,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setScale(uint32_t elementId, const math::Vector3& scale)
+    void UIRenderer::setScale(uint32_t elementId, const math::Vector3& scale)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -176,7 +176,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setIs3D(uint32_t elementId, bool is3D)
+    void UIRenderer::setIs3D(uint32_t elementId, bool is3D)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -189,7 +189,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setOnClicked(uint32_t elementId, std::function<void()> callback)
+    void UIRenderer::setOnClicked(uint32_t elementId, std::function<void()> callback)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -197,7 +197,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setOnHovered(uint32_t elementId, std::function<void()> callback)
+    void UIRenderer::setOnHovered(uint32_t elementId, std::function<void()> callback)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -205,7 +205,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setOnUnhovered(uint32_t elementId, std::function<void()> callback)
+    void UIRenderer::setOnUnhovered(uint32_t elementId, std::function<void()> callback)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -213,7 +213,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setOnPressed(uint32_t elementId, std::function<void()> callback)
+    void UIRenderer::setOnPressed(uint32_t elementId, std::function<void()> callback)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -221,7 +221,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::setOnReleased(uint32_t elementId, std::function<void()> callback)
+    void UIRenderer::setOnReleased(uint32_t elementId, std::function<void()> callback)
     {
         if (elementId > 0 && elementId <= _uiElements.size()) {
             uint32_t index = elementId - 1;
@@ -229,7 +229,7 @@ namespace ayt::engine::render
         }
     }
 
-    bool AYUIRenderer::isInsideElement(uint32_t elementId, const math::Vector2& position)
+    bool UIRenderer::isInsideElement(uint32_t elementId, const math::Vector2& position)
     {
         if (elementId <= 0 || elementId > _uiElements.size())
             return false;
@@ -253,7 +253,7 @@ namespace ayt::engine::render
         return insideX && insideY;
     }
 
-    void AYUIRenderer::beginUIFrame() {
+    void UIRenderer::beginUIFrame() {
         _device->saveGLState();
         auto stateManager = _device->getGLStateManager();
         stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -261,7 +261,7 @@ namespace ayt::engine::render
 
     }
 
-    void AYUIRenderer::renderUI() {
+    void UIRenderer::renderUI() {
         // 先处理所有脏元素
         flushDirtyElements();
 
@@ -283,13 +283,13 @@ namespace ayt::engine::render
 
             // 更新投影矩阵
             auto cameraSystem = _renderer->getCameraSystem();
-            IAYCamera* camera;
+            ICamera* camera;
             math::Matrix4 projection;
             math::Matrix4 model;
             math::Matrix4 view;
             if (!batch.is3D)
             {
-                camera = cameraSystem->getCamera(AYCameraSystem::SCREEN_SPACE_CAMERA);
+                camera = cameraSystem->getCamera(CameraSystem::SCREEN_SPACE_CAMERA);
                 projection = camera->getProjectionMatrix();
                 view = camera->getViewMatrix();
                 stateManager->setDepthTest(batch.is3D);
@@ -336,7 +336,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::endUIFrame() {
+    void UIRenderer::endUIFrame() {
         _device->restoreGLState();
     }
 
@@ -349,7 +349,7 @@ namespace ayt::engine::render
 
 
 
-    void AYUIRenderer::flushDirtyElements() {
+    void UIRenderer::flushDirtyElements() {
         for (uint32_t index : _dirtyElements) {
             if (index < _uiElements.size() && _uiElements[index].renderData.dirty) {
                 updateElementVertices(index);
@@ -367,12 +367,12 @@ namespace ayt::engine::render
         _dirtyTextElements.clear();
     }
 
-    AYUIRenderer::UIBatch* AYUIRenderer::getTargetBatch(const UIElement& element)
+    UIRenderer::UIBatch* UIRenderer::getTargetBatch(const UIElement& element)
     {
         return getTargetBatch(element.renderData.texture, element.renderData.is3D);
     }
 
-    AYUIRenderer::UIBatch* AYUIRenderer::getTargetBatch(GLuint textureId, bool is3D)
+    UIRenderer::UIBatch* UIRenderer::getTargetBatch(GLuint textureId, bool is3D)
     {
         for (auto& batch : _uiBatches)
             if (is3D == batch.is3D && textureId == batch.textureId)
@@ -386,7 +386,7 @@ namespace ayt::engine::render
         return &_uiBatches.back();
     }
 
-    void AYUIRenderer::setupUIBuffers()
+    void UIRenderer::setupUIBuffers()
     {
         _uiVAO = _device->createVertexArray();
 
@@ -415,7 +415,7 @@ namespace ayt::engine::render
         _device->restoreGLState();
     }
 
-    void AYUIRenderer::updateElementVertices(uint32_t elementIndex) {
+    void UIRenderer::updateElementVertices(uint32_t elementIndex) {
         UIElement& element = _uiElements[elementIndex];
         auto& renderData = element.renderData;
 
@@ -426,10 +426,10 @@ namespace ayt::engine::render
         // 创建新的批次或添加到现有批次
         UIBatch* targetBatch = getTargetBatch(element);
 
-        std::vector<math::Vector3> rectPoints = AYGraphicGenerator::createRectV();
-        math::Vector3 normal = AYGraphicGenerator::create2DN();
-        std::vector<math::Vector2> texCoords = AYGraphicGenerator::createRectT();
-        std::vector<GLuint> indices = AYGraphicGenerator::createRectI(true);
+        std::vector<math::Vector3> rectPoints = GraphicGenerator::createRectV();
+        math::Vector3 normal = GraphicGenerator::create2DN();
+        std::vector<math::Vector2> texCoords = GraphicGenerator::createRectT();
+        std::vector<GLuint> indices = GraphicGenerator::createRectI(true);
 
         // 变换顶点位置：缩放和位移
         std::vector<math::Vector3> transformedPositions;
@@ -470,15 +470,15 @@ namespace ayt::engine::render
 
     }
 
-    void AYUIRenderer::updateTextVertices(uint32_t elementIndex) {
+    void UIRenderer::updateTextVertices(uint32_t elementIndex) {
         // 这里需要收集当前文本元素的信息合并到batch
         UIElement& element = _uiElements[elementIndex];
         if (element.text.empty()) return;
 
         math::Vector3 startPos = element.renderData.position;
         math::Vector3 currentPos = startPos;
-        auto normal = AYGraphicGenerator::create2DN();
-        auto indices = AYGraphicGenerator::createRectI(true);
+        auto normal = GraphicGenerator::create2DN();
+        auto indices = GraphicGenerator::createRectI(true);
 
         float lineHeight = 24.0f * element.textScale;
 
@@ -525,7 +525,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYUIRenderer::uploadVertexData() {
+    void UIRenderer::uploadVertexData() {
         if (_uiBatches.empty()) return;
 
         // 计算总顶点数和索引数
@@ -592,7 +592,7 @@ namespace ayt::engine::render
         _vertexBufferDirty = false;
     }
 
-    void AYUIRenderer::_loadUIRendererConfigINI()
+    void UIRenderer::_loadUIRendererConfigINI()
     {
         _config.loadFromFile(_configPath, ConfigType::INI);
 
@@ -603,7 +603,7 @@ namespace ayt::engine::render
             Path::Engine::getPresetShaderPath() + std::string("UIRenderer/ui.frag"));
     }
 
-    void AYUIRenderer::_saveUIRendererConfigINI()
+    void UIRenderer::_saveUIRendererConfigINI()
     {
         _config.set("shader name.ui", _uiShaderName);
         _config.set("shader path.ui_vertex", _uiVertexPath);
@@ -612,7 +612,7 @@ namespace ayt::engine::render
         _config.saveConfig(_configPath);
     }
 
-    GLuint AYUIRenderer::_getUIShader(bool reload)
+    GLuint UIRenderer::_getUIShader(bool reload)
     {
         return _device->getShaderV(_uiShaderName, reload, _uiVertexPath, _uiFragmentPath);
     }

@@ -4,8 +4,8 @@
 #include "Component/AYCameraComponent.h"
 #include "Component/Combat/STCombatComponents.h"
 #include "AYPath.h"
-#include "BaseRendering/Camera/AY3DCamera.h"
-#include "BaseRendering/Camera/AY2DCamera.h"
+#include "BaseRendering/Camera/AYCamera3D.h"
+#include "BaseRendering/Camera/AYCamera2D.h"
 #include "Component/AYPlayerController.h"
 #include "2DPhy/Collision/Box2D/Box2DBoxCollider.h"
 #include "AYAVEngine.h"
@@ -16,44 +16,44 @@ using namespace ::ayt::engine::input;
 using namespace ::ayt::engine::path;
 using namespace ::ayt::engine::resource;
 
-class Orc : public AYEntrant
+class Orc : public Entrant
 {
 public:
     Orc(const std::string& name = "Orc") :
-        AYEntrant(name)
+        Entrant(name)
     {
-		_orcSprite = addComponent<AYSpriteRenderComponent>("_orcSprite");
+		_orcSprite = addComponent<SpriteRenderComponent>("_orcSprite");
 		auto collider = std::make_shared<Box2DBoxCollider>(glm::vec2(1, 1));
-		collider->setCategoryBits(AYCategoryBits::Player);
+		collider->setCategoryBits(CategoryBits::Player);
 		collider->setMaskBits(
-			AYCategoryBits::BlockAll &
-			~AYCategoryBits::Sensor
+			CategoryBits::BlockAll &
+			~CategoryBits::Sensor
 		);
 		collider->setOffset(glm::vec2(0, 0.5f));
 		_physics->addCollider(collider);
-		_physics->setBodyType(IAYPhysicsBody::BodyType::Dynamic);
-		_controller = addComponent<AYPlayerController>("_controller");
+		_physics->setBodyType(IPhysicsBody::BodyType::Dynamic);
+		_controller = addComponent<PlayerController>("_controller");
 		_controller->setMoveSpeed(5.0f);
 		_controller->setJumpForce(10.0f);
-		_camera.push_back(addComponent<AYCameraComponent>("_orc2DCamera"));
-		_camera.push_back(addComponent<AYCameraComponent>("_orc3DCamera"));
-		_camera[0]->setupCamera(IAYCamera::Type::ORTHOGRAPHIC_2D);
-		_camera[1]->setupCamera(IAYCamera::Type::PERSPECTIVE_3D);
+		_camera.push_back(addComponent<CameraComponent>("_orcCamera2D"));
+		_camera.push_back(addComponent<CameraComponent>("_orc3DCamera"));
+		_camera[0]->setupCamera(ICamera::Type::ORTHOGRAPHIC_2D);
+		_camera[1]->setupCamera(ICamera::Type::PERSPECTIVE_3D);
 		_camera[0]->activate();
-		if (auto* cam2D = dynamic_cast<AY2DCamera*>(_camera[0]->getCamera()))
+		if (auto* cam2D = dynamic_cast<Camera2D*>(_camera[0]->getCamera()))
 		{
 			cam2D->showDeadzone(true);
 		}
 
-		auto binding = std::make_shared<AYInputBinding>();
-		binding->addAction("atk_base", AYInputAction::Type::Press, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
-		binding->addAction("atk_charge", AYInputAction::Type::LongPress, MouseButtonInput{ GLFW_MOUSE_BUTTON_RIGHT });
-		binding->addAction("jump", AYInputAction::Type::Press, KeyboardInput{ GLFW_KEY_SPACE });
+		auto binding = std::make_shared<InputBinding>();
+		binding->addAction("atk_base", InputAction::Type::Press, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
+		binding->addAction("atk_charge", InputAction::Type::LongPress, MouseButtonInput{ GLFW_MOUSE_BUTTON_RIGHT });
+		binding->addAction("jump", InputAction::Type::Press, KeyboardInput{ GLFW_KEY_SPACE });
 		auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
 		inputSystem->addInputMapping("orc", binding);
 
-		auto defaultBinding = std::make_shared<AYInputBinding>();
-		defaultBinding->addAction("f4", AYInputAction::Type::Press, KeyboardInput{ GLFW_KEY_F4 });
+		auto defaultBinding = std::make_shared<InputBinding>();
+		defaultBinding->addAction("f4", InputAction::Type::Press, KeyboardInput{ GLFW_KEY_F4 });
 		inputSystem->addInputMapping("default", defaultBinding);
 
 		auto ecsEngine = GET_CAST_MODULE(ECS, "ECSEngine");
@@ -88,15 +88,15 @@ public:
 
     virtual void beginPlay()override
     {
-		AYEntrant::beginPlay();
-		auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+		Entrant::beginPlay();
+		auto renderManager = GET_CAST_MODULE(RendererManager, "Renderer");
 		auto device = renderManager->getRenderDevice();
 		//glfwSetInputMode(device->getWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
 	void processMouseMovement(float xpos, float ypos) 
 	{
-		auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+		auto renderManager = GET_CAST_MODULE(RendererManager, "Renderer");
 		auto device = renderManager->getRenderDevice();
 
 
@@ -111,7 +111,7 @@ public:
 
 		
 		auto cameraSystem = renderManager->getCameraSystem();
-		auto cam3D = dynamic_cast<AY3DCamera*>(cameraSystem->getActiveCamera());
+		auto cam3D = dynamic_cast<Camera3D*>(cameraSystem->getActiveCamera());
 		if (cam3D)
 		{
 			cam3D->rotate(xoffset, yoffset);
@@ -124,9 +124,9 @@ public:
 
     virtual void update(float delta_time)override
     {
-        AYEntrant::update(delta_time);
-		auto inputSystem = GET_CAST_MODULE(AYInputSystem, "InputSystem");
-		auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+        Entrant::update(delta_time);
+		auto inputSystem = GET_CAST_MODULE(InputSystem, "InputSystem");
+		auto renderManager = GET_CAST_MODULE(RendererManager, "Renderer");
 
 		if (inputSystem->isActionJustReleased("default.f4"))
 		{
@@ -198,7 +198,7 @@ public:
 				static bool flag0 = true;
 				if (flag0)
 				{
-					auto ave = GET_CAST_MODULE(AYAVEngine, "AVEngine");
+					auto ave = GET_CAST_MODULE(AVEngine, "AVEngine");
 					//std::vector<std::string> lists{
 					//	"@audios/shade6.wav",
 					//	//"@audios/ambient/Evening_wanders.mp3",
@@ -244,7 +244,7 @@ public:
 				}
 
 				auto* camera = _camera[switcher]->getCamera();
-				auto* cam3D = dynamic_cast<AY3DCamera*>(camera);
+				auto* cam3D = dynamic_cast<Camera3D*>(camera);
 				if (cam3D)
 				{
 					_physics->setPhysicsMode(true);
@@ -302,9 +302,9 @@ public:
 
 
 private:
-    AYSpriteRenderComponent* _orcSprite;
-	AYPlayerController* _controller;
-	std::vector<AYCameraComponent*> _camera;
+    SpriteRenderComponent* _orcSprite;
+	PlayerController* _controller;
+	std::vector<CameraComponent*> _camera;
 
 	float _mouseSensitivity = 0.1f; // 鼠标灵敏度
 };

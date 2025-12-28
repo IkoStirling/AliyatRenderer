@@ -4,16 +4,16 @@
 #include <vector>
 namespace ayt::engine::render
 {
-    class AYRenderer;
-    class AYLightManager {
+    class Renderer;
+    class LightManager {
     public:
-        AYLightManager(AYRenderDevice* device, AYRenderer* renderer);
-        ~AYLightManager();
+        LightManager(RenderDevice* device, Renderer* renderer);
+        ~LightManager();
 
         // 光源管理接口
-        void addDirectionalLight(const STDirectionalLight& light);
-        void addPointLight(const STPointLight& light);
-        void addSpotLight(const STSpotLight& light);
+        void addDirectionalLight(const DirectionalLight& light);
+        void addPointLight(const PointLight& light);
+        void addSpotLight(const SpotLight& light);
 
         void clearAllLights();
 
@@ -24,12 +24,12 @@ namespace ayt::engine::render
         void bindLightData(GLuint bindingPoint = 0);
 
     private:
-        AYRenderDevice* _device;
-        AYRenderer* _renderer;
+        RenderDevice* _device;
+        Renderer* _renderer;
 
-        std::vector<STDirectionalLight> _directionalLights;
-        std::vector<STPointLight> _pointLights;
-        std::vector<STSpotLight> _spotLights;
+        std::vector<DirectionalLight> _directionalLights;
+        std::vector<PointLight> _pointLights;
+        std::vector<SpotLight> _spotLights;
 
         // 最大光源数量限制
         static const int MAX_DIRECTIONAL_LIGHTS = 4;

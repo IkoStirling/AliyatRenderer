@@ -3,7 +3,7 @@
 #include "STTransform.h"
 namespace ayt::engine::physics
 {
-    class IAYPhysical
+    class IPhysical
     {
     public: // transform
         virtual const math::Transform& getTransform() const = 0;

@@ -3,11 +3,11 @@
 #include "Box2DColliderBase.h"
 namespace ayt::engine::physics
 {
-    class Box2DBoxCollider : public AYBox2DCollider, public Box2DColliderBase
+    class Box2DBoxCollider : public Box2DCollider, public Box2DColliderBase
     {
     public:
         explicit Box2DBoxCollider(const math::Vector2& size = { 1.0f, 1.0f }) :
-            AYBox2DCollider(size) {
+            Box2DCollider(size) {
         }
 
         // 特有方法

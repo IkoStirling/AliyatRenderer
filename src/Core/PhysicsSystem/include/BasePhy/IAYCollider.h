@@ -2,9 +2,9 @@
 #include "ECPhysicsDependence.h"
 namespace ayt::engine::physics
 {
-    class IAYPhysicsBody; // 前向声明
+    class IPhysicsBody; // 前向声明
 
-    class IAYCollider {
+    class ICollider {
     public:
         enum class ShapeType {
             Box2D,
@@ -13,7 +13,7 @@ namespace ayt::engine::physics
             Edge2D
         };
 
-        virtual ~IAYCollider() = default;
+        virtual ~ICollider() = default;
 
         // 基础属性
         virtual ShapeType getShapeType() const = 0;

@@ -6,13 +6,13 @@
 
 namespace ayt::engine::input
 {
-    using ayt::engine::render::AYRenderDevice;
+    using ayt::engine::render::RenderDevice;
 
-    class AYInputSystem : public Mod_InputSystem
+    class InputSystem : public Mod_InputSystem
     {
     public:
-        AYInputSystem();
-        ~AYInputSystem();
+        InputSystem();
+        ~InputSystem();
 
         void init() override;
 
@@ -30,7 +30,7 @@ namespace ayt::engine::input
         /*
             虚拟按键映射，这里提供映射中按键活动的状态访问方法
         */
-        void addInputMapping(const std::string& name, std::shared_ptr<AYInputBinding> binding);
+        void addInputMapping(const std::string& name, std::shared_ptr<InputBinding> binding);
         void removeInputMapping(const std::string& name);
         bool isActionActive(const std::string& bindingName, const std::string& actionName) const;
         bool isActionActive(const std::string& fullActionName) const; //bindingName.actionName
@@ -75,15 +75,15 @@ namespace ayt::engine::input
             {
                 if (auto btn = std::get_if<GamepadButtonInput>(&input))
                 {
-                    spdlog::debug("[AYInputSystem] current: {}, previous: {}", state.current, state.previous);
+                    spdlog::debug("[InputSystem] current: {}, previous: {}", state.current, state.previous);
                 }
             }
         }
     private:
-        AYRenderDevice* _device = nullptr;
+        RenderDevice* _device = nullptr;
 
         // 按键映射存储
-        std::unordered_map<std::string, std::shared_ptr<AYInputBinding>> _keyBindings;
+        std::unordered_map<std::string, std::shared_ptr<InputBinding>> _keyBindings;
 
         // 输入状态存储
         std::unordered_map<
@@ -139,5 +139,5 @@ namespace ayt::engine::input
         static void scrollCallbackWrapper(GLFWwindow* window, double xoffset, double yoffset);
     };
 
-    REGISTER_MODULE_CLASS("InputSystem", AYInputSystem)
+    REGISTER_MODULE_CLASS("InputSystem", InputSystem)
 }

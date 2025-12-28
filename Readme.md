@@ -8,6 +8,7 @@
 			(which cannot be separated)
 			--Log
 			--Math
+			--Path
 			--ConfigWrapper
 		[Core]
 			(core parts of this engine)
@@ -19,7 +20,7 @@
 			--SoundEngine
 			--Renderer
 				--CameraSystem
-				--MaterialManager(Logically belong here)
+				--MaterialManager
 				--TextureManager
 			--Network
 			--Physics
@@ -124,6 +125,6 @@ Run the following commands:
 | Version               | Discription                                                                 
 |--------------------|----------------------------------------------------------------------
 | 0.1.9 | The previous version created a lot of chaos, making it difficult for the project to continue. After refactoring the code, it will jump to version 2.0. Refactoring aims to complete 80% of the code style modifications
-| |
+| 0.2.0 | It's time to start Version 0.2.0! next step is shutdown all the opengl module
 | |
 | |

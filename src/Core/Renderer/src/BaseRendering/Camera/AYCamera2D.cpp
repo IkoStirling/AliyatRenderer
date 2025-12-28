@@ -1,0 +1,141 @@
+﻿#pragma once
+#include "BaseRendering/Camera/AYCamera2D.h"
+#include "AYRendererManager.h"
+namespace ayt::engine::render
+{
+    void Camera2D::update(float delta_time)
+    {
+        _lastTransform = _transform;
+
+        // 计算实际视口大小(世界单位/米)
+        float ppm = getPixelPerMeter();
+        float viewWidth = _viewport.z / (ppm * _zoom);  // 视口宽度(米)
+        float viewHeight = _viewport.w / (ppm * _zoom); // 视口高度(米)
+
+        // 2. 计算死区边界（物理单位-米）
+        math::Vector2 deadzoneMin(
+            -viewWidth * 0.5f + viewWidth * _deadzone.x,  // 左边界
+            -viewHeight * 0.5f + viewHeight * _deadzone.z // 下边界
+        );
+        math::Vector2 deadzoneMax(
+            viewWidth * 0.5f - viewWidth * (1 - _deadzone.y),   // 右边界
+            viewHeight * 0.5f - viewHeight * (1 - _deadzone.w)  // 上边界
+        );
+
+        // 计算目标点相对于摄像机中心的偏移(世界单位)
+        math::Vector2 targetOffset = math::Vector2(_targetPosition) - math::Vector2(_transform.position);
+
+        // 3. 计算移动偏移（物理单位-米）
+        math::Vector2 moveOffset(0.0f);
+
+        if (targetOffset.x < deadzoneMin.x) {
+            moveOffset.x = targetOffset.x - deadzoneMin.x;
+        }
+        else if (targetOffset.x > deadzoneMax.x) {
+            moveOffset.x = targetOffset.x - deadzoneMax.x;
+        }
+
+        if (targetOffset.y < deadzoneMin.y) {
+            moveOffset.y = targetOffset.y - deadzoneMin.y;
+        }
+        else if (targetOffset.y > deadzoneMax.y) {
+            moveOffset.y = targetOffset.y - deadzoneMax.y;
+        }
+
+        // 应用移动（物理单位-米）
+        if (glm::length(moveOffset) > 0) _dirtyView = true;
+
+        math::Vector2 newPos = math::Vector2(_transform.position) + moveOffset * _moveSpeed * delta_time;
+
+        // 地图边界约束（物理单位-米）
+        newPos.x = glm::clamp(newPos.x,
+            _mapBounds.x + viewWidth * 0.5f,
+            _mapBounds.y - viewWidth * 0.5f);
+        newPos.y = glm::clamp(newPos.y,
+            _mapBounds.z + viewHeight * 0.5f,
+            _mapBounds.w - viewHeight * 0.5f);
+
+        _transform.position = math::Vector3(newPos, _transform.position.z);
+    }
+
+    math::Matrix4 Camera2D::getViewMatrix() const
+    {
+        if (_dirtyView)
+        {
+            // 将屏幕中心定义为(0,0), 正常是在左上角, 不进行缩放
+            _cachedView = glm::translate(math::Matrix4(1.0f),
+                -math::Vector3(
+                    math::Vector2(_transform.position) + _additionalOffset,
+                    0.0f));
+            _dirtyView = false;
+        }
+        return _cachedView;
+    }
+
+    math::Matrix4 Camera2D::getProjectionMatrix() const
+    {
+        if (_dirtyProjection)
+        {
+            // 返回物理比例下的投影矩阵
+            float ppm = getPixelPerMeter();
+            float zoomedWidth = _viewport.z / (_zoom * ppm);
+            float zoomedHeight = _viewport.w / (_zoom * ppm);
+
+            _cachedProjection = glm::ortho(
+                -zoomedWidth * 0.5f,  // left
+                zoomedWidth * 0.5f,   // right
+                -zoomedHeight * 0.5f,  // bottom 
+                zoomedHeight * 0.5f,   // top
+                _near,
+                _far
+            );
+            _dirtyProjection = false;
+        }
+        return _cachedProjection;
+    }
+
+    void Camera2D::setViewBox(float view_near, float view_far)
+    {
+        _dirtyProjection = true;
+        _near = view_near;
+        _far = view_far;
+    }
+
+    void Camera2D::setDeadzone(const math::Vector4& zone)
+    {
+        _deadzone = zone;
+    }
+
+    void Camera2D::setTargetPosition(const math::Vector2& targetPos)
+    {
+        _targetPosition = math::Vector3(targetPos, 0.f);
+    }
+
+    void Camera2D::setCurrentPosition(const math::Vector2& currentPos)
+    {
+        _transform.position = math::Vector3(currentPos, 0.f);
+    }
+
+    void Camera2D::showDeadzone(bool switcher)
+    {
+        auto rendererManager = GET_CAST_MODULE(RendererManager, "Renderer");
+        if (switcher && !_ddeadzone)
+        {
+            _ddeadzone = rendererManager->addDebugDraw(false, [](Renderer* renderer, RenderDevice* device) {
+                renderer->getCoreRenderer()
+                    ->drawRect2D(
+                        { math::Vector3(1920 * 0.5f, 1080 * 0.5f, 0) },
+                        math::Vector2(1920 * 0.4f, 1080 * 0.4f),
+                        0,
+                        true,
+                        CoreRenderer::Space::Screen);
+                });
+        }
+        else if (!switcher && _ddeadzone)
+        {
+            rendererManager->removeDebugDraw(_ddeadzone);
+        }
+
+    }
+
+}

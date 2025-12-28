@@ -4,11 +4,11 @@
 #include "BasePhy/IAYPhysical.h"
 namespace ayt::engine::physics
 {
-    class IAYPhysicsBody
+    class IPhysicsBody
     {
     public:
         enum class BodyType { Static, Dynamic, Kinematic };
-        virtual ~IAYPhysicsBody() = default;
+        virtual ~IPhysicsBody() = default;
         virtual void setType(BodyType type) { _type = type; }
         virtual BodyType getType() { return _type; }
         virtual bool isDynamic() { return _type == BodyType::Dynamic; }
@@ -39,12 +39,12 @@ namespace ayt::engine::physics
 
         //---------------碰撞管理----------------
         // 碰撞体
-        virtual void addCollider(IAYCollider* collider) = 0;
-        virtual void removeCollider(IAYCollider* collider) = 0;
+        virtual void addCollider(ICollider* collider) = 0;
+        virtual void removeCollider(ICollider* collider) = 0;
         virtual void setTrigger(bool is_trigger) = 0;
 
         // 获取所有碰撞体
-        virtual const std::vector<IAYCollider*> getColliders() const = 0;
+        virtual const std::vector<ICollider*> getColliders() const = 0;
 
         // 碰撞查询
         virtual void queryOverlapArea(const math::Vector4& area) = 0;

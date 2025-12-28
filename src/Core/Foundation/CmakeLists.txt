@@ -1,0 +1,41 @@
+set(MODULE_NAME foundation)
+
+set(SRC_FILES
+ "Config/AYConfigWrapper.cpp"
+ "Log/AYLogger.cpp"
+ "Path/AYPath.cpp"
+)
+
+set(HEAD_FILES
+    "Config/AYConfigWrapper.h"
+    "Log/AYLogger.h"
+    "Math/Adapter/BGFXAdapter.h"
+    "Math/Adapter/Box2DAdapter.h"
+    "Math/Adapter/GLMAdapter.h"
+    "Math/Adapter/PhysXAdapter.h"
+    "Math/AYMathType.h"
+    "Math/AYMathUtil.h"
+    "Path/AYPath.h"
+
+)
+
+add_library(${MODULE_NAME} STATIC ${SRC_FILES} ${HEAD_FILES})
+
+target_include_directories(${MODULE_NAME} PUBLIC 
+	${CMAKE_CURRENT_SOURCE_DIR}/Config
+	${CMAKE_CURRENT_SOURCE_DIR}/Log
+	${CMAKE_CURRENT_SOURCE_DIR}/Math
+	${CMAKE_CURRENT_SOURCE_DIR}/Path
+)
+
+find_package(Boost CONFIG REQUIRED COMPONENTS property_tree)
+find_package(spdlog CONFIG REQUIRED)
+find_package(glm CONFIG REQUIRED)
+
+target_link_libraries(${MODULE_NAME}
+	PRIVATE
+	Boost::property_tree
+    spdlog::spdlog_header_only
+    INTERFACE 
+	glm::glm
+) 

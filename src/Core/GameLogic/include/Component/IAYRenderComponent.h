@@ -5,9 +5,9 @@
 namespace ayt::engine::game 
 {
 
-	class IAYRenderComponent : public IAYComponent, public ::ayt::engine::render::IAYRenderable
+	class IRenderComponent : public IComponent, public ::ayt::engine::render::IRenderable
 	{
 	public:
-		virtual void render(const ::ayt::engine::render::AYRenderContext& context) = 0;
+		virtual void render(const ::ayt::engine::render::RenderContext& context) = 0;
 	};
 }

@@ -5,13 +5,13 @@
 namespace ayt::engine::physics
 {
     // 此类中坐标系均为Box2D世界坐标系
-    class Box2DPhysicsBody : public IAYPhysicsBody
+    class Box2DPhysicsBody : public IPhysicsBody
     {
     public:
         Box2DPhysicsBody(b2WorldId worldId, const math::Vector2& position, float rotation, BodyType type);
         ~Box2DPhysicsBody() override;
 
-        // 实现IAYPhysicsBody接口
+        // 实现IPhysicsBody接口
         void setType(BodyType type) override;
         void setTransform(const math::Transform& transform) override;
         math::Transform getTransform() override;
@@ -23,12 +23,12 @@ namespace ayt::engine::physics
         void applyForce(const math::Vector2& force) override;
         void applyImpulse(const math::Vector2& impulse) override;
         void applyTorque(float torque) override;
-        void addCollider(IAYCollider* collider) override;
-        void removeCollider(IAYCollider* collider) override;
+        void addCollider(ICollider* collider) override;
+        void removeCollider(ICollider* collider) override;
         void removeAllColliders();
-        bool hasCollider(IAYCollider* collider) const;
+        bool hasCollider(ICollider* collider) const;
         void setTrigger(bool is_trigger) override;
-        const std::vector<IAYCollider*> getColliders() const override;
+        const std::vector<ICollider*> getColliders() const override;
         void queryOverlapArea(const math::Vector4& area) override;
         void setFriction(float friction) override;
         void setBounciness(float bounciness) override;
@@ -49,10 +49,10 @@ namespace ayt::engine::physics
         math::Vector2 getHighestPoint() const;
     private:
         b2BodyId _bodyId = b2_nullBodyId;
-        std::unordered_map<IAYCollider*, b2ShapeId> _colliderShapes;
+        std::unordered_map<ICollider*, b2ShapeId> _colliderShapes;
         // 内部辅助方法
-        b2ShapeId _createShape(IAYCollider* collider);
-        void _updateShapeProperties(b2ShapeId shapeId, IAYCollider* collider);
+        b2ShapeId _createShape(ICollider* collider);
+        void _updateShapeProperties(b2ShapeId shapeId, ICollider* collider);
 
         static b2BodyType convertBodyType(BodyType type);
     };

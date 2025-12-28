@@ -5,12 +5,12 @@
 
 namespace ayt::engine::game
 {
-    using ::ayt::engine::render::IAYCamera;
+    using ::ayt::engine::render::ICamera;
 
-    class AYCameraComponent : public IAYComponent
+    class CameraComponent : public IComponent
     {
     public:
-        AYCameraComponent(IAYCamera* camera = nullptr);
+        CameraComponent(ICamera* camera = nullptr);
 
         void beginPlay() override;
 
@@ -18,26 +18,26 @@ namespace ayt::engine::game
 
         void endPlay() override;
 
-        void bindCamera(IAYCamera* camera);
+        void bindCamera(ICamera* camera);
 
         void activate();
 
-        IAYCamera* getCamera() const;
+        ICamera* getCamera() const;
 
         void shake(float intensity, float duration);
 
         void setZoom(float zoom);
 
-        void setupCamera(IAYCamera::Type type);
+        void setupCamera(ICamera::Type type);
 
     private:
-        void _update2DCamera(const math::Transform& ownerTrans);
+        void _updateCamera2D(const math::Transform& ownerTrans);
 
         void _update3DCamera(const math::Transform& ownerTrans);
 
         void _applyShakeEffect(float delta);
 
-        IAYCamera* _boundCamera = nullptr;
+        ICamera* _boundCamera = nullptr;
 
         float _shakeIntensity = 0.0f;
         float _shakeDuration = 0.0f;

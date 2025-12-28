@@ -403,7 +403,7 @@ namespace ayt::engine::resource
 			return false;
 		}
 
-		IAYResource::load(filepath);
+		IResource::load(filepath);
 		_loaded = true;
 		return true;
 	}

@@ -13,10 +13,11 @@
 #include <bx/bounds.h>
 #include <bx/pixelformat.h>
 #include <functional>
+
 namespace ayt::engine::render
 {
 	using BgfxUniformCallback = std::function<void(bgfx::ProgramHandle)>;
-	struct STShaderProgramB
+	struct ShaderProgramB
 	{
 		bgfx::ShaderHandle vsh;
 		bgfx::ShaderHandle fsh;
@@ -26,7 +27,7 @@ namespace ayt::engine::render
 		BgfxUniformCallback callback;
 	};
 
-	class AYBgfxCreator
+	class BgfxCreator
 	{
 	public:
 		void update(float delta_time);
@@ -49,8 +50,8 @@ namespace ayt::engine::render
 		static bx::FileReader _reader;
 		static bx::DefaultAllocator _defaultAllocator;
 
-		std::unordered_map<std::string, STShaderProgramB> _shaderCache;
-		std::queue<std::pair<std::string, STShaderProgramB>> _reloadQueue;
+		std::unordered_map<std::string, ShaderProgramB> _shaderCache;
+		std::queue<std::pair<std::string, ShaderProgramB>> _reloadQueue;
 		std::mutex _reloadMutex;
 		std::atomic<bool> _isReloading{ false };
 	};

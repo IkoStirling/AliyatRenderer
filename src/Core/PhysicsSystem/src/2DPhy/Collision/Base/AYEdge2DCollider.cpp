@@ -1,7 +1,7 @@
 #include "2DPhy/Collision/Base/AYEdge2DCollider.h"
 namespace ayt::engine::physics
 {
-    AYEdge2DCollider::AYEdge2DCollider(const math::Vector2& vertex1,
+    Edge2DCollider::Edge2DCollider(const math::Vector2& vertex1,
         const math::Vector2& vertex2) :
         _vertex1(vertex1),
         _vertex2(vertex2)
@@ -9,7 +9,7 @@ namespace ayt::engine::physics
 
     }
 
-    void AYEdge2DCollider::setOffset(const math::Vector2& offset)
+    void Edge2DCollider::setOffset(const math::Vector2& offset)
     {
         math::Vector2 center = (_vertex1 + _vertex2) * 0.5f;
         math::Vector2 delta = offset - center;
@@ -18,11 +18,11 @@ namespace ayt::engine::physics
         _offset = offset;
     }
 
-    float AYEdge2DCollider::getLength() const {
+    float Edge2DCollider::getLength() const {
         return glm::distance(_vertex1, _vertex2);
     }
 
-    math::Vector2 AYEdge2DCollider::getDirection() const {
+    math::Vector2 Edge2DCollider::getDirection() const {
         return glm::normalize(_vertex2 - _vertex1);
     }
 

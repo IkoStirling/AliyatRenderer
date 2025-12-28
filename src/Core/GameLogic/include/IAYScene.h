@@ -4,9 +4,9 @@
 #include <future>
 namespace ayt::engine::game
 {
-    class IAYScene {
+    class IScene {
     public:
-        virtual ~IAYScene() = default;
+        virtual ~IScene() = default;
 
         //=== 核心生命周期 ===//
         virtual void load() = 0;       // 同步加载
@@ -55,7 +55,7 @@ namespace ayt::engine::game
         }
 
         // 查找功能
-        virtual AYGameObject* findObjectByName(const std::string& name)
+        virtual GameObject* findObjectByName(const std::string& name)
         {
             std::lock_guard<std::mutex> lock(_objMutex);
             for (auto& [type, obj] : _objs)
@@ -85,15 +85,15 @@ namespace ayt::engine::game
         std::atomic<float> _loadProgress{ 0.0f };
         std::future<void> _loadFuture;
 
-        std::unordered_multimap<std::type_index, std::unique_ptr<AYGameObject>> _objs;
+        std::unordered_multimap<std::type_index, std::unique_ptr<GameObject>> _objs;
         mutable std::mutex _objMutex;
         std::string _name;
     };
 
     template<typename T, typename ...Args>
-    inline T* IAYScene::addObject(Args && ...args)
+    inline T* IScene::addObject(Args && ...args)
     {
-        static_assert(std::is_base_of_v<AYGameObject, T>, "T must inherit from AYGameObject");
+        static_assert(std::is_base_of_v<GameObject, T>, "T must inherit from GameObject");
 
         std::lock_guard<std::mutex> lock(_objMutex);
         auto obj = std::make_unique<T>(std::forward<Args>(args)...);
@@ -103,9 +103,9 @@ namespace ayt::engine::game
     }
 
     template<typename T>
-    inline std::vector<T*> IAYScene::findObjectByType()
+    inline std::vector<T*> IScene::findObjectByType()
     {
-        static_assert(std::is_base_of_v<AYGameObject, T>, "T must inherit from AYGameObject");
+        static_assert(std::is_base_of_v<GameObject, T>, "T must inherit from GameObject");
 
         std::lock_guard<std::mutex> lock(_objMutex);
         std::vector<T*> result;

@@ -31,7 +31,7 @@ namespace ayt::engine::render
                 {
                     if (wParam == SC_CLOSE && altPressed)  // 只有Alt+F4时才拦截
                     {
-                        AYLOG_INFO("[AYRenderDevice] User input alt + F4.");
+                        AYLOG_INFO("[RenderDevice] User input alt + F4.");
                         altPressed = false;  // 重置状态
                         return 0;  // 拦截Alt+F4
                     }
@@ -39,17 +39,17 @@ namespace ayt::engine::render
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
 
-    AYRenderDevice::AYRenderDevice() :
+    RenderDevice::RenderDevice() :
         _configPath("@config/Renderer/RenderDevice/config.ini")
     {
     }
 
-    AYRenderDevice::~AYRenderDevice()
+    RenderDevice::~RenderDevice()
     {
 
     }
 
-    bool AYRenderDevice::init(int width, int height)
+    bool RenderDevice::init(int width, int height)
     {
         if (!glfwInit()) return false;
 
@@ -64,7 +64,7 @@ namespace ayt::engine::render
 
         _window = glfwCreateWindow(width, height, "AliyatRenderer", NULL, NULL);
         if (!_window) return false;
-        glfwSetFramebufferSizeCallback(_window, &AYRenderDevice::_viewportCallbackWrapper);
+        glfwSetFramebufferSizeCallback(_window, &RenderDevice::_viewportCallbackWrapper);
 
         glfwMakeContextCurrent(_window);
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
@@ -101,7 +101,7 @@ namespace ayt::engine::render
         init.resolution.reset = BGFX_RESET_VSYNC;  // 启用垂直同步
 
         if (!bgfx::init(init)) {
-            AYLOG_ERR("[AYRenderDevice] Failed to init bgfx!");
+            AYLOG_ERR("[RenderDevice] Failed to init bgfx!");
             return false;
         }
 
@@ -109,30 +109,30 @@ namespace ayt::engine::render
         _stateManager->setDepthTest(true);
         _stateManager->setBlend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         _shaderManager = std::make_unique<AYShaderManager>();
-        _textureManager = std::make_unique<AYTextureManager>(this);
+        _textureManager = std::make_unique<TextureManager>(this);
 
         return true;
     }
 
-    void AYRenderDevice::shutdown()
+    void RenderDevice::shutdown()
     {
         bgfx::shutdown();
         removeViewportCallback();
         _saveDeviceWindowConfigINI();
     }
 
-    GLFWwindow* AYRenderDevice::getWindow()
+    GLFWwindow* RenderDevice::getWindow()
     {
         GLFWwindow* win = _window.load();
         if (!win) throw std::runtime_error("Window not available");
         return win;
     }
 
-    void AYRenderDevice::setWindowDesktopEffect(float opacity, bool clickThrough, COLORREF colorkey)
+    void RenderDevice::setWindowDesktopEffect(float opacity, bool clickThrough, COLORREF colorkey)
     {
         HWND hwnd = glfwGetWin32Window(_window.load());
         if (!hwnd) {
-            AYLOG_ERR("[AYRenderDevice] Failed to get Win32 window handle!");
+            AYLOG_ERR("[RenderDevice] Failed to get Win32 window handle!");
             return;
         }
 
@@ -171,16 +171,16 @@ namespace ayt::engine::render
         }
     }
 
-    void AYRenderDevice::OnWindowSizeChanged(int width, int height)
+    void RenderDevice::OnWindowSizeChanged(int width, int height)
     {
         // 像素级透明度控制，因复杂度较高废弃
     }
 
-    void AYRenderDevice::setWindowAlwaysOnTop(bool topmost)
+    void RenderDevice::setWindowAlwaysOnTop(bool topmost)
     {
         HWND hwnd = glfwGetWin32Window(_window.load());
         if (!hwnd) {
-            AYLOG_ERR("[AYRenderDevice] Failed to get Win32 window handle!");
+            AYLOG_ERR("[RenderDevice] Failed to get Win32 window handle!");
             return;
         }
 
@@ -197,13 +197,13 @@ namespace ayt::engine::render
         }
     }
 
-    void AYRenderDevice::setViewportCallback(ViewportCallback callback)
+    void RenderDevice::setViewportCallback(ViewportCallback callback)
     {
         std::lock_guard<std::mutex> lock(_callbackMutex);
         _callback = std::move(callback);
     }
 
-    void AYRenderDevice::removeViewportCallback()
+    void RenderDevice::removeViewportCallback()
     {
         std::lock_guard<std::mutex> lock(_callbackMutex);
         if (_window) {
@@ -212,7 +212,7 @@ namespace ayt::engine::render
         _callback = nullptr;
     }
 
-    GLuint AYRenderDevice::createVertexBuffer(const void* data, size_t size, const std::string& type)
+    GLuint RenderDevice::createVertexBuffer(const void* data, size_t size, const std::string& type)
     {
         GLuint vbo;
         glGenBuffers(1, &vbo);
@@ -228,7 +228,7 @@ namespace ayt::engine::render
         return vbo;
     }
 
-    GLuint AYRenderDevice::createIndexBuffer(const void* data, size_t size)
+    GLuint RenderDevice::createIndexBuffer(const void* data, size_t size)
     {
         GLuint ibo;
         glGenBuffers(1, &ibo);
@@ -237,27 +237,27 @@ namespace ayt::engine::render
         return ibo;
     }
 
-    GLuint AYRenderDevice::createVertexArray()
+    GLuint RenderDevice::createVertexArray()
     {
         GLuint vao;
         glGenVertexArrays(1, &vao);
         return vao;
     }
 
-    bgfx::VertexBufferHandle AYRenderDevice::createVertexBufferB(const bgfx::VertexLayout& layout, const void* data, size_t size, const std::string& type)
+    bgfx::VertexBufferHandle RenderDevice::createVertexBufferB(const bgfx::VertexLayout& layout, const void* data, size_t size, const std::string& type)
     {
         const bgfx::Memory* mem = createMemoryB(data, size);
         uint16_t flags = (type == "dynamic") ? BGFX_BUFFER_ALLOW_RESIZE : BGFX_BUFFER_NONE;
         return bgfx::createVertexBuffer(mem, layout, flags);
     }
 
-    bgfx::IndexBufferHandle AYRenderDevice::createIndexBufferB(const void* data, size_t size)
+    bgfx::IndexBufferHandle RenderDevice::createIndexBufferB(const void* data, size_t size)
     {
         const bgfx::Memory* mem = createMemoryB(data, size);
         return bgfx::createIndexBuffer(mem, BGFX_BUFFER_NONE);
     }
 
-    bgfx::VertexLayout AYRenderDevice::createVertexLayoutB()
+    bgfx::VertexLayout RenderDevice::createVertexLayoutB()
     {
         bgfx::VertexLayout layout;
         layout.begin()
@@ -267,7 +267,7 @@ namespace ayt::engine::render
         return layout;
     }
 
-    const bgfx::Memory* AYRenderDevice::createMemoryB(const void* data, size_t size)
+    const bgfx::Memory* RenderDevice::createMemoryB(const void* data, size_t size)
     {
         const bgfx::Memory* mem = nullptr;
 
@@ -284,43 +284,43 @@ namespace ayt::engine::render
         }
 
         if (mem == nullptr) {
-            AYLOG_ERR("[AYRenderDevice] Failed to allocate memory for index buffer");
+            AYLOG_ERR("[RenderDevice] Failed to allocate memory for index buffer");
         }
 
         return mem;
     }
 
-    GLuint AYRenderDevice::createTexture2D(const uint8_t* pixels, int width, int height, int channels)
+    GLuint RenderDevice::createTexture2D(const uint8_t* pixels, int width, int height, int channels)
     {
         return createTexture(TextureType::Standard, pixels, width, height, channels);
     }
 
-    bgfx::TextureHandle AYRenderDevice::createTexture2DB(const uint8_t* pixels, int width, int height, int channels)
+    bgfx::TextureHandle RenderDevice::createTexture2DB(const uint8_t* pixels, int width, int height, int channels)
     {
         return createTextureB(TextureType::Standard, pixels, width, height, channels);
     }
 
-    bgfx::TextureHandle AYRenderDevice::createFontTextureB(const uint8_t* pixels, int width, int height)
+    bgfx::TextureHandle RenderDevice::createFontTextureB(const uint8_t* pixels, int width, int height)
     {
         return createTextureB(TextureType::Font, pixels, width, height, 1);
     }
 
-    bgfx::TextureHandle AYRenderDevice::createVideoTextureB(int width, int height)
+    bgfx::TextureHandle RenderDevice::createVideoTextureB(int width, int height)
     {
         return createTextureB(TextureType::Video, nullptr, width, height, 4);
     }
 
-    GLuint AYRenderDevice::createFontTexture(const uint8_t* pixels, int width, int height)
+    GLuint RenderDevice::createFontTexture(const uint8_t* pixels, int width, int height)
     {
         return createTexture(TextureType::Font, pixels, width, height, 1);
     }
 
-    GLuint AYRenderDevice::createVideoTexture(int width, int height)
+    GLuint RenderDevice::createVideoTexture(int width, int height)
     {
         return createTexture(TextureType::Video, nullptr, width, height, 4);
     }
 
-    void AYRenderDevice::updateTexture(GLuint textureID, const uint8_t* pixels, int width, int height, GLenum format)
+    void RenderDevice::updateTexture(GLuint textureID, const uint8_t* pixels, int width, int height, GLenum format)
     {
         if (!pixels) return;
 
@@ -330,14 +330,14 @@ namespace ayt::engine::render
             format, GL_UNSIGNED_BYTE, pixels);
     }
 
-    void AYRenderDevice::updateTextureB(bgfx::TextureHandle texture, const uint8_t* pixels, int width, int height, bgfx::TextureFormat::Enum format)
+    void RenderDevice::updateTextureB(bgfx::TextureHandle texture, const uint8_t* pixels, int width, int height, bgfx::TextureFormat::Enum format)
     {
         if (!pixels) return;
         const bgfx::Memory* mem = bgfx::copy(pixels, width * height * 4); // 假设 4 字节/像素
         bgfx::updateTexture2D(texture, 0, 0, 0, 0, width, height, mem);
     }
 
-    GLuint AYRenderDevice::createShaderProgram(const char* vtx_src, const char* frag_src)
+    GLuint RenderDevice::createShaderProgram(const char* vtx_src, const char* frag_src)
     {
         // 创建顶点着色器
         GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -362,17 +362,17 @@ namespace ayt::engine::render
         return shaderProgram;
     }
 
-    GLuint AYRenderDevice::getShaderV(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
+    GLuint RenderDevice::getShaderV(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
     {
         if (reload)
         {
-            AYLOG_INFO("[AYRenderDevice] Shader reload: {}", name);
+            AYLOG_INFO("[RenderDevice] Shader reload: {}", name);
             _shaderManager->reloadShader(name);
         }
         return _shaderManager->loadShader(name, vertex_shaderPath, fragment_shaderPath);
     }
 
-    bgfx::ProgramHandle AYRenderDevice::createShaderProgramB(const char* vtx_name,
+    bgfx::ProgramHandle RenderDevice::createShaderProgramB(const char* vtx_name,
         const char* vtx_src,
         const char* frag_name,
         const char* frag_src)
@@ -395,12 +395,12 @@ namespace ayt::engine::render
         return program;
     }
 
-    bgfx::ProgramHandle AYRenderDevice::getShaderB(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
+    bgfx::ProgramHandle RenderDevice::getShaderB(const std::string& name, bool reload, const std::string& vertex_shaderPath, const std::string& fragment_shaderPath)
     {
         return _shaderManager->loadShaderB(name, vertex_shaderPath, fragment_shaderPath);
     }
 
-    void AYRenderDevice::restoreGLState()
+    void RenderDevice::restoreGLState()
     {
         // 恢复程序
         _stateManager->useProgram(_previousState.currentProgram);
@@ -439,7 +439,7 @@ namespace ayt::engine::render
         _stateManager->setLineWidth(_previousState.lineWidth);
     }
 
-    AYRenderDevice::TextureParams AYRenderDevice::getDefaultTextureParams(TextureType type)
+    RenderDevice::TextureParams RenderDevice::getDefaultTextureParams(TextureType type)
     {
         TextureParams params;
 
@@ -468,7 +468,7 @@ namespace ayt::engine::render
         return params;
     }
 
-    AYRenderDevice::TextureParams AYRenderDevice::getDefaultTextureParamsB(TextureType type)
+    RenderDevice::TextureParams RenderDevice::getDefaultTextureParamsB(TextureType type)
     {
         TextureParams params;
 
@@ -504,7 +504,7 @@ namespace ayt::engine::render
         return params;
     }
 
-    GLuint AYRenderDevice::createTexture(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
+    GLuint RenderDevice::createTexture(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
     {
         GLuint texture;
         glGenTextures(1, &texture);
@@ -562,7 +562,7 @@ namespace ayt::engine::render
         return texture;
     }
 
-    bgfx::TextureHandle AYRenderDevice::createTextureB(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
+    bgfx::TextureHandle RenderDevice::createTextureB(TextureType type, const uint8_t* pixels, int width, int height, int channels, const TextureParams* customParams)
     {
         // 基本参数检查
         if (width <= 0 || height <= 0) {
@@ -601,7 +601,7 @@ namespace ayt::engine::render
         return bgfx::createTexture2D(width, height, generateMipmap, 1, format, flags, mem);
     }
 
-    void AYRenderDevice::_viewportCallbackWrapper(GLFWwindow* window, int width, int height) {
+    void RenderDevice::_viewportCallbackWrapper(GLFWwindow* window, int width, int height) {
         auto* device = GET_CAST_MODULE(Mod_Renderer, "Renderer")->getRenderDevice();
         if (!device) return;
 
@@ -616,7 +616,7 @@ namespace ayt::engine::render
         }
     }
 
-    void AYRenderDevice::_loadDeviceWindowConfigINI()
+    void RenderDevice::_loadDeviceWindowConfigINI()
     {
         _config.loadFromFile(_configPath, ConfigType::INI);
 
@@ -632,7 +632,7 @@ namespace ayt::engine::render
         _colorKeyB = _config.get<uint32_t>("window config.color_key_b", 0);
     }
 
-    void AYRenderDevice::_saveDeviceWindowConfigINI()
+    void RenderDevice::_saveDeviceWindowConfigINI()
     {
         _config.set<std::string>("render config.render backend", _renderBackend);
         _config.set<bool>("window config.enable_window_effect", _isEnableWindowEffect);

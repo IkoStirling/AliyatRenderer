@@ -11,20 +11,20 @@ namespace ayt::engine::render
         int count;
     };
 
-    class AYAnimationManager {
+    class AnimationManager {
     public:
         using AnimationCallback = std::function<void()>;
     public:
-        AYAnimationManager(AYRenderDevice* device);
+        AnimationManager(RenderDevice* device);
         void shutdown();
         // 加载图集并注册动画
-        std::shared_ptr<AYSpriteAtlas> loadAtlas(const std::string& atlasName,
+        std::shared_ptr<SpriteAtlas> loadAtlas(const std::string& atlasName,
             const std::string& texturePath,
             const math::Vector2& spriteSize,
             const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
             const std::vector<bool>& loops = {});
 
-        std::shared_ptr<AYSpriteAtlas> getAtlas(const std::string& atlasName);
+        std::shared_ptr<SpriteAtlas> getAtlas(const std::string& atlasName);
 
         std::vector<AYAnimationFrame> makeFrames(
             int beginIndex,
@@ -47,8 +47,8 @@ namespace ayt::engine::render
             AnimationCallback callback);
 
     private:
-        std::unordered_map<std::string, std::shared_ptr<AYSpriteAtlas>> _atlasMap;
-        AYRenderDevice* _device;
+        std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> _atlasMap;
+        RenderDevice* _device;
     };
 
 }

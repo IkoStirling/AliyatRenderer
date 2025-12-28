@@ -4,7 +4,7 @@
 #include <functional>
 namespace ayt::engine::render
 {
-    class AYAnimationController {
+    class AnimationController {
     public:
         enum class State {
             Idle,
@@ -13,8 +13,8 @@ namespace ayt::engine::render
         };
 
 
-        void play(std::shared_ptr<AYAnimationClip> clip, bool forceRestart = false); //强制重新播放
-        void queueAnimation(std::shared_ptr<AYAnimationClip> clip);
+        void play(std::shared_ptr<AnimationClip> clip, bool forceRestart = false); //强制重新播放
+        void queueAnimation(std::shared_ptr<AnimationClip> clip);
         void update(float deltaTime);
         void pause();
         void resume();
@@ -32,8 +32,8 @@ namespace ayt::engine::render
         State getState() const { return _state; }
 
     private:
-        std::shared_ptr<AYAnimationClip> _currentClip;
-        std::queue<std::shared_ptr<AYAnimationClip>> _animationQueue;
+        std::shared_ptr<AnimationClip> _currentClip;
+        std::queue<std::shared_ptr<AnimationClip>> _animationQueue;
         size_t _currentFrame = 0;
         float _frameTimer = 0.0f;
         State _state = State::Idle;

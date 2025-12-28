@@ -1,15 +1,15 @@
 #include "2DRendering/AYAnimationClip.h"
 namespace ayt::engine::render
 {
-    AYAnimationClip::AYAnimationClip(const std::string& name, bool isLoop)
+    AnimationClip::AnimationClip(const std::string& name, bool isLoop)
         : name(name), isLoop(isLoop) {
     }
 
-    void AYAnimationClip::addFrame(const AYAnimationFrame& frame) {
+    void AnimationClip::addFrame(const AYAnimationFrame& frame) {
         _frames.push_back(frame);
     }
 
-    const AYAnimationFrame& AYAnimationClip::getFrame(size_t index) const {
+    const AYAnimationFrame& AnimationClip::getFrame(size_t index) const {
         if (index >= _frames.size()) {
             static AYAnimationFrame defaultFrame;
             return defaultFrame;
@@ -17,7 +17,7 @@ namespace ayt::engine::render
         return _frames[index];
     }
 
-    size_t AYAnimationClip::frameCount() const {
+    size_t AnimationClip::frameCount() const {
         return _frames.size();
     }
 }

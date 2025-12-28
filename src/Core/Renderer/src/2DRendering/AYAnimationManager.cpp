@@ -4,17 +4,17 @@ namespace ayt::engine::render
 {
 	using namespace ::ayt::engine::resource;
 
-	AYAnimationManager::AYAnimationManager(AYRenderDevice* device) :
+	AnimationManager::AnimationManager(RenderDevice* device) :
 		_device(device)
 	{
 	}
 
-	void AYAnimationManager::shutdown()
+	void AnimationManager::shutdown()
 	{
 
 	}
 
-	std::shared_ptr<AYSpriteAtlas> AYAnimationManager::loadAtlas(const std::string& atlasName,
+	std::shared_ptr<SpriteAtlas> AnimationManager::loadAtlas(const std::string& atlasName,
 		const std::string& texturePath,
 		const math::Vector2& spriteSize,
 		const std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>& animations,
@@ -26,7 +26,7 @@ namespace ayt::engine::render
 		}
 
 		// 加载纹理
-		auto tex = AYResourceManager::getInstance().load<AYTexture>(texturePath);
+		auto tex = ResourceManager::getInstance().load<AYTexture>(texturePath);
 		if (!tex) return nullptr;
 
 		GLuint textureId = _device->createTexture2D(tex->getPixelData(),
@@ -35,7 +35,7 @@ namespace ayt::engine::render
 			tex->getChannels());
 
 		// 存储图集数据
-		auto atlas = std::make_shared<AYSpriteAtlas>(
+		auto atlas = std::make_shared<SpriteAtlas>(
 			textureId,
 			spriteSize,
 			math::Vector2(tex->getWidth(), tex->getHeight())
@@ -45,7 +45,7 @@ namespace ayt::engine::render
 		size_t i = 0;
 		for (const auto& [name, frames] : animations) {
 			auto loop = i < loops.size() ? loops[i++] : false;
-			auto clip = std::make_shared<AYAnimationClip>(name, loop);
+			auto clip = std::make_shared<AnimationClip>(name, loop);
 			for (const auto& frame : frames) {
 				clip->addFrame(frame);
 			}
@@ -56,13 +56,13 @@ namespace ayt::engine::render
 		return atlas;
 	}
 
-	std::shared_ptr<AYSpriteAtlas> AYAnimationManager::getAtlas(const std::string& atlasName)
+	std::shared_ptr<SpriteAtlas> AnimationManager::getAtlas(const std::string& atlasName)
 	{
 		auto it = _atlasMap.find(atlasName);
 		return it != _atlasMap.end() ? it->second : nullptr;
 	}
 
-	std::vector<AYAnimationFrame> AYAnimationManager::makeFrames(
+	std::vector<AYAnimationFrame> AnimationManager::makeFrames(
 		int beginIndex,
 		int frameCount,
 		const math::Vector2& spriteSize,
@@ -108,7 +108,7 @@ namespace ayt::engine::render
 	}
 
 	std::vector<std::pair<std::string, std::vector<AYAnimationFrame>>>
-		AYAnimationManager::makeAnimationData(
+		AnimationManager::makeAnimationData(
 			const math::Vector2& spriteSize,
 			const math::Vector2& atlasSize,
 			const std::vector<AnimeDataCreator>& indexs,
@@ -127,7 +127,7 @@ namespace ayt::engine::render
 
 
 
-	void AYAnimationManager::registerAnimationEvent(const std::string& atlasName, const std::string& animationName, int frameIndex, AnimationCallback callback)
+	void AnimationManager::registerAnimationEvent(const std::string& atlasName, const std::string& animationName, int frameIndex, AnimationCallback callback)
 	{
 	}
 }

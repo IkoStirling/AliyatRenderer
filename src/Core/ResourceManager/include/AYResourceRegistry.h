@@ -5,27 +5,30 @@
 #include <functional>
 #include <string>
 #include <any>
+#include <stdexcept>
+
 namespace ayt::engine::resource
 {
-    class AYResourceRegistry {
-    public:
-        using ParametricCreatorFunc = std::function<std::shared_ptr<IAYResource>(const std::any&)>;
 
-        static AYResourceRegistry& getInstance()
+    class ResourceRegistry {
+    public:
+        using ParametricCreatorFunc = std::function<std::shared_ptr<IResource>(const std::any&)>;
+
+        static ResourceRegistry& getInstance()
         {
-            static AYResourceRegistry mInstance;
+            static ResourceRegistry mInstance;
             return mInstance;
         }
 
         template<typename T, typename... Args>
         void registerType(const std::string& typeName)
         {
-            _creators[typeName] = [typeName](std::any const& args) -> std::shared_ptr<IAYResource> {
+            _creators[typeName] = [typeName](std::any const& args) -> std::shared_ptr<IResource> {
                 // 类型安全检查
                 try {
                     if constexpr (sizeof...(Args) == 0)
                     {
-                        return static_pointer_cast<IAYResource>(std::make_shared<T>());
+                        return static_pointer_cast<IResource>(std::make_shared<T>());
                     }
                     else
                     {

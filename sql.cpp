@@ -1,5 +1,5 @@
 #include <iostream>
-#include <AYSqlPool.h>
+#include "AYSqlPool.h"
 #include <iomanip>
 #include <AYCmdInterface.h>
 #include <fstream>
@@ -30,7 +30,7 @@ void printHelp() {
 }
 
 struct CommandLineArgs {
-    STSqlType dbType = STSqlType::SQLite3;
+    SqlType dbType = SqlType::SQLite3;
     std::string username;
     std::string password;
     std::string dbName;
@@ -82,13 +82,13 @@ CommandLineArgs parseArguments(int argc, char* argv[]) {
             std::transform(type.begin(), type.end(), type.begin(), ::tolower);
 
             if (type == "mysql") {
-                args.dbType = STSqlType::MySQL;
+                args.dbType = SqlType::MySQL;
             }
             else if (type == "postgresql" || type == "postgres") {
-                args.dbType = STSqlType::PostgreSQL;
+                args.dbType = SqlType::PostgreSQL;
             }
             else if (type == "sqlite" || type == "sqlite3") {
-                args.dbType = STSqlType::SQLite3;
+                args.dbType = SqlType::SQLite3;
             }
             else {
                 throw std::runtime_error("Unsupported database type: " + type);
@@ -384,11 +384,11 @@ int main(int argc, char* argv[])
         }
         CommandInterface cmdInterface;
         std::unique_ptr<ICommandParser> parser;
-        AYSqlPool& sqlPool = AYSqlPool::getInstance();
-        AYSqlConfig config;
+        SqlPool& sqlPool = SqlPool::getInstance();
+        SqlConfig config;
 
         switch (args.dbType) {
-        case STSqlType::SQLite3:
+        case SqlType::SQLite3:
         {
             if (args.filePath.empty()) {
                 throw std::runtime_error("SQLite requires a database file path (-f/--file)");
@@ -412,7 +412,7 @@ int main(int argc, char* argv[])
                 }
             }
 
-            config = AYSqlConfig::SQLiteConfig(args.filePath);
+            config = SqlConfig::SQLiteConfig(args.filePath);
             sqlPool.initialize(config);
             auto conn = sqlPool.getConnection();
             auto& session = conn->session();
@@ -428,7 +428,7 @@ int main(int argc, char* argv[])
                     if (isSelect) {
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
-                        AYSqlConnection::printQueryResult(rows, output);
+                        SqlConnection::printQueryResult(rows, output);
                         return CommandResult{ true, output.str(), "" };
                     }
                     else {
@@ -459,12 +459,12 @@ int main(int argc, char* argv[])
                 });
             break;
         }
-        case STSqlType::MySQL:
+        case SqlType::MySQL:
         {
             if (args.host.empty() || args.dbName.empty() || args.username.empty()) {
                 throw std::runtime_error("MySQL requires host, database name and username");
             }
-            config = AYSqlConfig::MySQLConfig(args.host, args.port,
+            config = SqlConfig::MySQLConfig(args.host, args.port,
                 args.dbName, args.username, args.password);
             std::cout << "MySQL connection: \n\t"
                 << config.connectionString << std::endl;;
@@ -514,7 +514,7 @@ int main(int argc, char* argv[])
                         // 查询语句
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
-                        AYSqlConnection::printQueryResult(rows, output);
+                        SqlConnection::printQueryResult(rows, output);
                         return CommandResult{ true, output.str(), "" };
                     }
                     else {
@@ -540,12 +540,12 @@ int main(int argc, char* argv[])
                 });
             break;
         }
-        case STSqlType::PostgreSQL:
+        case SqlType::PostgreSQL:
         {
             if (args.host.empty() || args.dbName.empty() || args.username.empty()) {
                 throw std::runtime_error("PostgreSQL requires host, database name and username");
             }
-            config = AYSqlConfig::PostgreSQLConfig(args.host, args.port,
+            config = SqlConfig::PostgreSQLConfig(args.host, args.port,
                 args.dbName, args.username, args.password);
             std::cout << "PostgreSQL connection: \n\t"
                 << config.connectionString << std::endl;
@@ -584,7 +584,7 @@ int main(int argc, char* argv[])
                         // 处理查询语句
                         soci::rowset<soci::row> rows = (session.prepare << cmd.normalized);
                         std::stringstream output;
-                        AYSqlConnection::printQueryResult(rows, output);
+                        SqlConnection::printQueryResult(rows, output);
                         return CommandResult{ true, output.str(), "" };
                     }
                     else {

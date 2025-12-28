@@ -2,12 +2,12 @@
 #include "AYInputSystem.h"
 namespace ayt::engine::input
 {
-    AYInputAction::AYInputAction(Type type, UniversalInput input, float long_pressDuration, float double_pressDuration)
+    InputAction::InputAction(Type type, UniversalInput input, float long_pressDuration, float double_pressDuration)
         : _type(type), _input(input), _durationThreshold(long_pressDuration), _doublePressThreshold(double_pressDuration)
     {
     }
 
-    bool AYInputAction::evaluate(const AYInputSystem& input) const
+    bool InputAction::evaluate(const InputSystem& input) const
     {
         return std::visit([&](auto&& arg) -> bool {
             using T = std::decay_t<decltype(arg)>;
@@ -64,12 +64,12 @@ namespace ayt::engine::input
             }, _input);
     }
 
-    void AYInputAction::rebind(UniversalInput input)
+    void InputAction::rebind(UniversalInput input)
     {
         _input = input;
     }
 
-    const UniversalInput& AYInputAction::getInput() const
+    const UniversalInput& InputAction::getInput() const
     {
         return _input;
     }

@@ -3,9 +3,9 @@
 
 namespace ayt::engine::render
 {
-    class IAYCamera {
+    class ICamera {
     public:
-        virtual ~IAYCamera() = default;
+        virtual ~ICamera() = default;
 
         // 获取视图矩阵（View Matrix）
         virtual math::Matrix4 getViewMatrix() const;

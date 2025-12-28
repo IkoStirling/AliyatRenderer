@@ -1,17 +1,17 @@
 #include "2DPhy/Collision/Base/AYPolygon2DCollider.h"
 namespace ayt::engine::physics
 {
-    AYPolygon2DCollider::AYPolygon2DCollider(const std::vector<math::Vector2>& vertices)
+    Polygon2DCollider::Polygon2DCollider(const std::vector<math::Vector2>& vertices)
         : _vertices(vertices) {
         _updateConvexity();
     }
 
-    void AYPolygon2DCollider::setVertices(const std::vector<math::Vector2>& vertices) {
+    void Polygon2DCollider::setVertices(const std::vector<math::Vector2>& vertices) {
         _vertices = vertices;
         _updateConvexity();
     }
 
-    void AYPolygon2DCollider::_updateConvexity() {
+    void Polygon2DCollider::_updateConvexity() {
         if (_vertices.size() < 3) {
             _isConvex = false;  // 少于3个顶点不是多边形
             return;
@@ -35,19 +35,19 @@ namespace ayt::engine::physics
         _isConvex = true;  // 所有边方向一致，是凸多边形
     }
 
-    void AYPolygon2DCollider::addVertex(const math::Vector2& vertex) {
+    void Polygon2DCollider::addVertex(const math::Vector2& vertex) {
         _vertices.push_back(vertex);
         _updateConvexity();
     }
 
-    void AYPolygon2DCollider::removeVertex(size_t index) {
+    void Polygon2DCollider::removeVertex(size_t index) {
         if (index < _vertices.size()) {
             _vertices.erase(_vertices.begin() + index);
             _updateConvexity();
         }
     }
 
-    void AYPolygon2DCollider::clearVertices() {
+    void Polygon2DCollider::clearVertices() {
         _vertices.clear();
         _isConvex = true;
     }

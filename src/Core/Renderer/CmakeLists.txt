@@ -1,5 +1,5 @@
 set(MODULE_NAME renderer)
-set(INTERFACE_NAME ${MODULE_NAME}_xxx)
+set(INTERFACE_NAME ${MODULE_NAME}_interface)
 file(GLOB_RECURSE SRCS
 	"*.cpp"
 	"*.c"

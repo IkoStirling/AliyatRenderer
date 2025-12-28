@@ -7,7 +7,7 @@ namespace ayt::engine::render
     using namespace ::ayt::engine::config;
     using namespace ::ayt::engine::path;
 
-    AYSpriteRenderer::AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer) :
+    SpriteRenderer::SpriteRenderer(RenderDevice* device, Renderer* renderer) :
         _device(device),
         _renderer(renderer),
         _configPath("@config/Renderer/SpriteRenderer/config.ini")
@@ -16,12 +16,12 @@ namespace ayt::engine::render
         _initBuffers();
     }
 
-    AYSpriteRenderer::~AYSpriteRenderer()
+    SpriteRenderer::~SpriteRenderer()
     {
 
     }
 
-    void AYSpriteRenderer::shutdown()
+    void SpriteRenderer::shutdown()
     {
         _saveSpriteRendererConfigINI();
         if (_vao) {
@@ -33,7 +33,7 @@ namespace ayt::engine::render
     }
 
 
-    void AYSpriteRenderer::drawSprite(GLuint texture,
+    void SpriteRenderer::drawSprite(GLuint texture,
         const math::Transform& transform,
         const math::Vector2& uvOffset,
         const math::Vector2& uvSize,
@@ -57,7 +57,7 @@ namespace ayt::engine::render
         );
     }
 
-    void AYSpriteRenderer::drawSpriteFromAtlas(GLuint texture,
+    void SpriteRenderer::drawSpriteFromAtlas(GLuint texture,
         const math::Transform& transform,
         const math::Vector2& size,
         const math::Vector2& uvOffset,
@@ -81,7 +81,7 @@ namespace ayt::engine::render
         );
     }
 
-    void AYSpriteRenderer::drawSprite3D(GLuint texture,
+    void SpriteRenderer::drawSprite3D(GLuint texture,
         const math::Transform& transform,
         const math::Vector2& uvOffset,
         const math::Vector2& uvSize,
@@ -132,7 +132,7 @@ namespace ayt::engine::render
         _device->restoreGLState();
     }
 
-    void AYSpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
+    void SpriteRenderer::drawSpriteFromAtlas3D(GLuint texture,
         const math::Transform& transform,
         const math::Vector2& uvOffset,
         const math::Vector2& uvSize,
@@ -157,7 +157,7 @@ namespace ayt::engine::render
     }
 
 
-    void AYSpriteRenderer::_initBuffers()
+    void SpriteRenderer::_initBuffers()
     {
         // 顶点数据 (位置 + 纹理坐标)
         float vertices[] = {
@@ -171,7 +171,7 @@ namespace ayt::engine::render
             1.0f, 0.0f, 0.0f, 1.0f, 0.0f
         };
 
-        // 使用AYRenderDevice创建VBO
+        // 使用RenderDevice创建VBO
         _vbo = _device->createVertexBuffer(vertices, sizeof(vertices));
 
         // 创建VAO
@@ -195,7 +195,7 @@ namespace ayt::engine::render
         _device->restoreGLState();
     }
 
-    void AYSpriteRenderer::_loadSpriteRendererConfigINI()
+    void SpriteRenderer::_loadSpriteRendererConfigINI()
     {
         _config.loadFromFile(_configPath, ConfigType::INI);
 
@@ -211,7 +211,7 @@ namespace ayt::engine::render
             Path::Engine::getPresetShaderPath() + std::string("SpriteRenderer/sprite_atlas.frag"));
     }
 
-    void AYSpriteRenderer::_saveSpriteRendererConfigINI()
+    void SpriteRenderer::_saveSpriteRendererConfigINI()
     {
         _config.set("shader name.base", _baseShader);
         _config.set("shader name.atlas", _atlasShader);
@@ -223,12 +223,12 @@ namespace ayt::engine::render
         _config.saveConfig(_configPath);
     }
 
-    GLuint AYSpriteRenderer::_getBaseShader(bool reload)
+    GLuint SpriteRenderer::_getBaseShader(bool reload)
     {
         return _device->getShaderV(_baseShader, reload, _baseVertex, _baseFragment);
     }
 
-    GLuint AYSpriteRenderer::_getAtlasShader(bool reload)
+    GLuint SpriteRenderer::_getAtlasShader(bool reload)
     {
         return _device->getShaderV(_atlasShader, reload, _atlasVertex, _atlasFragment);
     }

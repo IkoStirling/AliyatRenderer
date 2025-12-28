@@ -7,7 +7,7 @@ namespace ayt::engine::game
 {
 	using namespace ::ayt::engine::render;
 
-	class AYSpriteRenderComponent : public IAYRenderComponent
+	class SpriteRenderComponent : public IRenderComponent
 	{
 	public:
 		struct AnimationConfig {
@@ -25,17 +25,17 @@ namespace ayt::engine::game
 			}
 		};
 		virtual void endPlay() override {};
-		virtual void render(const AYRenderContext& context) override
+		virtual void render(const RenderContext& context) override
 		{
 			if (!_sprite && _isAnimated)
 				return;
-			auto ent = dynamic_cast<AYEntrant*>(getOwner());
+			auto ent = dynamic_cast<Entrant*>(getOwner());
 			if (!ent)
 				return;
 			auto& trans = ent->getTransform();
 			if (_isVisible)
 			{
-				auto renderManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+				auto renderManager = GET_CAST_MODULE(RendererManager, "Renderer");
 				auto spriteRenderer = renderManager->getRenderer()->getSpriteRenderer();
 				auto cameraSystem = renderManager->getCameraSystem();
 				float ppm = cameraSystem->getActiveCamera()->getPixelPerMeter();
@@ -109,7 +109,7 @@ namespace ayt::engine::game
 		) {
 			_isAnimated = true;
 			_characterSize = characterSize;
-			auto renderMgr = GET_CAST_MODULE(AYRendererManager, "Renderer");
+			auto renderMgr = GET_CAST_MODULE(RendererManager, "Renderer");
 			auto animMgr = renderMgr->get2DAnimationManager();
 
 			// 转换动画配置格式
@@ -125,7 +125,7 @@ namespace ayt::engine::game
 			auto atlas = animMgr->loadAtlas(name, texturePath, spriteSize, data, loops);
 
 			// 创建精灵
-			_sprite = std::unique_ptr<AYAnimatedSprite>(
+			_sprite = std::unique_ptr<AnimatedSprite>(
 				renderMgr->create2DSprite(atlas)
 			);
 		}
@@ -153,7 +153,7 @@ namespace ayt::engine::game
 		}
 
 	public:
-		std::unique_ptr<AYAnimatedSprite> _sprite;
+		std::unique_ptr<AnimatedSprite> _sprite;
 		glm::vec2 _uvOffset = glm::vec2(0);
 		glm::vec2 _uvSize = glm::vec2(1);
 		glm::vec3 _spriteSize = glm::vec3(1.f);

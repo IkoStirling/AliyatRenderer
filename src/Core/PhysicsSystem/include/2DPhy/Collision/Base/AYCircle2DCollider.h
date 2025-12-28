@@ -2,9 +2,9 @@
 #include "BasePhy/IAYCollider.h"
 namespace ayt::engine::physics
 {
-    class AYCircle2DCollider : public IAYCollider {
+    class Circle2DCollider : public ICollider {
     public:
-        explicit AYCircle2DCollider(float radius = 0.5f);
+        explicit Circle2DCollider(float radius = 0.5f);
 
         // ÐÎ×´ÀàÐÍ
         ShapeType getShapeType() const override { return ShapeType::Circle2D; }

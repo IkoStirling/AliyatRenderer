@@ -4,47 +4,47 @@
 #include <string>
 namespace ayt::engine::render
 {
-    AYLightManager::AYLightManager(AYRenderDevice* device, AYRenderer* renderer) :
+    LightManager::LightManager(RenderDevice* device, Renderer* renderer) :
         _device(device),
         _renderer(renderer)
     {
         _setupLightSSBO();
     }
 
-    AYLightManager::~AYLightManager()
+    LightManager::~LightManager()
     {
         glDeleteBuffers(1, &_ssbo);
     }
 
-    void AYLightManager::addDirectionalLight(const STDirectionalLight& light)
+    void LightManager::addDirectionalLight(const DirectionalLight& light)
     {
         if (_directionalLights.size() < MAX_DIRECTIONAL_LIGHTS) {
             _directionalLights.push_back(light);
         }
     }
 
-    void AYLightManager::addPointLight(const STPointLight& light)
+    void LightManager::addPointLight(const PointLight& light)
     {
         if (_pointLights.size() < MAX_POINT_LIGHTS) {
             _pointLights.push_back(light);
         }
     }
 
-    void AYLightManager::addSpotLight(const STSpotLight& light)
+    void LightManager::addSpotLight(const SpotLight& light)
     {
         if (_spotLights.size() < MAX_SPOT_LIGHTS) {
             _spotLights.push_back(light);
         }
     }
 
-    void AYLightManager::clearAllLights()
+    void LightManager::clearAllLights()
     {
         _directionalLights.clear();
         _pointLights.clear();
         _spotLights.clear();
     }
 
-    void AYLightManager::updateLightData()
+    void LightManager::updateLightData()
     {
         if (_ssbo == 0) {
             _setupLightSSBO();
@@ -70,13 +70,13 @@ namespace ayt::engine::render
         AY_CHECK_GL_ERROR("Update lights data failed.");
     }
 
-    void AYLightManager::bindLightData(GLuint bindingPoint)
+    void LightManager::bindLightData(GLuint bindingPoint)
     {
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPoint, _ssbo);
         AY_CHECK_GL_ERROR("Bind lights data failed.");
     }
 
-    void AYLightManager::_setupLightSSBO()
+    void LightManager::_setupLightSSBO()
     {
         if (_ssbo != 0) {
             glDeleteBuffers(1, &_ssbo); // 确保清理旧缓冲区
@@ -90,7 +90,7 @@ namespace ayt::engine::render
         AY_CHECK_GL_ERROR("Setup lights ssbo failed.");
     }
 
-    void AYLightManager::_packLightData()
+    void LightManager::_packLightData()
     {
         memset(&_lightData, 0, sizeof(LightSSBOData));
 

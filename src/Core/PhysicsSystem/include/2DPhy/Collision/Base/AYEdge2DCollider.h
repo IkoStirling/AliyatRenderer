@@ -2,9 +2,9 @@
 #include "BasePhy/IAYCollider.h"
 namespace ayt::engine::physics
 {
-    class AYEdge2DCollider : public IAYCollider {
+    class Edge2DCollider : public ICollider {
     public:
-        explicit AYEdge2DCollider(const math::Vector2& vertex1 = { 0,0 },
+        explicit Edge2DCollider(const math::Vector2& vertex1 = { 0,0 },
             const math::Vector2& vertex2 = { 1,0 });
 
         // ÐÎ×´ÀàÐÍ

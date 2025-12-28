@@ -4,7 +4,7 @@
 #include "glm/glm.hpp"
 namespace ayt::engine::input
 {
-    class AYInputBinding;
+    class InputBinding;
 
     struct InputState {
         bool current = false;           // 当前帧状态
@@ -29,7 +29,7 @@ namespace ayt::engine::input
         /*
             虚拟按键映射，这里提供映射中按键活动的状态访问方法
         */
-        virtual void addInputMapping(const std::string& name, std::shared_ptr<AYInputBinding> binding) = 0;
+        virtual void addInputMapping(const std::string& name, std::shared_ptr<InputBinding> binding) = 0;
         virtual void removeInputMapping(const std::string& name) = 0;
         virtual bool isActionActive(const std::string& bindingName, const std::string& actionName) const = 0;
         virtual bool isActionActive(const std::string& fullActionName) const = 0; //bindingName.actionName

@@ -21,23 +21,17 @@ link_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/thirdParty/lib)
 
 #-------------项目自定义库--------------#
 
-add_subdirectory(src/Core/Math)
-add_subdirectory(src/Core/ConfigWrapper)
-add_subdirectory(src/Core/Log)
-add_subdirectory(src/Core/SQL)
-add_subdirectory(src/Core/Command)
+add_subdirectory(src/Core/Foundation)
+add_subdirectory(src/Core/Addition)
 add_subdirectory(src/Core/ModuleManager)
 
 add_subdirectory(src/Core/MemoryPool)
 add_subdirectory(src/Core/EventSystem)
-add_subdirectory(src/Core/TimerManager)
-add_subdirectory(src/Core/MaterialManager)
 add_subdirectory(src/Core/ResourceManager)
 add_subdirectory(src/Core/SoundEngine)
 add_subdirectory(src/Core/Renderer)
 add_subdirectory(src/Core/InputSystem)
 #add_subdirectory(src/Core/Network)
-add_subdirectory(src/Core/SceneManager)
 add_subdirectory(src/Core/PhysicsSystem)
 add_subdirectory(src/Core/ECSEngine)
 
@@ -53,7 +47,7 @@ file(COPY ${ASSETS} DESTINATION ${CMAKE_BINARY_DIR})
 
 # 快捷数据库工具
 add_executable(aysql_tool sql.cpp)
-target_link_libraries(aysql_tool PRIVATE sql command)
+target_link_libraries(aysql_tool PRIVATE addition)
 
 # 快捷配置文件工具
 find_package(httplib CONFIG REQUIRED)

@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 namespace ayt::engine::resource
 {
-    class AYVideo : public IAYResource
+    class AYVideo : public IResource
     {
         SUPPORT_MEMORY_POOL(AYVideo)
             DECLARE_RESOURCE_CLASS(AYVideo, "videos")

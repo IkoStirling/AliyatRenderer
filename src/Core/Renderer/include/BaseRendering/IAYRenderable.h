@@ -2,10 +2,10 @@
 #include "AYRenderContext.h"
 namespace ayt::engine::render
 {
-	class IAYRenderable
+	class IRenderable
 	{
 	public:
-		virtual ~IAYRenderable() = default;
-		virtual void render(const AYRenderContext& context) = 0;
+		virtual ~IRenderable() = default;
+		virtual void render(const RenderContext& context) = 0;
 	};
 }

@@ -5,17 +5,17 @@
 #include <memory>
 namespace ayt::engine::resource
 {
-    AYAudioPlayer::AYAudioPlayer(bool enable3D) : _is3DEnabled(enable3D) {
+    AudioPlayer::AudioPlayer(bool enable3D) : _is3DEnabled(enable3D) {
         alGenSources(1, &_source);
         updateSourceProperties();
     }
 
-    AYAudioPlayer::~AYAudioPlayer() {
+    AudioPlayer::~AudioPlayer() {
         stop();
         alDeleteSources(1, &_source);
     }
 
-    bool AYAudioPlayer::play(const std::shared_ptr<IAYAudioSource>& source, bool loop) {
+    bool AudioPlayer::play(const std::shared_ptr<IAYAudioSource>& source, bool loop) {
         stop(); // 停止当前播放
         if (!source || !source->getSampleRate()) return false;
 
@@ -61,7 +61,7 @@ namespace ayt::engine::resource
         return true;
     }
 
-    void AYAudioPlayer::pause()
+    void AudioPlayer::pause()
     {
         if (_state == PlayState::Playing) {
             alSourcePause(_source);
@@ -69,7 +69,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAudioPlayer::resume()
+    void AudioPlayer::resume()
     {
         if (_state == PlayState::Paused) {
             alSourcePlay(_source);
@@ -77,7 +77,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAudioPlayer::stop() {
+    void AudioPlayer::stop() {
         if (_state == PlayState::Stopped) return;
 
         alSourceStop(_source);
@@ -87,7 +87,7 @@ namespace ayt::engine::resource
         _callback = nullptr;
     }
 
-    void AYAudioPlayer::seek(float seconds)
+    void AudioPlayer::seek(float seconds)
     {
         if (!_currentSource) return;
 
@@ -106,23 +106,23 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAudioPlayer::setPlaybackFinishedCallback(PlaybackFinishedCallback callback)
+    void AudioPlayer::setPlaybackFinishedCallback(PlaybackFinishedCallback callback)
     {
         _callback = callback;
     }
 
-    void AYAudioPlayer::setMasterVolume(float volume) {
+    void AudioPlayer::setMasterVolume(float volume) {
         _masterVolume.store(std::clamp(volume, 0.0f, 1.0f));
         updateSourceProperties();
     }
 
-    void AYAudioPlayer::setVolume(float volume)
+    void AudioPlayer::setVolume(float volume)
     {
         _volume.store(std::clamp(volume, 0.0f, 1.0f));
         updateSourceProperties();
     }
 
-    void AYAudioPlayer::setPosition(const glm::vec3& position)
+    void AudioPlayer::setPosition(const glm::vec3& position)
     {
         _position = position;
         if (_is3DEnabled) {
@@ -130,7 +130,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAudioPlayer::setVelocity(const glm::vec3& velocity)
+    void AudioPlayer::setVelocity(const glm::vec3& velocity)
     {
         _velocity = velocity;
         if (_is3DEnabled) {
@@ -138,7 +138,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAudioPlayer::setLoop(bool loop)
+    void AudioPlayer::setLoop(bool loop)
     {
         _loop.store(loop);
         // 静态音频立即设置，流式音频在update中处理
@@ -147,13 +147,13 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAudioPlayer::set3DEnabled(bool enabled)
+    void AudioPlayer::set3DEnabled(bool enabled)
     {
         _is3DEnabled = enabled;
         updateSourceProperties();
     }
 
-    void AYAudioPlayer::set3DParameters(float rolloff, float refDistance, float maxDistance)
+    void AudioPlayer::set3DParameters(float rolloff, float refDistance, float maxDistance)
     {
         _rolloffFactor = rolloff;
         _referenceDistance = refDistance;
@@ -162,7 +162,7 @@ namespace ayt::engine::resource
         updateSourceProperties();
     }
 
-    bool AYAudioPlayer::isPlaybackFinished() const {
+    bool AudioPlayer::isPlaybackFinished() const {
         // 1. 基础条件检查
         if (!_currentSource || _state != PlayState::Playing) {
             return false;
@@ -190,17 +190,17 @@ namespace ayt::engine::resource
         //}
     }
 
-    bool AYAudioPlayer::isAvaliableOrInterruptible() const {
+    bool AudioPlayer::isAvaliableOrInterruptible() const {
         return _state == PlayState::Stopped ||
             (_state == PlayState::Playing && _loop.load());
     }
 
-    AYAudioPlayer::PlayState AYAudioPlayer::getState() const
+    AudioPlayer::PlayState AudioPlayer::getState() const
     {
         return _state.load();
     }
 
-    float AYAudioPlayer::getCurrentTime() const
+    float AudioPlayer::getCurrentTime() const
     {
         if (!_currentSource) return 0.0f;
 
@@ -209,12 +209,12 @@ namespace ayt::engine::resource
         return offset;
     }
 
-    bool AYAudioPlayer::isStreaming() const
+    bool AudioPlayer::isStreaming() const
     {
         return _currentSource && _currentSource->isStreaming();
     }
 
-    void AYAudioPlayer::update() {
+    void AudioPlayer::update() {
         if (_state != PlayState::Playing || !_currentSource) return;
 
         // 处理流式音频缓冲
@@ -261,7 +261,7 @@ namespace ayt::engine::resource
     }
 
 
-    void AYAudioPlayer::cleanup() {
+    void AudioPlayer::cleanup() {
         // 清空缓冲区队列（仅对流式音频）
         if (_currentSource && _currentSource->isStreaming()) {
             ALint queued;
@@ -281,7 +281,7 @@ namespace ayt::engine::resource
         _currentSource.reset();
     }
 
-    void AYAudioPlayer::updateSourceProperties() {
+    void AudioPlayer::updateSourceProperties() {
         alSourcef(_source, AL_GAIN, _volume.load() * _masterVolume.load());
 
         if (_is3DEnabled) {
@@ -296,7 +296,7 @@ namespace ayt::engine::resource
         }
     }
 
-    bool AYAudioPlayer::refillBuffers(size_t minFrames) {
+    bool AudioPlayer::refillBuffers(size_t minFrames) {
         std::lock_guard<std::mutex> lock(_bufferMutex);
 
         ALint queued;

@@ -35,7 +35,6 @@ target_link_libraries(${MODULE_NAME} PUBLIC
 	${INTERFACE_NAME}
 	module_manager
 	event_system
-	material_manager
 	sound_engine
 	PRIVATE
 	${FFMPEG_LIBRARIES}

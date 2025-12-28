@@ -4,12 +4,12 @@
 #include <memory>
 namespace ayt::engine::render
 {
-    class AYRenderer;
+    class Renderer;
 
-    class AYSpriteRenderer {
+    class SpriteRenderer {
     public:
-        AYSpriteRenderer(AYRenderDevice* device, AYRenderer* renderer);
-        ~AYSpriteRenderer();
+        SpriteRenderer(RenderDevice* device, Renderer* renderer);
+        ~SpriteRenderer();
         void shutdown();
 
         void drawSprite(GLuint texture,
@@ -58,8 +58,8 @@ namespace ayt::engine::render
 
 
     private:
-        AYRenderDevice* _device;
-        AYRenderer* _renderer;
+        RenderDevice* _device;
+        Renderer* _renderer;
 
         void _initBuffers();
 

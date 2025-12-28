@@ -9,8 +9,7 @@
 #include "AYInputSystem.h"
 #include "AYInputBinding.h"
 #include "AYGameObject.h"
-#include "Component/AYTransformComponent.h"
-#include "Component/AYSpriteRenderComponent.h"
+
 #include "Preset/Orc.h"
 #include "Preset/Orc_scene.h"
 
@@ -39,14 +38,14 @@ namespace ayt::engine
             close();
             });
 
-        auto binding = std::make_shared<AYInputBinding>();
-        binding->addAction("double_click", AYInputAction::Type::LongPress, KeyboardInput{ GLFW_KEY_W });
-        binding->addAction("Mouse_Left", AYInputAction::Type::LongPress, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
-        binding->addAction("GamePad_X", AYInputAction::Type::LongPress, GamepadButtonInput{ GLFW_GAMEPAD_BUTTON_X });
+        auto binding = std::make_shared<InputBinding>();
+        binding->addAction("double_click", InputAction::Type::LongPress, KeyboardInput{ GLFW_KEY_W });
+        binding->addAction("Mouse_Left", InputAction::Type::LongPress, MouseButtonInput{ GLFW_MOUSE_BUTTON_LEFT });
+        binding->addAction("GamePad_X", InputAction::Type::LongPress, GamepadButtonInput{ GLFW_GAMEPAD_BUTTON_X });
         auto inputSystem = GET_CAST_MODULE(Mod_InputSystem, "InputSystem");
         inputSystem->addInputMapping("default", binding);
 
-        auto sm = GET_CAST_MODULE(AYSceneManager, "SceneManager");
+        auto sm = GET_CAST_MODULE(SceneManager, "SceneManager");
         sm->addScene<Orc_scene>("level0");
         sm->loadScene("level0");
 

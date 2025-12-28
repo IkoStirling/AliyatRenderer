@@ -7,7 +7,7 @@
 
 namespace ayt::engine::physics
 {
-	namespace AYCategoryBits {
+	namespace CategoryBits {
 		enum Type : uint16_t {
 			None = 0x0000,		// 无类别（通常不用作物体的类别）
 			Player = 0x0001,		// 玩家角色
@@ -26,11 +26,11 @@ namespace ayt::engine::physics
 		};
 	}
 
-	class AYPhysicsSystem : public Mod_PhysicsSystem
+	class PhysicsSystem : public Mod_PhysicsSystem
 	{
 	public:
-		AYPhysicsSystem() = default;
-		~AYPhysicsSystem() = default;
+		PhysicsSystem() = default;
+		~PhysicsSystem() = default;
 
 		virtual void init() override;
 		virtual void update(float delta_time) override;
@@ -40,7 +40,7 @@ namespace ayt::engine::physics
 
 		void createWorld(WorldType type);
 		void destroyWorld(WorldType type);
-		IAYPhysicsWorld* getPhysicsWorld(WorldType type);
+		IPhysicsWorld* getPhysicsWorld(WorldType type);
 
 		void setSimulationPaused(bool paused);
 		void setFixedTimeStep(float timeStep);
@@ -52,7 +52,7 @@ namespace ayt::engine::physics
 		void _syncPhysicsToLogic();
 		void _syncLogicToPhysics();
 		struct PhysicsWorld {
-			std::unique_ptr<IAYPhysicsWorld> impl;
+			std::unique_ptr<IPhysicsWorld> impl;
 			std::unordered_set<EntityID> entities;
 		};
 		std::unordered_map<WorldType, PhysicsWorld> _worlds;
@@ -68,5 +68,5 @@ namespace ayt::engine::physics
 		uint32_t _debugDrawFlags = 0;
 	};
 
-	REGISTER_MODULE_CLASS("PhysicsSystem", AYPhysicsSystem)
+	REGISTER_MODULE_CLASS("PhysicsSystem", PhysicsSystem)
 }

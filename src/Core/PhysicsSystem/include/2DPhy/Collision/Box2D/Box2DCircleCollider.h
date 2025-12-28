@@ -3,11 +3,11 @@
 #include "Box2DColliderBase.h"
 namespace ayt::engine::physics
 {
-    class Box2DCircleCollider : public AYCircle2DCollider, public Box2DColliderBase
+    class Box2DCircleCollider : public Circle2DCollider, public Box2DColliderBase
     {
     public:
         explicit Box2DCircleCollider(float radius = 0.5f) :
-            AYCircle2DCollider(radius) {
+            Circle2DCollider(radius) {
         }
 
         void setRadius(float radius) override

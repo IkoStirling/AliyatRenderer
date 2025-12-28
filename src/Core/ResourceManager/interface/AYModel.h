@@ -2,16 +2,18 @@
 #include "IAYResource.h"
 #include "AYResourceRegistry.h"
 #include "AYMemoryPool.h"
+#include "Mod_MaterialManager.h"
 #include "STMaterial.h"
-#include "AYMaterialManager.h"
 #include "STMesh.h"
 #include <filesystem>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+
+
 namespace ayt::engine::resource
 {
-    class AYModel : public IAYResource
+    class AYModel : public IResource
     {
         //SUPPORT_MEMORY_POOL(AYModel)
         DECLARE_RESOURCE_CLASS(AYModel, "models")
@@ -81,7 +83,7 @@ namespace ayt::engine::resource
 
 
 
-            IAYResource::load(filepath);
+            IResource::load(filepath);
             _loaded = true;
             return true;
         }
@@ -350,7 +352,7 @@ namespace ayt::engine::resource
 
             material.type = hasTransparency ? Material::Type::Transparent : Material::Type::Opaque;
 
-            auto materialManager = GET_CAST_MODULE(render::AYMaterialManager, "MaterialManager");
+            auto materialManager = GET_CAST_MODULE(render::Mod_MaterialManager, "MaterialManager");
             materialManager->createMaterial(material);
         }
 

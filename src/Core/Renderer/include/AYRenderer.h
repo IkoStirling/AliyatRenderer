@@ -12,26 +12,26 @@
 #include <memory>
 namespace ayt::engine::render
 {
-    class AYRenderer
+    class Renderer
     {
     public:
-        explicit AYRenderer(AYRenderDevice* device);
+        explicit Renderer(RenderDevice* device);
         void shutdown();
-        ~AYRenderer();
+        ~Renderer();
 
         void clearScreen(float r, float g, float b, float a);
         void drawFullscreenQuad();
 
-        AYRenderContext& getRenderContext() { return _context; }
-        AYSpriteRenderer* getSpriteRenderer() { return _spriteRenderer.get(); }
-        AYFontRenderer* getFontRenderer() { return _fontRenderer.get(); }
-        AYCoreRenderer* getCoreRenderer() { return _coreRenderer.get(); }
-        AYUIRenderer* getUIRenderer() { return _uiRenderer.get(); }
-        AYSkyboxRenderer* getSkyboxRenderer() { return _skyboxRenderer.get(); }
+        RenderContext& getRenderContext() { return _context; }
+        SpriteRenderer* getSpriteRenderer() { return _spriteRenderer.get(); }
+        FontRenderer* getFontRenderer() { return _fontRenderer.get(); }
+        CoreRenderer* getCoreRenderer() { return _coreRenderer.get(); }
+        UIRenderer* getUIRenderer() { return _uiRenderer.get(); }
+        SkyboxRenderer* getSkyboxRenderer() { return _skyboxRenderer.get(); }
 
-        AYMaterialManager* getMaterialManager() { return GET_CAST_MODULE(AYMaterialManager, "MaterialManager").get(); }
-        AYLightManager* getLightManager() { return _lightManager.get(); }
-        AYCameraSystem* getCameraSystem() { return _cameraSystem.get(); }
+        MaterialManager* getMaterialManager() { return GET_CAST_MODULE(MaterialManager, "MaterialManager").get(); }
+        LightManager* getLightManager() { return _lightManager.get(); }
+        CameraSystem* getCameraSystem() { return _cameraSystem.get(); }
 
     private:
         void _initFontRenderer();
@@ -43,17 +43,17 @@ namespace ayt::engine::render
         void _initLightManager();
         void _initCameraSystem();
 
-        AYRenderDevice* _device;
-        AYRenderContext _context;
+        RenderDevice* _device;
+        RenderContext _context;
 
-        std::unique_ptr<AYFontRenderer> _fontRenderer;
-        std::unique_ptr<AYSpriteRenderer> _spriteRenderer;
-        std::unique_ptr<AYCoreRenderer> _coreRenderer;
-        std::unique_ptr<AYUIRenderer> _uiRenderer;
-        std::unique_ptr<AYSkyboxRenderer> _skyboxRenderer;
+        std::unique_ptr<FontRenderer> _fontRenderer;
+        std::unique_ptr<SpriteRenderer> _spriteRenderer;
+        std::unique_ptr<CoreRenderer> _coreRenderer;
+        std::unique_ptr<UIRenderer> _uiRenderer;
+        std::unique_ptr<SkyboxRenderer> _skyboxRenderer;
 
-        std::unique_ptr<AYLightManager> _lightManager;
-        std::unique_ptr<AYCameraSystem> _cameraSystem;
+        std::unique_ptr<LightManager> _lightManager;
+        std::unique_ptr<CameraSystem> _cameraSystem;
 
         GLuint _screenVAO = 0;
     };

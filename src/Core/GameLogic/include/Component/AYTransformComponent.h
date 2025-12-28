@@ -5,7 +5,7 @@
 
 namespace ayt::engine::game
 {
-    class AYTransformComponent : public IAYComponent
+    class TransformComponent : public IComponent
     {
     public:
         virtual void beginPlay() override {}

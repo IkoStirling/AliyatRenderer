@@ -66,7 +66,7 @@ namespace ayt::engine::resource
         // 初始化重采样器
         if (!initResampler()) return false;
 
-        return IAYResource::load(rpath);
+        return IResource::load(rpath);
     }
 
     bool AYAudioStream::initDecoder() {

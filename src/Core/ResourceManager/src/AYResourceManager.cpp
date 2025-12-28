@@ -11,13 +11,13 @@ namespace ayt::engine::resource
     using json = nlohmann::json;
 
 
-    AYResourceManager& AYResourceManager::getInstance()
+    ResourceManager& ResourceManager::getInstance()
     {
-        static AYResourceManager mInstance;
+        static ResourceManager mInstance;
         return mInstance;
     }
 
-    void AYResourceManager::unloadResource(const std::string& filepath) {
+    void ResourceManager::unloadResource(const std::string& filepath) {
         auto strongIt = _strongCache.find(filepath);
         if (strongIt != _strongCache.end()) {
             if (strongIt->second.resource->unload())
@@ -28,27 +28,27 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::reloadResource(const std::string& filepath) {
+    void ResourceManager::reloadResource(const std::string& filepath) {
         std::string rpath = Path::resolve(filepath);
         auto resource = getResourceByPath(filepath);
         resource->reload(rpath);
     }
 
-    void AYResourceManager::pinResource(const std::string& filepath, const std::shared_ptr<IAYResource>& res)
+    void ResourceManager::pinResource(const std::string& filepath, const std::shared_ptr<IResource>& res)
     {
         size_t size = res->sizeInBytes();
         _currentMemoryUsage += size;
         _strongCache[filepath] = STCacheEntry{ res, size, std::chrono::steady_clock::now() };
     }
 
-    void AYResourceManager::unpinResource(const std::string& filepath)
+    void ResourceManager::unpinResource(const std::string& filepath)
     {
         _strongCache.erase(filepath);
     }
 
-    void AYResourceManager::printStats()
+    void ResourceManager::printStats()
     {
-        AYLOG_INFO("[AYResourceManager] === Resource Cache Stats ===");
+        AYLOG_INFO("[ResourceManager] === Resource Cache Stats ===");
         for (const auto& [filepath, weak] : _weakCache) {
             if (auto shared = weak.lock()) {
                 // 减去当前 lock() 产生的引用，只统计外部持有的引用
@@ -61,7 +61,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::touchResource(const std::string& filepath)
+    void ResourceManager::touchResource(const std::string& filepath)
     {
         std::string rpath = Path::resolve(filepath);
         auto strongIt = _strongCache.find(rpath);
@@ -70,7 +70,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::trim()
+    void ResourceManager::trim()
     {
         while (_strongCache.size() > _maxItemCount || _currentMemoryUsage > _maxMemoryBytes) {
             auto oldest = _strongCache.begin();
@@ -84,25 +84,25 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::update(float delta_time)
+    void ResourceManager::update(float delta_time)
     {
-        AYAsyncTracker::getInstance().update(delta_time);
+        AsyncTracker::getInstance().update(delta_time);
     }
 
-    void AYResourceManager::init()
+    void ResourceManager::init()
     {
         _listenEvents();
     }
 
-    void AYResourceManager::shutdown()
+    void ResourceManager::shutdown()
     {
-        //std::unordered_map<std::string, std::weak_ptr<IAYResource>> wc;
+        //std::unordered_map<std::string, std::weak_ptr<IResource>> wc;
         //std::unordered_map<std::string, STCacheEntry> sc;
         //_weakCache.swap(wc);
         //_strongCache.swap(sc);
     }
 
-    std::shared_ptr<IAYResource> AYResourceManager::getResourceByPath(const std::string& filepath)
+    std::shared_ptr<IResource> ResourceManager::getResourceByPath(const std::string& filepath)
     {
         auto strongIt = _strongCache.find(filepath);
         if (strongIt != _strongCache.end()) {
@@ -121,7 +121,7 @@ namespace ayt::engine::resource
         return nullptr;
     }
 
-    void AYResourceManager::tagResource(const std::string& filepath, const Tag& tag)
+    void ResourceManager::tagResource(const std::string& filepath, const Tag& tag)
     {
         std::string rpath = Path::resolve(filepath);
         _tagMap[tag].insert(rpath);
@@ -130,7 +130,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::untagResource(const std::string& filepath, const Tag& tag)
+    void ResourceManager::untagResource(const std::string& filepath, const Tag& tag)
     {
         std::string rpath = Path::resolve(filepath);
         _tagMap[tag].erase(rpath);
@@ -143,9 +143,9 @@ namespace ayt::engine::resource
         }
     }
 
-    std::vector<std::shared_ptr<IAYResource>> AYResourceManager::getResourcesWithTag(const Tag& tag)
+    std::vector<std::shared_ptr<IResource>> ResourceManager::getResourcesWithTag(const Tag& tag)
     {
-        std::vector<std::shared_ptr<IAYResource>> result;
+        std::vector<std::shared_ptr<IResource>> result;
         auto it = _tagMap.find(tag);
         if (it != _tagMap.end()) {
             for (const auto& path : it->second) {
@@ -157,7 +157,7 @@ namespace ayt::engine::resource
         return result;
     }
 
-    void AYResourceManager::unloadTag(const Tag& tag)
+    void ResourceManager::unloadTag(const Tag& tag)
     {
         auto resources = getResourcesWithTag(tag);
         for (auto& res : resources) {
@@ -165,16 +165,16 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::printTaggedStats(const Tag& tag)
+    void ResourceManager::printTaggedStats(const Tag& tag)
     {
         auto resources = getResourcesWithTag(tag);
-        AYLOG_INFO("[AYResourceManager] Resources with tag [{}]:", tag);
+        AYLOG_INFO("[ResourceManager] Resources with tag [{}]:", tag);
         for (auto& res : resources) {
             AYLOG_INFO("{} | size: {}", res->getPath(), res->sizeInBytes());
         }
     }
 
-    void AYResourceManager::savePersistentCache(const std::string& savePath)
+    void ResourceManager::savePersistentCache(const std::string& savePath)
     {
         // 暂时弃用，未支持序列化参数
 
@@ -191,7 +191,7 @@ namespace ayt::engine::resource
         //out << j.dump(4);
     }
 
-    void AYResourceManager::loadPersistentCache(const std::string& loadPath)
+    void ResourceManager::loadPersistentCache(const std::string& loadPath)
     {
         // 暂时弃用，未支持序列化参数
 
@@ -201,7 +201,7 @@ namespace ayt::engine::resource
         //in >> j;
         //for (auto& [path, val] : j.items()) {
         //    std::string typeName = val.at("type").get<std::string>();
-        //    auto resource = AYResourceRegistry::getInstance().create<IAYResource>(typeName);
+        //    auto resource = ResourceRegistry::getInstance().create<IResource>(typeName);
         //    if (resource && resource->load(path)) {
         //        size_t size = resource->sizeInBytes();
         //        _strongCache[path] = STCacheEntry{
@@ -215,7 +215,7 @@ namespace ayt::engine::resource
         //}
     }
 
-    void AYResourceManager::_preloadFromConfig(const std::string& configPath)
+    void ResourceManager::_preloadFromConfig(const std::string& configPath)
     {
         // 暂时弃用，未支持序列化参数
 
@@ -242,15 +242,15 @@ namespace ayt::engine::resource
         // 同理 for sounds、shaders 等等
     }
 
-    AYResourceManager::AYResourceManager()
+    ResourceManager::ResourceManager()
     {
     }
 
-    AYResourceManager::~AYResourceManager()
+    ResourceManager::~ResourceManager()
     {
     }
 
-    void AYResourceManager::_cleanupResources()
+    void ResourceManager::_cleanupResources()
     {
         for (auto it = _weakCache.begin(); it != _weakCache.end(); )
         {
@@ -261,7 +261,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYResourceManager::_listenEvents()
+    void ResourceManager::_listenEvents()
     {
         registerResourceType<AYTexture>();
         registerResourceType<AYAudio>();

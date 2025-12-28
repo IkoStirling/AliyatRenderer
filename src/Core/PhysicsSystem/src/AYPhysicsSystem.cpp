@@ -5,14 +5,14 @@ namespace ayt::engine::physics
 	using namespace ::ayt::engine::render;
 	using namespace ::ayt::engine::ecs;
 
-	void AYPhysicsSystem::init()
+	void PhysicsSystem::init()
 	{
 		createWorld(WorldType::AY2D);
 		createWorld(WorldType::AY3D);
 		setDebugDrawEnabled(true);
 	}
 
-	void AYPhysicsSystem::update(float delta_time)
+	void PhysicsSystem::update(float delta_time)
 	{
 		if (_paused) return;
 
@@ -27,7 +27,7 @@ namespace ayt::engine::physics
 		_syncPhysicsToLogic();
 	}
 
-	void AYPhysicsSystem::addToWorld(EntityID entity, WorldType type)
+	void PhysicsSystem::addToWorld(EntityID entity, WorldType type)
 	{
 		auto& world = _worlds[type];
 		if (world.impl->createBody(entity)) {
@@ -35,7 +35,7 @@ namespace ayt::engine::physics
 		}
 	}
 
-	void AYPhysicsSystem::createWorld(WorldType type)
+	void PhysicsSystem::createWorld(WorldType type)
 	{
 		auto it = _worlds.find(type);
 		if (it != _worlds.end())
@@ -53,12 +53,12 @@ namespace ayt::engine::physics
 		}
 	}
 
-	void AYPhysicsSystem::destroyWorld(WorldType type)
+	void PhysicsSystem::destroyWorld(WorldType type)
 	{
 		_worlds.erase(type);
 	}
 
-	IAYPhysicsWorld* AYPhysicsSystem::getPhysicsWorld(WorldType type)
+	IPhysicsWorld* PhysicsSystem::getPhysicsWorld(WorldType type)
 	{
 		auto it = _worlds.find(type);
 		if (it != _worlds.end())
@@ -68,22 +68,22 @@ namespace ayt::engine::physics
 		return nullptr;
 	}
 
-	void AYPhysicsSystem::setSimulationPaused(bool paused)
+	void PhysicsSystem::setSimulationPaused(bool paused)
 	{
 		_paused = paused;
 	}
 
-	void AYPhysicsSystem::setFixedTimeStep(float timeStep)
+	void PhysicsSystem::setFixedTimeStep(float timeStep)
 	{
 		_fixedTimeStep = timeStep;
 	}
 
-	void AYPhysicsSystem::setDebugDrawEnabled(bool enabled)
+	void PhysicsSystem::setDebugDrawEnabled(bool enabled)
 	{
-		auto rendererManager = GET_CAST_MODULE(AYRendererManager, "Renderer");
+		auto rendererManager = GET_CAST_MODULE(RendererManager, "Renderer");
 		if (enabled && !_debugDrawFlags)
 		{
-			_debugDrawFlags = rendererManager->addDebugDraw(false, [this](AYRenderer* renderer, AYRenderDevice* device) {
+			_debugDrawFlags = rendererManager->addDebugDraw(false, [this](Renderer* renderer, RenderDevice* device) {
 				for (auto& [type, world] : _worlds)
 				{
 					for (auto body : world.impl->getAllBodies())
@@ -114,7 +114,7 @@ namespace ayt::engine::physics
 									size,
 									0,
 									true,
-									AYCoreRenderer::Space::World);
+									CoreRenderer::Space::World);
 						}
 					}
 				}
@@ -126,14 +126,14 @@ namespace ayt::engine::physics
 		}
 	}
 
-	void AYPhysicsSystem::setDebugDrawFlags(uint32_t flags)
+	void PhysicsSystem::setDebugDrawFlags(uint32_t flags)
 	{
 		_debugDrawFlags = flags;
 	}
 
-	void AYPhysicsSystem::_syncLogicToPhysics()
+	void PhysicsSystem::_syncLogicToPhysics()
 	{
-		auto view = GET_CAST_MODULE(ECS, "ECSEngine")->getView<math::Transform, STPhysicsComponent>();
+		auto view = GET_CAST_MODULE(ECS, "ECSEngine")->getView<math::Transform, PhysicsComponent>();
 
 		for (auto [entity, transform, physics] : view)
 		{
@@ -141,9 +141,9 @@ namespace ayt::engine::physics
 		}
 	}
 
-	void AYPhysicsSystem::_syncPhysicsToLogic()
+	void PhysicsSystem::_syncPhysicsToLogic()
 	{
-		auto view = GET_CAST_MODULE(ECS, "ECSEngine")->getView<math::Transform, STPhysicsComponent>();
+		auto view = GET_CAST_MODULE(ECS, "ECSEngine")->getView<math::Transform, PhysicsComponent>();
 
 		for (auto [entity, transform, physics] : view)
 		{

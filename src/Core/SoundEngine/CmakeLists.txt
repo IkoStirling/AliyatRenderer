@@ -1,5 +1,5 @@
 ﻿set(MODULE_NAME sound_engine)
-set(INTERFACE_NAME ${MODULE_NAME}_xxx)
+set(INTERFACE_NAME ${MODULE_NAME}_interface)
 
 
 add_library(${INTERFACE_NAME} INTERFACE

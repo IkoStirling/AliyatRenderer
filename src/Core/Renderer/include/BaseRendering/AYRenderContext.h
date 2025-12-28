@@ -3,7 +3,7 @@
 #include <memory>
 namespace ayt::engine::render
 {
-	struct AYRenderContext
+	struct RenderContext
 	{
 		uint32_t currentCameraID = 0;
 

@@ -6,39 +6,39 @@ namespace ayt::engine::resource
 {
     using namespace ::ayt::engine::config;
 
-    AYAVEngine::AYAVEngine() :
+    AVEngine::AVEngine() :
         _preloadPath("@audios/AudioCachePreload.json")
     {
         ALCdevice* device = alcOpenDevice(nullptr);
         if (!device) {
-            AYLOG_ERR("[AYAVEngine] Failed to open OpenAL device");
+            AYLOG_ERR("[AVEngine] Failed to open OpenAL device");
             return;
         }
 
         ALCcontext* context = alcCreateContext(device, nullptr);
         if (!context) {
-            AYLOG_ERR("[AYAVEngine] Failed to create OpenAL context");
+            AYLOG_ERR("[AVEngine] Failed to create OpenAL context");
             alcCloseDevice(device);
             return;
         }
 
         if (!alcMakeContextCurrent(context)) {
-            AYLOG_ERR("[AYAVEngine] Failed to make OpenAL context current");
+            AYLOG_ERR("[AVEngine] Failed to make OpenAL context current");
             alcDestroyContext(context);
             alcCloseDevice(device);
             return;
         }
 
-        _analyzer = std::make_unique<AYSpectrumAnalyzer>();
+        _analyzer = std::make_unique<SpectrumAnalyzer>();
         for (int i = 0; i < maxAudioPlayerNum; i++)
         {
-            _players.push_back(std::make_shared<AYAudioPlayer>());
+            _players.push_back(std::make_shared<AudioPlayer>());
             _players.back()->set3DParameters(_rolloffFactor, _referenceDistance, _maxDistance);
         }
 
     }
 
-    AYAVEngine::~AYAVEngine()
+    AVEngine::~AVEngine()
     {
         ALCcontext* context = alcGetCurrentContext();
         ALCdevice* device = alcGetContextsDevice(context);
@@ -47,7 +47,7 @@ namespace ayt::engine::resource
         if (device) alcCloseDevice(device);
     }
 
-    void AYAVEngine::init()
+    void AVEngine::init()
     {
         if (_initialized) return;
 
@@ -59,7 +59,7 @@ namespace ayt::engine::resource
                     auto& event = static_cast<const Event_CameraMove&>(in_event);
                     auto& trans = event.transform;
                     auto& tp = trans.position;
-                    //AYLOG_INFO("[AYAVEngine] update sound location[{},{},{}]", tp.x, tp.y, tp.z);
+                    //AYLOG_INFO("[AVEngine] update sound location[{},{},{}]", tp.x, tp.y, tp.z);
                     setListenerPosition(trans.position, trans.getForwardVector(), trans.getUpVector());
                 });
             _tokens.push_back(std::unique_ptr<EventToken>(token));
@@ -68,7 +68,7 @@ namespace ayt::engine::resource
         _initialized = true;
     }
 
-    void AYAVEngine::update(float delta_time)
+    void AVEngine::update(float delta_time)
     {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
 
@@ -98,7 +98,7 @@ namespace ayt::engine::resource
             _activeAudios.end());
 
         // 频谱分析（针对背景音乐）
-        if (_players[AUDIO_SLOT_01]->getState() == AYAudioPlayer::PlayState::Playing) {
+        if (_players[AUDIO_SLOT_01]->getState() == AudioPlayer::PlayState::Playing) {
             auto bgm = _players[AUDIO_SLOT_01]->getAudioSource();
             if (bgm && bgm->isStreaming()) {
                 auto stream = std::static_pointer_cast<AYAudioStream>(bgm);
@@ -127,7 +127,7 @@ namespace ayt::engine::resource
 
     }
 
-    void AYAVEngine::shutdown()
+    void AVEngine::shutdown()
     {
         stopAll();
 
@@ -138,16 +138,16 @@ namespace ayt::engine::resource
         _tokens.clear();
 
         _initialized = false;
-        AYLOG_INFO("[AYAVEngine] shutdown complete");
+        AYLOG_INFO("[AVEngine] shutdown complete");
     }
 
 
-    std::shared_ptr<IAYAudioSource> AYAVEngine::playSound2D(const std::string& path, bool isStreaming, bool loop, float volume, int slot, bool asyncload)
+    std::shared_ptr<IAYAudioSource> AVEngine::playSound2D(const std::string& path, bool isStreaming, bool loop, float volume, int slot, bool asyncload)
     {
         return playSound3D(path, glm::vec3(0, 0, 0), isStreaming, loop, volume, slot, asyncload);
     }
 
-    std::shared_ptr<IAYAudioSource> AYAVEngine::playSound3D(const std::string& path, const glm::vec3& position, bool isStreaming, bool loop, float volume, int slot, bool asyncload)
+    std::shared_ptr<IAYAudioSource> AVEngine::playSound3D(const std::string& path, const glm::vec3& position, bool isStreaming, bool loop, float volume, int slot, bool asyncload)
     {
         if (!_initialized) return nullptr;
 
@@ -167,7 +167,7 @@ namespace ayt::engine::resource
             }
         }
 
-        auto& rm = AYResourceManager::getInstance();
+        auto& rm = ResourceManager::getInstance();
 
         if (!audio) {
             if (asyncload) {
@@ -216,13 +216,13 @@ namespace ayt::engine::resource
         return audio;
     }
 
-    std::shared_ptr<AYVideo> AYAVEngine::playVideo(const std::string& path, bool loop, const std::shared_ptr<IAYAudioSource>& audio)
+    std::shared_ptr<AYVideo> AVEngine::playVideo(const std::string& path, bool loop, const std::shared_ptr<IAYAudioSource>& audio)
     {
         if (!_initialized) return nullptr;
 
         std::shared_ptr<AYVideo> video;
 
-        auto& rm = AYResourceManager::getInstance();
+        auto& rm = ResourceManager::getInstance();
         video = rm.load<AYVideo>(path);
 
         if (!video) return nullptr;
@@ -245,12 +245,12 @@ namespace ayt::engine::resource
         return video;
     }
 
-    void AYAVEngine::createPlaylist(const std::string& playlistName, const std::vector<std::string>& audioPaths) {
+    void AVEngine::createPlaylist(const std::string& playlistName, const std::vector<std::string>& audioPaths) {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         _playlists[playlistName] = { audioPaths, false, 0, nullptr };
     }
 
-    void AYAVEngine::removePlaylist(const std::string& playlistName) {
+    void AVEngine::removePlaylist(const std::string& playlistName) {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (_currentPlaylistName == playlistName) {
             stopPlaylist();
@@ -258,11 +258,11 @@ namespace ayt::engine::resource
         _playlists.erase(playlistName);
     }
 
-    void AYAVEngine::playPlaylist(const std::string& playlistName, bool loopPlaylist) {
+    void AVEngine::playPlaylist(const std::string& playlistName, bool loopPlaylist) {
 
         auto it = _playlists.find(playlistName);
         if (it == _playlists.end()) {
-            spdlog::warn("[AYAVEngine] Playlist '{}' not found", playlistName);
+            spdlog::warn("[AVEngine] Playlist '{}' not found", playlistName);
             return;
         }
 
@@ -279,7 +279,7 @@ namespace ayt::engine::resource
 
     }
 
-    void AYAVEngine::pausePlaylist() {
+    void AVEngine::pausePlaylist() {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (!_isPlaylistPlaying) return;
 
@@ -292,7 +292,7 @@ namespace ayt::engine::resource
         _isPlaylistPlaying = false;
     }
 
-    void AYAVEngine::resumePlaylist() {
+    void AVEngine::resumePlaylist() {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (_isPlaylistPlaying) return;
 
@@ -305,7 +305,7 @@ namespace ayt::engine::resource
         _isPlaylistPlaying = true;
     }
 
-    void AYAVEngine::stopPlaylist() {
+    void AVEngine::stopPlaylist() {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (!_isPlaylistPlaying) return;
 
@@ -320,19 +320,19 @@ namespace ayt::engine::resource
         _currentPlaylistName.clear();
     }
 
-    void AYAVEngine::skipToNextTrack() {
+    void AVEngine::skipToNextTrack() {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (!_isPlaylistPlaying) return;
         _playNextTrack();
     }
 
-    void AYAVEngine::skipToPreviousTrack() {
+    void AVEngine::skipToPreviousTrack() {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (!_isPlaylistPlaying) return;
         _playPreviousTrack();
     }
 
-    void AYAVEngine::setPlaylistLoop(bool loop) {
+    void AVEngine::setPlaylistLoop(bool loop) {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         _playlistLoop = loop;
 
@@ -342,11 +342,11 @@ namespace ayt::engine::resource
         }
     }
 
-    bool AYAVEngine::isPlaylistPlaying() const {
+    bool AVEngine::isPlaylistPlaying() const {
         return _isPlaylistPlaying;
     }
 
-    std::string AYAVEngine::getCurrentTrack() const {
+    std::string AVEngine::getCurrentTrack() const {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         auto it = _playlists.find(_currentPlaylistName);
         if (it != _playlists.end() && it->second.currentTrackIndex < it->second.tracks.size()) {
@@ -355,7 +355,7 @@ namespace ayt::engine::resource
         return "";
     }
 
-    size_t AYAVEngine::getCurrentTrackIndex() const {
+    size_t AVEngine::getCurrentTrackIndex() const {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         auto it = _playlists.find(_currentPlaylistName);
         if (it != _playlists.end()) {
@@ -364,7 +364,7 @@ namespace ayt::engine::resource
         return 0;
     }
 
-    const std::vector<std::string>& AYAVEngine::getPlaylistTracks(const std::string& playlistName) const {
+    const std::vector<std::string>& AVEngine::getPlaylistTracks(const std::string& playlistName) const {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         static const std::vector<std::string> empty;
         auto it = _playlists.find(playlistName);
@@ -374,7 +374,7 @@ namespace ayt::engine::resource
         return empty;
     }
 
-    void AYAVEngine::_playNextTrack() {
+    void AVEngine::_playNextTrack() {
         auto it = _playlists.find(_currentPlaylistName);
         if (it == _playlists.end()) return;
 
@@ -420,18 +420,18 @@ namespace ayt::engine::resource
                 break;
             }
 
-            spdlog::warn("[AYAVEngine] Failed to play track: {}", playlist.tracks[playlist.currentTrackIndex]);
+            spdlog::warn("[AVEngine] Failed to play track: {}", playlist.tracks[playlist.currentTrackIndex]);
         }
 
         // 如果所有尝试都失败了，停止播放列表
         if (!playlist.currentAudio && attempts >= maxAttempts) {
-            AYLOG_ERR("[AYAVEngine] All tracks in playlist '{}' failed to play", _currentPlaylistName);
+            AYLOG_ERR("[AVEngine] All tracks in playlist '{}' failed to play", _currentPlaylistName);
             _isPlaylistPlaying = false;
             _currentPlaylistName.clear();
         }
     }
 
-    void AYAVEngine::_playPreviousTrack() {
+    void AVEngine::_playPreviousTrack() {
         auto it = _playlists.find(_currentPlaylistName);
         if (it == _playlists.end()) return;
 
@@ -474,27 +474,27 @@ namespace ayt::engine::resource
                 }
                 break;
             }
-            spdlog::warn("[AYAVEngine] Failed to play track: {}", playlist.tracks[playlist.currentTrackIndex]);
+            spdlog::warn("[AVEngine] Failed to play track: {}", playlist.tracks[playlist.currentTrackIndex]);
         }
 
         // 如果所有尝试都失败了，停止播放列表
         if (!playlist.currentAudio && attempts >= maxAttempts) {
-            AYLOG_ERR("[AYAVEngine] All tracks in playlist '{}' failed to play", _currentPlaylistName);
+            AYLOG_ERR("[AVEngine] All tracks in playlist '{}' failed to play", _currentPlaylistName);
             _isPlaylistPlaying = false;
             _currentPlaylistName.clear();
         }
     }
 
-    void AYAVEngine::_onTrackFinished()
+    void AVEngine::_onTrackFinished()
     {
-        AYLOG_INFO("[AYAVEngine] one music finished");
+        AYLOG_INFO("[AVEngine] one music finished");
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         if (!_isPlaylistPlaying) return;
         _playNextTrack();
     }
 
 
-    void AYAVEngine::setMasterVolume(float volume)
+    void AVEngine::setMasterVolume(float volume)
     {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         float _oldMasterInv = 1 / _masterVolume;
@@ -505,7 +505,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::pauseAll()
+    void AVEngine::pauseAll()
     {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         for (auto& source : _activeAudios) {
@@ -516,7 +516,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::resumeAll()
+    void AVEngine::resumeAll()
     {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         for (auto& source : _activeAudios) {
@@ -527,7 +527,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::stopAll()
+    void AVEngine::stopAll()
     {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         for (auto& source : _activeAudios) {
@@ -540,7 +540,7 @@ namespace ayt::engine::resource
         _activeVideos.clear();
     }
 
-    void AYAVEngine::seek(const std::string& path, float seconds)
+    void AVEngine::seek(const std::string& path, float seconds)
     {
         // 查找对应的音频和视频资源
         std::shared_ptr<IAYAudioSource> audio;
@@ -557,7 +557,7 @@ namespace ayt::engine::resource
         }
 
         if (audio) {
-            if (auto player = std::dynamic_pointer_cast<AYAudioPlayer>(audio)) {
+            if (auto player = std::dynamic_pointer_cast<AudioPlayer>(audio)) {
                 player->seek(seconds);
             }
         }
@@ -567,7 +567,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::setSourcePosition(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position)
+    void AVEngine::setSourcePosition(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position)
     {
         std::lock_guard<std::mutex> lock(_sourceMutex);
 
@@ -580,7 +580,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::setSourceVelocity(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& velocity)
+    void AVEngine::setSourceVelocity(std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& velocity)
     {
         std::lock_guard<std::mutex> lock(_sourceMutex);
 
@@ -592,7 +592,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::setAttenuationParameter(float rolloff_factor, float reference_distance, float max_distance)
+    void AVEngine::setAttenuationParameter(float rolloff_factor, float reference_distance, float max_distance)
     {
         _rolloffFactor = rolloff_factor;
         _referenceDistance = reference_distance;
@@ -602,7 +602,7 @@ namespace ayt::engine::resource
             player->set3DParameters(_rolloffFactor, _referenceDistance, _maxDistance);
     }
 
-    void AYAVEngine::setListenerPosition(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up)
+    void AVEngine::setListenerPosition(const glm::vec3& position, const glm::vec3& forward, const glm::vec3& up)
     {
         std::lock_guard<std::recursive_mutex> lock(_cacheMutex);
         _listenerPosition = position;
@@ -610,11 +610,11 @@ namespace ayt::engine::resource
         _listenerUp = glm::normalize(up);
     }
 
-    void AYAVEngine::_preloadAudios()
+    void AVEngine::_preloadAudios()
     {
         _preloadFile.loadFromFile(_preloadPath, ConfigType::JSON);
 
-        auto& rm = AYResourceManager::getInstance();
+        auto& rm = ResourceManager::getInstance();
         for (const auto& path : _preloadFile.getVector<std::string>("audio_preload"))
         {
             rm.loadAsync<AYAudio>(path, [this, path](std::shared_ptr<AYAudio> loadedAudio) {
@@ -624,7 +624,7 @@ namespace ayt::engine::resource
         }
     }
 
-    void AYAVEngine::_saveAudios()
+    void AVEngine::_saveAudios()
     {
         std::vector<std::string> paths;
         for (const auto& [path, audio] : _audioCache)
@@ -636,9 +636,9 @@ namespace ayt::engine::resource
         _preloadFile.saveConfig(_preloadPath);
     }
 
-    void AYAVEngine::_playAudioImpl(const std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position, bool loop, float volume, bool is3D, int slot)
+    void AVEngine::_playAudioImpl(const std::shared_ptr<IAYAudioSource>& audio, const glm::vec3& position, bool loop, float volume, bool is3D, int slot)
     {
-        std::shared_ptr<AYAudioPlayer> splayer;
+        std::shared_ptr<AudioPlayer> splayer;
 
         if (slot == -1)
         {
@@ -658,7 +658,7 @@ namespace ayt::engine::resource
         {
             if (slot >= maxAudioPlayerNum)
             {
-                AYLOG_ERR("[AYAVEngine] Slot unavailable!");
+                AYLOG_ERR("[AVEngine] Slot unavailable!");
                 return;
             }
 
@@ -696,10 +696,10 @@ namespace ayt::engine::resource
 
     }
 
-    void AYAVEngine::_syncVideoToAudio(const std::shared_ptr<AYVideo>& video, const std::shared_ptr<IAYAudioSource>& audio)
+    void AVEngine::_syncVideoToAudio(const std::shared_ptr<AYVideo>& video, const std::shared_ptr<IAYAudioSource>& audio)
     {
         video->setSyncCallback([audio](AYVideo& v) {
-            if (auto player = dynamic_cast<AYAudioPlayer*>(audio.get())) {
+            if (auto player = dynamic_cast<AudioPlayer*>(audio.get())) {
                 double audioTime = player->getCurrentTime();
                 v.syncToAudio(audioTime);
             }

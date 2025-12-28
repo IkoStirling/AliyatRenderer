@@ -6,16 +6,16 @@
 #include "AYLogger.h"
 namespace ayt::engine::resource
 {
-    class AYAsyncTracker {
+    class AsyncTracker {
     public:
-        static AYAsyncTracker& getInstance() {
-            static AYAsyncTracker instance;
+        static AsyncTracker& getInstance() {
+            static AsyncTracker instance;
             return instance;
         }
 
         void addTask(const std::string& path,
-            std::shared_future<std::shared_ptr<IAYResource>> future,
-            std::function<void(std::shared_ptr<IAYResource>)> callback,
+            std::shared_future<std::shared_ptr<IResource>> future,
+            std::function<void(std::shared_ptr<IResource>)> callback,
             std::chrono::milliseconds timeout = std::chrono::seconds(5))
         {
             _tasks.push_back({
@@ -56,6 +56,6 @@ namespace ayt::engine::resource
         }
 
     private:
-        std::vector<STAsyncTask> _tasks;
+        std::vector<AsyncTask> _tasks;
     };
 }
